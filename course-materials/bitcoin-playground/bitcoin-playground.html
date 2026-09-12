@@ -1,0 +1,401 @@
+<!doctype html>
+<html lang="en">
+<head>
+<!--
+MIT License
+
+Copyright (c) 2026 Davide Patti
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+-->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; connect-src 'none'; font-src 'none'; base-uri 'none'; form-action 'none'">
+<meta name="color-scheme" content="light">
+<title>Bitcoin Playground</title>
+<style>:root{font-family:Arial,Helvetica,sans-serif;color:#29323c;background:#f8f5ed;font-synthesis:none;--paper:#f8f5ed;--ink:#29323c;--muted:#6b736f;--line:#dcd7ca;--purple:#8256d8;--accent:#8256d8;--wash:#eee6f8}
+*{box-sizing:border-box}body{margin:0}button,a,select{-webkit-tap-highlight-color:transparent}button,select{font:inherit}button,a{touch-action:manipulation}button{cursor:pointer}a{color:inherit}button:disabled{cursor:default;opacity:.38}button:focus-visible,a:focus-visible,summary:focus-visible,select:focus-visible{outline:3px solid #3177c8;outline-offset:4px}button{border:1px solid var(--line);border-radius:8px;background:#fffdf7;color:var(--ink);padding:11px 17px;font-size:14px;font-weight:600;transition:background .15s,transform .15s}button:hover:not(:disabled){background:#eee8dc}button:active:not(:disabled){transform:translateY(1px)}.primary{background:var(--ink);color:#fffdf7;border-color:var(--ink)}.primary:hover:not(:disabled){background:#434e59}.quiet{background:transparent}.skip-link{position:absolute;z-index:20;left:12px;top:-90px;padding:12px;background:#fff}.skip-link:focus{top:10px}
+.app-header{height:72px;padding:0 36px;display:flex;align-items:center;border-bottom:1px solid var(--line);gap:18px}.brand{display:flex;gap:11px;align-items:center;text-decoration:none;font-size:18px;letter-spacing:-.5px}.brand strong{font-weight:750}.brand-mark{display:grid;place-items:center;width:32px;height:35px;background:#f3bc59;color:#3d3429;border:1.5px solid var(--ink);border-radius:9px;transform:rotate(-6deg);font-size:25px;font-weight:700}.header-note{margin-left:auto;display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted)}.offline-dot{width:6px;height:6px;border-radius:50%;background:#649268}#help-button{padding:0;width:31px;height:31px;border-radius:50%;font-family:Georgia,serif;font-size:17px}main{max-width:1580px;margin:auto;padding:27px 36px 24px}main:focus{outline:0}.eyebrow{font-size:11px;line-height:1.4;font-weight:700;letter-spacing:1.7px;color:var(--muted);margin:0 0 12px}h1,h2,p{margin-top:0}h1{font-size:36px;letter-spacing:-1.15px;line-height:1.12;margin-bottom:13px}h2{font-size:26px;line-height:1.18;letter-spacing:-.6px}p{font-size:16px;line-height:1.58}.muted{color:var(--muted)}.hub-intro{padding:32px 0 28px;max-width:730px}.hub-intro h1{font-size:52px;letter-spacing:-2px}.hub-intro p:last-child{font-size:18px;color:var(--muted);max-width:560px;margin-bottom:0}.collection-label{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);padding-bottom:13px;margin:7px 0 20px}.collection-label .eyebrow{margin:0}.collection-label span{color:var(--muted);font-size:12px}.tool-card{display:grid;grid-template-columns:minmax(275px, .75fr) 1.65fr;overflow:hidden;background:#fdfbf5;border:1px solid #d7d0c0;border-radius:17px}.tool-card-copy{padding:40px;display:flex;flex-direction:column;align-items:flex-start;border-right:1px solid var(--line)}.tool-card-copy h2{font-size:33px;max-width:260px}.tool-card-copy p{color:#6b736f;font-size:15px;margin-bottom:30px}.tool-card-copy .primary{margin-top:auto;font-size:15px;padding:14px 23px}.toy-number{font-size:12px;color:#8256d8;margin-bottom:23px;font-weight:700;letter-spacing:1px}.tool-card-art{padding:18px 20px;display:grid;align-items:center;background:#fbf8ef;overflow:hidden}.tool-card-art .scene-svg{width:100%;max-height:390px}.tool-card-art .scene-caption{display:none}.hub-bottom{display:flex;justify-content:space-between;padding-top:23px;gap:20px;font-size:12px;line-height:1.6;color:var(--muted)}.hub-bottom p{font-size:12px;margin:0;max-width:580px}
+.tool-heading{display:flex;align-items:center;justify-content:space-between;gap:18px;margin:0 0 24px}.tool-heading h1{font-size:30px;margin-bottom:6px}.tool-heading .eyebrow{margin:0}.heading-actions{display:flex;gap:8px}.stepper{display:grid;grid-template-columns:repeat(9,1fr);margin-bottom:24px;border-bottom:1px solid var(--line);gap:6px}.step-tab{position:relative;border:0;border-radius:0;background:transparent;padding:0 2px 16px;text-align:left;color:var(--muted);font-size:12px;font-weight:500;display:flex;align-items:center;gap:8px;white-space:nowrap}.step-tab:hover:not(:disabled){background:transparent;color:var(--ink)}.step-tab::after{content:'';position:absolute;bottom:-1px;left:0;right:0;height:3px;background:transparent}.step-tab[aria-current="step"]::after{background:var(--accent)}.step-tab[aria-current="step"]{color:var(--ink);font-weight:700}.step-index{display:grid;place-items:center;width:25px;height:25px;border:1px solid #cbc6bb;border-radius:50%;font-size:11px;flex-shrink:0}.step-tab[aria-current="step"] .step-index{background:var(--accent);color:#fff;border-color:var(--accent)}.step-tab.complete .step-index{background:#e9e6dd;border-color:#e9e6dd}.workbench{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:26px;align-items:start}.canvas-wrap{background:#fffdf7;border:1.4px solid #cfc8b9;border-radius:15px;overflow:hidden}.canvas-meta{height:47px;display:flex;align-items:center;justify-content:space-between;padding:0 22px;border-bottom:1px solid #e7e1d4;gap:15px}.canvas-meta .eyebrow{font-size:10px;letter-spacing:1.05px;color:var(--accent);margin:0}.scene-position{color:#928c80;font-size:11px}.scene{min-height:395px;display:flex;align-items:center;justify-content:center;padding:5px 10px}.scene-svg{display:block;width:100%;height:auto;overflow:visible}.scene-svg text{fill:var(--ink);stroke:none}.scene-svg .label{font-size:19px;font-weight:700}.scene-svg .small-label{font-size:17px;font-weight:500}.scene-svg .hand-label{font-family:'Chalkboard SE','Comic Sans MS',Arial,sans-serif;font-size:22px;font-weight:700}.scene-svg .scene-caption{font-size:17px;font-weight:600;fill:#665f53}.scene-svg .big-number{font-size:28px;font-weight:700}.scene-svg .medium-number{font-size:25px;font-weight:700}.scene-svg .mono{font-family:Menlo,Consolas,monospace;font-size:17px}.scene-svg .stage-number{font-size:15px;font-weight:700;fill:white}.scene-svg .note-letter{font-size:25px;font-weight:700}.scene-svg .tray-label{font-size:12px;font-weight:700}.scene-svg .gate-label{font-size:14px}.scene-svg .tiny-check{font-size:13px;font-weight:700}.scene-svg .check-mark{font-size:24px;font-weight:700}.scene-legend{display:flex;align-items:center;gap:19px;padding:12px 22px;border-top:1px solid #e7e1d4;font-size:11px;color:#77736b;flex-wrap:wrap}.legend-item{display:flex;align-items:center;gap:6px}.legend-swatch{width:10px;height:10px;border:1px solid #8b76a5;border-radius:2px;background:#e6d7ff}.legend-swatch.blue{background:#bfdaef;border-color:#6e98b4}.legend-swatch.yellow{background:#f7daa0;border-color:#bdaa68}.narration{padding:6px 0}.narration .eyebrow{color:var(--accent);margin-bottom:11px}.narration h2{font-size:27px;margin-bottom:17px}.narration>p{color:#616a64;font-size:15px;line-height:1.65;margin-bottom:21px}.takeaway{padding:12px 0 12px 16px;border-left:3px solid var(--accent);font-size:14px;font-weight:600;line-height:1.6}.tx-status{border-top:1px solid var(--line);margin-top:22px;padding-top:17px}.tx-status .eyebrow{margin-bottom:10px;color:var(--muted);font-size:10px;letter-spacing:1.2px}.status-value{font-size:18px;font-weight:700;display:flex;align-items:center;gap:8px}.tx-dot{height:9px;width:9px;background:var(--accent);border-radius:50%}.tx-status dl{display:flex;gap:23px;margin:14px 0 0;font-size:12px}.tx-status dt{color:var(--muted);margin-bottom:5px}.tx-status dd{margin:0;font-weight:600}.scene-experiment{padding:14px 20px;min-height:54px;display:flex;align-items:center;justify-content:center;gap:11px;border-top:1px solid #e7e1d4;flex-wrap:wrap}.scene-experiment:empty{display:none}.scene-experiment button{font-size:12px;padding:9px 13px}.scene-experiment button[aria-pressed="true"]{border-color:var(--accent);background:var(--wash)}.experiment-label{font-size:12px;color:var(--muted);margin-right:2px}.transport{display:flex;align-items:center;justify-content:space-between;gap:20px;margin-top:22px}.transport-main{display:flex;align-items:center;gap:9px}.transport-main button{min-width:94px}.transport .primary{min-width:140px}.transport-options{display:flex;align-items:center;gap:16px;color:var(--muted);font-size:12px}.transport-options select{color:var(--ink);border:1px solid var(--line);background:transparent;border-radius:6px;padding:7px 8px;margin-left:5px}.keyboard-hint{font-size:11px}.progress-track{height:2px;background:#e5dfd1;margin-top:19px;overflow:hidden}.progress-fill{height:100%;background:var(--accent);width:0;transition:width .08s linear}.teaching-detail{margin-top:20px;max-width:1050px;font-size:13px;color:var(--muted)}.teaching-detail summary{cursor:pointer;font-size:12px;font-weight:600;color:#5c6660}.teaching-detail p{font-size:13px;line-height:1.65;margin:13px 0 0;max-width:940px}.tool-footer{display:flex;justify-content:space-between;margin-top:20px;color:#898578;font-size:10px;gap:12px}.check-row{animation:appear .5s both}.appear{animation:appear .7s both}@keyframes appear{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}.motion-paused *{animation-play-state:paused!important}
+dialog{border:1px solid #c9c1b1;border-radius:17px;padding:35px;max-width:560px;width:calc(100% - 36px);color:var(--ink);background:var(--paper);box-shadow:0 25px 100px #29323c33}dialog::backdrop{background:#292a2866;backdrop-filter:blur(3px)}dialog h2{font-size:29px}.dialog-close{float:right;padding:0;font-size:25px;width:30px;height:30px;background:none;border:0;margin:-16px -12px 0 0}.shortcuts{display:grid;grid-template-columns:105px 1fr;gap:12px;font-size:13px;padding:20px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}.shortcuts dt{font-family:Menlo,monospace}.shortcuts dd{margin:0;color:var(--muted)}.fine-print{font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:0}.fullscreen .app-header{display:none}.fullscreen main{padding-top:18px}.fullscreen .keyboard-hint{display:none}noscript{display:block;padding:30px}
+@media(min-width:1600px){.scene{min-height:470px}.narration{padding-top:19px}.narration>p{font-size:16px}}
+@media(max-width:1120px){main{padding:24px}.app-header{padding:0 24px}.workbench{grid-template-columns:minmax(0,1fr) 260px;gap:20px}.scene{min-height:340px;padding:20px 8px}.step-tab{font-size:10px;gap:5px}.step-index{width:22px;height:22px}.narration h2{font-size:24px}.narration>p{font-size:14px}.tool-card-copy{padding:30px}.tool-card-copy h2{font-size:29px}.keyboard-hint{display:none}}
+@media(max-width:850px){.workbench{grid-template-columns:1fr}.narration{display:grid;grid-template-columns:1fr 1fr;gap:0 25px}.narration .eyebrow,.narration h2{grid-column:1/-1}.narration h2{margin-bottom:12px}.tx-status{margin-top:0;grid-column:2;grid-row:3/5;border-top:0;padding-top:0}.takeaway{grid-column:1}.scene{min-height:0;padding:10px}.tool-heading h1{font-size:26px}.step-tab{display:flex;flex-direction:column;gap:6px;text-align:center;font-size:9px}.stepper{gap:0}.tool-card{grid-template-columns:1fr}.tool-card-copy{border-right:0;border-bottom:1px solid var(--line);padding:26px}.tool-card-copy h2{max-width:none}.tool-card-copy p{margin-bottom:20px}.tool-card-art{min-height:220px}.hub-intro h1{font-size:42px}.hub-intro{padding-top:15px}.tool-card-copy h2{font-size:30px}.transport{gap:15px;flex-wrap:wrap}.transport-options{margin-left:auto}.canvas-meta{height:42px}}
+@media(max-width:520px){main{padding:20px 14px}.app-header{height:60px;padding:0 15px}.brand{font-size:16px}.header-note{display:none}#help-button{margin-left:auto}.tool-heading{align-items:flex-start;margin-bottom:20px}.tool-heading h1{font-size:23px;max-width:190px}.heading-actions button{padding:8px 10px;font-size:11px}#fullscreen{display:none}.step-tab{font-size:8px}.step-index{width:24px;height:24px}.workbench{gap:20px}.narration{display:block}.tx-status{margin-top:20px;border-top:1px solid var(--line);padding-top:15px}.scene-legend{padding:10px 14px;font-size:9px;gap:11px}.canvas-meta{padding:0 13px}.canvas-meta .eyebrow{font-size:8px;letter-spacing:.7px}.scene-position{font-size:9px}.transport-main{width:100%;gap:7px}.transport-main button{min-width:0;flex:1;font-size:12px;padding:12px 10px}.transport-main .primary{min-width:0;flex:1.3}.transport-options{width:100%;justify-content:space-between}.hub-bottom{display:block}.hub-bottom>span{display:block;margin-top:10px}.hub-intro h1{font-size:37px}.tool-footer{flex-direction:column;gap:6px}.scene-experiment{padding:10px}.experiment-label{width:100%;text-align:center}.hub-intro p:last-child{font-size:16px}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.001ms!important;transition:none!important;scroll-behavior:auto!important}}
+@media(min-width:851px){.scene{height:clamp(300px,43vh,430px);min-height:0}.scene>.scene-svg{height:100%;width:100%}}
+</style>
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+<header class="app-header">
+  <a class="brand" href="#hub" aria-label="Bitcoin Playground home"><span class="brand-mark" aria-hidden="true">₿</span><span>Bitcoin <strong>Playground</strong></span></a>
+  <span class="header-note"><span class="offline-dot"></span> Offline learning lab</span>
+  <button class="quiet" id="help-button" aria-label="Help and keyboard shortcuts">?</button>
+</header>
+<main id="main" tabindex="-1"></main>
+<noscript>Bitcoin Playground needs JavaScript enabled in your browser. It runs entirely offline.</noscript>
+<dialog id="help-dialog" aria-labelledby="help-title">
+  <form method="dialog"><button class="dialog-close" aria-label="Close help">×</button></form>
+  <p class="eyebrow">BITCOIN PLAYGROUND</p><h2 id="help-title">A small lab for big ideas.</h2>
+  <p>Follow the transaction with <strong>Next</strong>, return with <strong>Back</strong>, or select any numbered stage. Play walks through the full sequence. Replay animates only the current stage.</p>
+  <dl class="shortcuts"><dt>← / →</dt><dd>Previous / next stage</dd><dt>Space</dt><dd>Play / pause the walkthrough</dd><dt>R</dt><dd>Replay the current stage</dd><dt>Home / End</dt><dd>First / last stage</dd><dt>Esc</dt><dd>Close this help</dd></dl>
+  <p class="fine-print">This is a teaching simulation of the M 1.3 protocol overview, slides 25–33. No coins, keys, network connections, or Bitcoin software are involved. Time is compressed. The proof-of-work example hashes a toy header, not a live block.</p>
+</dialog>
+<script>/* Deterministic teaching model. No network, keys, wallet, or Bitcoin RPC. */
+(function (root) {
+  'use strict';
+  const TX = Object.freeze({id:'TX A', input:100000, payment:60000, change:39000, fee:1000, outpoint:'prior-tx:0'});
+  const stages = [
+    {name:'The whole picture',short:'Overview',slide:25,color:'purple',layer:'Bitcoin system overview',title:'One transaction. Many independent decisions.',description:'Follow Alice’s payment to Bob through wallets, peers, miners, and full nodes. Each actor has a local view. Shared history emerges from validation and proof-of-work chain selection.',takeaway:'Keep your eye on the purple transaction slip.',detail:'The diagram groups roles for clarity. In practice, one machine can perform several roles, and a wallet can connect to its own full node.'},
+    {name:'Create & sign',short:'Wallet',slide:26,color:'purple',layer:'Wallet / application',title:'Alice creates and authorizes a payment.',description:'Her wallet selects a 100,000 satoshi UTXO, creates 60,000 sats for Bob and 39,000 sats of change, and signs the spend. The remaining 1,000 sats are the transaction fee.',takeaway:'The signature authorizes a proposed spend. It does not confirm it.',detail:'Inputs reference exact prior outputs (txid:vout). Outputs specify amounts and locking conditions. This example assumes a signature committing to the full transaction. No real private keys or signatures are generated here.'},
+    {name:'Validate & relay',short:'Relay',slide:27,color:'blue',layer:'P2P relay + node policy',title:'A peer checks it, then tells its neighbors.',description:'Alice sends the signed transaction to a peer. Receiving nodes check it against their local state and admission policy before accepting and relaying it. The purple slips are copies of the same transaction.',takeaway:'Relaying a transaction does not establish a shared ordering.',detail:'The introductory exchange is announcement → request → transaction (inv → getdata → tx). This is a schematic, not a packet trace. Modern relay may use witness transaction identifiers. Conflicting spends can arrive in different orders at different peers.'},
+    {name:'Local mempools',short:'Mempools',slide:28,color:'green',layer:'Node policy / implementation',title:'Each node has its own waiting room.',description:'Accepted, unconfirmed transactions wait in a node’s local mempool. Some peers already have Alice’s payment; another has not received it yet. Other transactions and their arrival order can differ too.',takeaway:'There is no global mempool. Local acceptance is not confirmation.',detail:'Admission, replacement, expiry, and eviction are local policy. The trays are snapshots, not a consensus ordering. The background slips B, C, and D are unrelated transactions, not conflicting spends.'},
+    {name:'Build a candidate',short:'Candidate',slide:29,color:'orange',layer:'Miner selection + consensus structure',title:'A miner assembles a candidate block.',description:'A miner selects transactions from its local view, puts the coinbase first, and commits to the ordered transactions with a Merkle root. The header also links to the previous block.',takeaway:'A candidate is local and replaceable. Inclusion is the miner’s choice.',detail:'A Bitcoin header is 80 bytes: version, previous block hash, Merkle root, time, nBits, and nonce. Selection depends on fees, dependencies, and local policy. A block can have at most 4,000,000 weight units. The coinbase can claim at most the allowed subsidy plus included fees.'},
+    {name:'Find proof of work',short:'Mine',slide:30,color:'orange',layer:'Bitcoin consensus',title:'Many hash attempts. One qualifying header.',description:'Miners change their candidate headers and try again. A valid proof of work has a numeric double-SHA256 hash at or below the target. The small example below uses a deliberately easy target.',takeaway:'Work is costly to find and easy to check. Success time is random.',detail:'This toy actually double-hashes a fixed 80-byte example header and varies its nonce. It is not a valid network block: the transactions, Merkle field, and target are illustrative. Bitcoin compares the full 256-bit numeric hash. There is no mining-progress percentage or predictable number of attempts.'},
+    {name:'Relay the block',short:'Block relay',slide:31,color:'blue',layer:'P2P block relay',title:'The found block travels to other nodes.',description:'The successful miner announces its block. Peers obtain the data and pass it onward. A receiving node still needs to check the block before treating it as part of its accepted history.',takeaway:'Receiving a block is different from accepting it.',detail:'Compact block relay can reuse transactions a peer already has, requesting missing ones. Faster propagation reduces stale-block risk; it does not change validity rules. The animation compresses network delays.'},
+    {name:'Verify independently',short:'Verify',slide:32,color:'green',layer:'Bitcoin consensus',title:'Every full node repeats the checks.',description:'Each full node checks the header and target, the transaction commitments, the spends and their authorization, and the block’s limits and coinbase reward. Proof of work alone is insufficient.',takeaway:'A mined block with invalid transactions is rejected.',detail:'Input existence and authorization are checked in the block’s branch context, including earlier transactions in the block. A valid block may still belong to a side branch. Try the invalid-block example: its proof of work is assumed valid, but an unauthorized spend makes the entire block invalid.'},
+    {name:'Extend the chain',short:'History',slide:33,color:'red',layer:'Bitcoin consensus',title:'Follow the valid chain with the most work.',description:'Alice’s transaction receives its first confirmation when its block joins a node’s active chain. Descendant blocks add confirmations. A competing valid branch with more accumulated work can replace that history.',takeaway:'Confirmations reduce reversal risk; they do not create absolute finality.',detail:'Chain selection compares cumulative work among valid chains, not a vote or merely a block count. The branch exercise uses equal work per block for legibility. Its reorganization leaves TX A unspent on the new branch, so this simplified node readmits it to its mempool; real readmission also depends on validity and policy.'}
+  ].map(Object.freeze);
+
+  // SHA-256, including padding and big-endian message words (FIPS 180-4).
+  const K=[0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2];
+  const rotr=(x,n)=>(x>>>n)|(x<<(32-n));
+  function sha256(input){
+    const length=input.length, padded=new Uint8Array(Math.ceil((length+9)/64)*64);
+    padded.set(input);padded[length]=128;
+    const dv=new DataView(padded.buffer);dv.setUint32(padded.length-4,length*8);
+    const h=[0x6a09e667,0xbb67ae85,0x3c6ef372,0xa54ff53a,0x510e527f,0x9b05688c,0x1f83d9ab,0x5be0cd19];
+    for(let off=0;off<padded.length;off+=64){
+      const w=new Uint32Array(64);
+      for(let i=0;i<16;i++)w[i]=dv.getUint32(off+4*i);
+      for(let i=16;i<64;i++){const a=w[i-15],b=w[i-2];w[i]=(w[i-16]+(rotr(a,7)^rotr(a,18)^(a>>>3))+w[i-7]+(rotr(b,17)^rotr(b,19)^(b>>>10)))>>>0;}
+      let [a,b,c,d,e,f,g,hh]=h;
+      for(let i=0;i<64;i++){const t1=(hh+(rotr(e,6)^rotr(e,11)^rotr(e,25))+((e&f)^(~e&g))+K[i]+w[i])>>>0;const t2=((rotr(a,2)^rotr(a,13)^rotr(a,22))+((a&b)^(a&c)^(b&c)))>>>0;hh=g;g=f;f=e;e=(d+t1)>>>0;d=c;c=b;b=a;a=(t1+t2)>>>0;}
+      [a,b,c,d,e,f,g,hh].forEach((v,i)=>{h[i]=(h[i]+v)>>>0;});
+    }
+    const out=new Uint8Array(32),v=new DataView(out.buffer);h.forEach((n,i)=>v.setUint32(4*i,n));return out;
+  }
+  const hex=bytes=>Array.from(bytes,b=>b.toString(16).padStart(2,'0')).join('');
+  const TARGET='0fffff'+'0'.repeat(58); // compact nBits 0x200fffff
+  function header(nonce){
+    const b=new Uint8Array(80),v=new DataView(b.buffer);
+    v.setUint32(0,0x20000000,true);
+    for(let i=4;i<68;i++)b[i]=(i*17+11)%256;
+    v.setUint32(68,1700000000,true);v.setUint32(72,0x200fffff,true);v.setUint32(76,nonce,true);return b;
+  }
+  function hashAttempt(nonce){const hash=hex(sha256(sha256(header(nonce))).reverse());return Object.freeze({nonce,hash,valid:hash<=TARGET});}
+  const trials=[];
+  for(let nonce=0;nonce<4096;nonce++){const trial=hashAttempt(nonce);trials.push(trial);if(trial.valid)break;}
+  if(!trials.at(-1).valid)throw new Error('The deterministic example needs a winning hash.');
+  function snapshot(step,options={}){
+    step=Math.max(0,Math.min(8,Number.isFinite(step)?Math.floor(step):0));
+    const invalid=step===7&&Boolean(options.invalid);
+    const reorg=step===8&&Boolean(options.reorg);
+    const descendants=step===8?Math.max(0,Math.min(3,Number(options.descendants)||0)):0;
+    const confirmations=step===8&&!reorg?1+descendants:0;
+    const status=step===0?'Not created':step===1?'Signed proposal':step===2?'Relaying':step===3?'Unconfirmed':step===4?'In a candidate':step===5?'Proof of work found':step===6?'Block received':invalid?'Block rejected':step===7?'Block valid':reorg?'Unconfirmed again':'Confirmed';
+    return {step,tx:TX,status,confirmations,invalid,reorg,descendants,accepted:step===8&&!reorg,
+      mempools:step<2?[[],[],[],[]]:step===2?[['A'],['A'],[],['A']]:step===8&&!reorg?[['B','C'],['C'],['D','B'],['B']]:[['A','B','C'],['B','A'],['C','D'],['C','A','B']],
+      candidate:step>=4?['coinbase','A','B']:[],branchWork:{main:2+descendants,rival:3+descendants},
+      checks:step>=7?[{label:'Header & proof of work',ok:true},{label:'Transaction commitments',ok:true},{label:'Unspent inputs & authorization',ok:!invalid},{label:'Block limits & reward',ok:true}]:[]};
+  }
+  const api={TX,stages,sha256,hex,header,hashAttempt,trials,TARGET,snapshot};
+  if(typeof module!=='undefined'&&module.exports)module.exports=api;
+  root.PlaygroundProtocol=api;
+})(typeof window!=='undefined'?window:globalThis);
+</script>
+<script>/* Original SVG illustrations. Shared primitives keep future toys visually related. */
+(function(root){
+  'use strict';
+  const ink='#29323c', colors={purple:'#8256d8',blue:'#3177c8',green:'#47965d',orange:'#db901e',red:'#ce5750'};
+  const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const text=(x,y,s,cls='label',extra='')=>`<text x="${x}" y="${y}" class="${cls}" ${extra}>${esc(s)}</text>`;
+  const lines=(x,y,items,cls='label',gap=25)=>items.map((s,i)=>text(x,y+i*gap,s,cls)).join('');
+  function defs(){return `<defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M1 1 9 5 1 9" fill="none" stroke="context-stroke" stroke-width="1.8" stroke-linejoin="round"/></marker>
+    <linearGradient id="screen" x2="0" y2="1"><stop stop-color="#f3faff"/><stop offset="1" stop-color="#cce3f4"/></linearGradient>
+    <linearGradient id="paper" x2="0" y2="1"><stop stop-color="#fffef8"/><stop offset="1" stop-color="#fbf1d9"/></linearGradient>
+    <symbol id="cube" viewBox="0 0 64 68"><path d="M5 17 34 4 60 17 31 31Z" fill="#9dd2f4"/><path d="M5 17 31 31 31 62 5 48Z" fill="#69aee4"/><path d="M31 31 60 17 60 49 31 62Z" fill="#398ecf"/><path d="M5 17 34 4 60 17 60 49 31 62 5 48Z M5 17 31 31 60 17 M31 31V62" fill="none" stroke="${ink}" stroke-width="2.5" stroke-linejoin="round"/></symbol>
+    <symbol id="slip" viewBox="0 0 48 60"><path d="M5 3H32L44 15V56H5Z" fill="#ede3ff" stroke="${ink}" stroke-width="2.2" stroke-linejoin="round"/><path d="M32 3V15H44" fill="#cdb4f1" stroke="${ink}" stroke-width="2"/><text x="24" y="35" font-size="23" text-anchor="middle" fill="#7543c1" font-family="Arial" font-weight="700">A</text><path d="M12 44H34M12 49H29" stroke="#9d76d7" stroke-width="2" stroke-linecap="round"/></symbol>
+  </defs>`;}
+  function svg(content,title='Bitcoin transaction journey'){return `<svg class="scene-svg" viewBox="0 0 1080 500" role="img" aria-label="${esc(title)}" xmlns="http://www.w3.org/2000/svg">${defs()}${content}</svg>`;}
+  function arrow(id,d,color='blue',dashed=false){return `<path id="${id}" d="${d}" fill="none" stroke="${colors[color]||color}" stroke-width="2.6" stroke-linecap="round" ${dashed?'stroke-dasharray="7 7"':''} marker-end="url(#arrow)"/>`;}
+  function packet(path,delay=0,type='tx',dur=1.7){return `<g class="traveller" opacity="0"><animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.03;0.94;1" dur="${dur}s" begin="${delay}s" fill="freeze"/><animateMotion dur="${dur}s" begin="${delay}s" fill="freeze"><mpath href="#${path}"/></animateMotion>${type==='tx'?'<use href="#slip" x="-17" y="-22" width="34" height="43"/>':`<rect x="-17" y="-17" width="34" height="34" rx="4" fill="#f8d277" stroke="${ink}" stroke-width="2"/>`}</g>`;}
+  function tx(x,y,scale=1){return `<use href="#slip" x="${x}" y="${y}" width="${48*scale}" height="${60*scale}"/>`;}
+  function node(x,y,{label='',scale=1,check='',active=true}={}){return `<g transform="translate(${x} ${y}) scale(${scale})" opacity="${active?1:.4}">
+    <ellipse cx="52" cy="97" rx="61" ry="7" fill="#e2ddcf"/>
+    <rect x="3" y="2" width="96" height="68" rx="7" fill="#aab7ca" stroke="${ink}" stroke-width="2.8"/>
+    <rect x="10" y="9" width="82" height="53" rx="2" fill="url(#screen)" stroke="${ink}" stroke-width="1.8"/>
+    <use href="#cube" x="33" y="17" width="38" height="41"/>
+    <path d="M43 71V81H24V86H78V81H60V71" fill="#8795a6" stroke="${ink}" stroke-width="2.5" stroke-linejoin="round"/>
+    <path d="M-2 88H104L111 96H-8Z" fill="#cbd5df" stroke="${ink}" stroke-width="2"/><path d="M8 91H91" stroke="#7c8795" stroke-width="2" stroke-dasharray="5 3"/>
+    ${label?text(52,122,label,'small-label','text-anchor="middle"'):''}
+    ${check?`<circle cx="111" cy="13" r="14" fill="${check==='yes'?'#e9f5df':'#fce4df'}" stroke="${check==='yes'?colors.green:colors.red}" stroke-width="2"/>${text(111,19,check==='yes'?'✓':'×','check-mark','text-anchor="middle"')}`:''}
+  </g>`;}
+  function person(x,y,{shirt='#95bd79',miner=false,scale=1}={}){return `<g transform="translate(${x} ${y}) scale(${scale})" stroke="${ink}" stroke-width="2.7" stroke-linejoin="round" stroke-linecap="round">
+    <ellipse cx="63" cy="172" rx="63" ry="9" fill="#e3decf" stroke="none"/>
+    <path d="M22 73Q3 85 8 153L80 164 103 112 87 82Z" fill="${shirt}"/>
+    <path d="M41 57 38 83Q55 98 68 78L66 61" fill="#f1c695"/>
+    <path d="M32 15Q4 29 19 76L35 81 74 68 86 43Q91 9 58 7Z" fill="#885b35"/>
+    <path d="M34 29Q45 43 75 25L77 59Q69 80 51 76L30 61 26 42Z" fill="#f3cea0"/>
+    <path d="M29 42Q18 33 21 48L30 53" fill="#f3cea0"/>
+    <path d="M61 52 67 56 60 58M48 65Q57 71 64 64" fill="none" stroke-width="2"/>
+    <path d="M46 46V49M68 44V47" stroke-width="3.4"/>
+    ${miner?'<path d="M22 28Q25 0 54 1 81 0 85 26L93 31 17 35Z" fill="#f2bc4b"/><path d="M46 6 45 25M62 4 64 24" fill="none" stroke="#b68626"/>':''}
+    <path d="M23 105 43 133 78 116 84 131Q47 160 32 146L14 124" fill="${shirt}"/>
+    <path d="M77 114Q84 103 90 109L99 118 85 133 76 130Z" fill="#f3cea0"/>
+    ${miner?'<path d="M83 102 117 84 135 117 96 136Z" fill="#abb7c8"/><path d="M96 104 120 105M104 117 113 97" stroke="#dd961f" stroke-width="4"/>':'<path d="M86 71 111 77 102 121 77 115Z" fill="#677891"/><path d="M89 77 105 81 99 109 83 105Z" fill="#c6e4f6"/><circle cx="94" cy="91" r="4" fill="#aa80e0" stroke-width="1.5"/>'}
+  </g>`;}
+  function tray(x,y,slips=['A','B','C'],scale=1){return `<g transform="translate(${x} ${y}) scale(${scale})"><path d="M5 30 20 3H130L146 31V65H5Z" fill="#d8e6e8" stroke="${ink}" stroke-width="2.5" stroke-linejoin="round"/>
+    ${slips.map((s,i)=>`<g transform="translate(${14+i*34} ${s==='A'?5:9}) rotate(${i%2?3:-3})"><path d="M0 0H29V46H0Z" fill="${s==='A'?'#e6d7ff':i%2?'#ffdc81':'#c7e2ac'}" stroke="${ink}" stroke-width="2"/>${text(14,28,s,'note-letter','text-anchor="middle"')}</g>`).join('')}
+    <path d="M4 32 16 57H135L147 31 143 70H8Z" fill="#b9d9e1" stroke="${ink}" stroke-width="2.4" stroke-linejoin="round"/>${text(76,63,'MEMPOOL','tray-label','text-anchor="middle"')}</g>`;}
+  function block(x,y,{label='BLOCK',color='#f2cf77',scale=1,withTx=false}={}){return `<g transform="translate(${x} ${y}) scale(${scale})" stroke="${ink}" stroke-width="2.5" stroke-linejoin="round">
+    <path d="M0 20 30 3 123 11 97 29Z" fill="#ffedb9"/><path d="M97 29 123 11 123 113 97 135Z" fill="#d5ab54"/><path d="M0 20 97 29 97 135 0 119Z" fill="${color}"/>
+    <path d="M14 45 79 51M14 55 79 61" stroke="#997328" stroke-width="2"/>
+    ${withTx?'<use href="#slip" x="24" y="64" width="38" height="47"/>':`<path d="M15 73 37 76 37 99 15 96Z M51 78 75 81 75 104 51 101Z" fill="#fff3cd" stroke-width="1.7"/>`}
+    ${text(49,158,label,'small-label','stroke="none" text-anchor="middle"')}
+  </g>`;}
+  function miner(x,y,scale=1){return `<g transform="translate(${x} ${y}) scale(${scale})">${person(0,-10,{miner:true,shirt:'#efa552',scale:.78})}<g transform="translate(81 88)" stroke="${ink}" stroke-width="2.5"><path d="M0 0 18 -12 85 -3 70 12 70 60 0 48Z" fill="#7e899b" stroke-linejoin="round"/><path d="M0 0 70 12 85 -3 85 46 70 60M70 12V60" fill="none"/>${[19,48].map(a=>`<circle cx="${a}" cy="26" r="11" fill="#424d5f"/><path d="M${a-7} 22  ${a+7} 30M${a+6} 19 ${a-6} 33" stroke="#b5c1d1"/>`).join('')}</g></g>`;}
+  function caption(s){return text(540,474,s,'scene-caption','text-anchor="middle"');}
+  function overview(){
+    let out='';
+    const headings=[[94,'Wallet','purple'],[318,'Peers','blue'],[520,'Mempools','green'],[730,'Miners','orange'],[974,'Full nodes','green']];
+    out+=headings.map(([x,s,c],i)=>`<circle cx="${x}" cy="39" r="14" fill="${colors[c]}"/>${text(x,44,i+1,'stage-number','text-anchor="middle"')}${text(x,79,s,'hand-label','text-anchor="middle"')}`).join('');
+    out+=arrow('o1','M168 244C194 244 197 225 227 224','blue');
+    [[280,165],[381,235],[278,315],[371,371]].forEach(([x,y],i)=>{out+=node(x-40,y-32,{scale:.69});});
+    out+=arrow('o2','M310 180L373 220','blue')+arrow('o3','M376 270L314 310','blue')+arrow('o4','M279 277V223','blue')+arrow('o5','M315 346L367 373','blue');
+    out+=person(36,103,{scale:.8})+person(57,305,{scale:.65,shirt:'#75a9d1'})+tx(101,249,.7);
+    [127,242,357].forEach((y,i)=>{out+=arrow('om'+i,`M426 ${y+45}Q446 ${y+22} 473 ${y+25}`,'blue',true);out+=node(495,y-20,{scale:.52});out+=tray(474,y+40,i===1?['C','A']:['A','B','C'],.65);out+=arrow('mm'+i,`M580 ${y+62}Q605 ${y+64} 633 ${y+57}`,'orange',true);out+=miner(634,y-21,.68);});
+    out+=arrow('win','M762 241H823','orange',true)+block(812,174,{withTx:true,scale:.65,label:'Found block'});
+    [123,252,381].forEach((y,i)=>{out+=arrow('verify'+i,`M901 237Q922 ${y+35} 949 ${y+35}`,'green');out+=node(945,y,{scale:.62,check:'yes'});});
+    out+=packet('o1',.2)+packet('o2',1.3)+packet('om1',2.1)+packet('mm1',3)+packet('win',4,'block')+packet('verify1',5,'block');
+    return svg(out+caption('A payment becomes history through local checks and accumulated work.'));
+  }
+  function wallet(){return svg(`
+    ${person(38,162,{scale:1.25})}${text(118,408,'ALICE','hand-label','text-anchor="middle"')}
+    ${arrow('w1','M222 254H284','purple')}
+    <g class="appear"><rect x="305" y="91" width="205" height="289" rx="11" fill="url(#paper)" stroke="${ink}" stroke-width="2.4"/>
+    ${text(328,128,'ONE INPUT','hand-label')}${text(328,174,'100,000 sats','big-number')}${lines(328,209,['Unspent output','prior-tx:0'],'small-label',22)}
+    <path d="M328 246H488" stroke="#d2c9b6"/>${text(328,280,'AUTHORIZED','small-label')}
+    <g transform="translate(335 304)" stroke="#8256d8" stroke-width="3" fill="#e7d9fd"><circle cx="14" cy="14" r="14"/><path d="M29 8H83L91 16 83 24 75 18 69 24 62 18H29Z"/><circle cx="10" cy="14" r="3"/></g></g>
+    ${arrow('w2','M532 230H591','purple')}${tx(541,151,1)}
+    <rect x="616" y="91" width="234" height="125" rx="11" fill="#e9f2e1" stroke="${ink}" stroke-width="2.4"/>
+    ${text(639,127,'BOB’S OUTPUT','hand-label')}${text(639,173,'60,000 sats','big-number')}
+    <rect x="616" y="237" width="234" height="95" rx="11" fill="#eef0f9" stroke="${ink}" stroke-width="2.4"/>
+    ${text(639,272,'CHANGE TO ALICE','hand-label')}${text(639,309,'39,000 sats','medium-number')}
+    ${text(626,373,'Fee = 1,000 sats','small-label')}
+    ${person(892,163,{shirt:'#7eadd2',scale:1.12})}${text(962,398,'BOB','hand-label','text-anchor="middle"')}
+    ${packet('w1',.1)}${packet('w2',1.7)}${caption('100,000 in = 60,000 payment + 39,000 change + 1,000 fee')}
+  `,'Alice authorizes a transaction spending 100,000 sats, paying Bob 60,000 and returning 39,000 as change, with a 1,000 sat fee.');}
+  function relay(){let out=person(32,158,{scale:1.1})+text(100,394,'ALICE','hand-label','text-anchor="middle"');
+    const positions=[[285,193],[555,80],[553,307],[866,191]];
+    [['r0','M195 252H276'],['r1','M401 211Q462 117 547 125'],['r2','M402 255Q462 352 546 352'],['r3','M672 128Q790 128 858 217'],['r4','M671 353Q784 365 857 262']].forEach(([id,d],i)=>{out+=arrow(id,d,i===2||i===4?'#c6c9c8':'blue',i>0);if(i!==2&&i!==4)out+=packet(id,i*.85);});
+    positions.forEach(([x,y],i)=>{out+=node(x,y,{label:`NODE ${i+1}`,check:i===2?'':'yes',active:i!==2});if(i!==2)out+=tx(x+111,y+44,.56);});
+    out+=text(485,222,'announce','small-label')+text(494,251,'request','small-label')+text(477,280,'send transaction','small-label');
+    return svg(out+caption('Each receiver checks the transaction before accepting and relaying it.'));}
+  function mempools(state){let out='';const nodes=[[237,58],[690,58],[237,270],[690,270]];
+    out+=arrow('m0','M406 153H665','blue')+arrow('m1','M685 351H422','blue')+arrow('m2','M345 252V225','blue');
+    nodes.forEach(([x,y],i)=>{out+=`<g class="check-row" style="animation-delay:${i*.25}s"><rect x="${x-24}" y="${y-8}" width="206" height="173" rx="20" fill="#edf3e5" stroke="#bfd2b0" stroke-width="1.4"/>`;out+=node(x+35,y,{scale:.56});out+=text(x+5,y+70,'NODE '+(i+1),'small-label');out+=tray(x+2,y+83,state.mempools[i],.98)+'</g>';});
+    out+=text(530,90,'LOCAL VIEWS','hand-label','text-anchor="middle"');
+    return svg(out+caption('Purple A is Alice’s payment. Node 3 has not received it in this snapshot.'));}
+  function candidate(){return svg(`
+    ${node(81,74,{label:'MINER’S NODE',scale:.9})}${tray(57,218,['A','B','C'],1.2)}
+    ${arrow('c1','M250 276H337','orange')}${packet('c1',.3)}
+    ${miner(333,125,1.2)}${text(425,369,'SELECT + ORDER','hand-label','text-anchor="middle"')}
+    ${arrow('c2','M533 244H609','orange')}${packet('c2',1.7)}
+    <g class="appear"><rect x="637" y="45" width="359" height="377" rx="16" fill="#fffef9" stroke="${ink}" stroke-width="2.5"/>
+    ${text(662,82,'CANDIDATE BLOCK','hand-label')}
+    <rect x="658" y="102" width="317" height="110" rx="8" fill="#e3effa" stroke="#5e91c9" stroke-width="1.8"/>
+    ${text(679,131,'80-BYTE HEADER','label')}${lines(679,163,['version · previous block hash','Merkle root · time · nBits · nonce'],'small-label',23)}
+    <rect x="658" y="231" width="317" height="39" rx="6" fill="#f9e5b5"/>
+    ${text(675,256,'1   coinbase: subsidy + fees','small-label')}
+    <rect x="658" y="280" width="317" height="51" rx="6" fill="#eadefb" stroke="#9d7cce" stroke-width="1.5"/>
+    ${text(675,311,'2   TX A: Alice pays Bob','label')}
+    <rect x="658" y="341" width="317" height="39" rx="6" fill="#f1efea"/>${text(675,367,'3   TX B: another payment','small-label')}
+    ${text(680,406,'Transaction order is committed.','small-label')}</g>
+    ${caption('The coinbase comes first. Parents must precede transactions that spend them.')}
+  `);}
+  function mining(trials){const last=trials.at(-1);return svg(`
+    ${miner(90,152,1.5)}${text(226,409,'MANY ATTEMPTS','hand-label','text-anchor="middle"')}
+    ${arrow('h1','M379 278H453','orange')}
+    <rect x="485" y="69" width="481" height="336" rx="15" fill="#fffefb" stroke="${ink}" stroke-width="2.5"/>
+    ${text(513,107,'80-BYTE TOY HEADER','hand-label')}${text(513,145,'nonce','small-label')}${text(596,145,last.nonce,'mono hash-nonce')}
+    <path d="M513 167H938" stroke="#d7cfbf"/>
+    ${text(513,198,'DOUBLE SHA-256','small-label')}${text(513,234,last.hash.slice(0,28),'mono hash-display')}${text(513,262,last.hash.slice(28),'mono hash-tail')}
+    ${text(513,306,'target  0fffff'+'0'.repeat(10)+'…','mono')}
+    <rect x="513" y="335" width="425" height="44" rx="7" fill="#e6f0dc"/>
+    ${text(532,363,'✓  Hash ≤ target: proof of work found','label hash-verdict')}
+    ${caption('Real SHA256d; illustrative header and easy target. No Bitcoin network is involved.')}
+  `);}
+  function blockRelay(){let out=miner(29,161,1.05)+block(229,192,{withTx:true,scale:.65,label:'Found block'});
+    const coords=[[459,194],[717,57],[718,337],[924,196]];
+    [['br0','M327 245H439'],['br1','M554 215Q620 107 706 104'],['br2','M554 274Q620 383 705 383'],['br3','M817 107Q900 118 929 188'],['br4','M819 380Q900 366 928 310']].forEach(([id,d],i)=>{out+=arrow(id,d,'blue',true)+packet(id,i*.8,'block');});
+    coords.forEach(([x,y],i)=>{out+=node(x,y,{label:'NODE '+(i+1),scale:.84});out+=block(x+75,y+57,{withTx:true,scale:.25,label:''});});
+    return svg(out+caption('The block is received at different times. Its contents still need validation.'));}
+  function verify(state){return svg(`
+    ${block(77,147,{withTx:true,color:state.invalid?'#ef9b8d':'#cfdda8',scale:1.24,label:state.invalid?'UNAUTHORIZED SPEND':'FOUND BLOCK'})}
+    <circle cx="218" cy="178" r="28" fill="#f5cf6a" stroke="${ink}" stroke-width="2.2"/>${text(218,184,'PoW','label','text-anchor="middle"')}
+    ${arrow('v1','M265 250H327',state.invalid?'red':'green')}
+    <path d="M352 368V165a126 126 0 0 1 252 0V368Z" fill="#e4dfd5" stroke="${ink}" stroke-width="3"/>
+    <path d="M380 368V169a98 98 0 0 1 196 0V368Z" fill="#fffdf8" stroke="${ink}" stroke-width="2.4"/>
+    ${text(478,170,'CONSENSUS','hand-label','text-anchor="middle"')}${text(478,200,'CHECKS','hand-label','text-anchor="middle"')}
+    ${state.checks.map((c,i)=>`<g class="check-row" style="animation-delay:${i*.45}s"><circle cx="397" cy="${235+i*31}" r="8" fill="${c.ok?'#e1efd5':'#f8d4ce'}"/>${text(397,240+i*31,c.ok?'✓':'×','tiny-check','text-anchor="middle"')}${text(415,240+i*31,['Header & PoW','Commitments','Authorization','Limits & reward'][i],'gate-label')}</g>`).join('')}
+    ${arrow('v2','M631 250H710',state.invalid?'red':'green')}
+    ${node(777,143,{scale:1.3,check:state.invalid?'no':'yes'})}
+    <rect x="740" y="318" width="238" height="57" rx="9" fill="${state.invalid?'#f8d6cd':'#deedd0'}" stroke="${state.invalid?colors.red:colors.green}" stroke-width="2"/>
+    ${text(859,354,state.invalid?'REJECT BLOCK':'VALID BLOCK','hand-label','text-anchor="middle"')}
+    ${caption(state.invalid?'Even valid proof of work cannot authorize an invalid spend.':'The same rules are checked independently by every full node.')}
+  `);}
+  function chain(state){
+    const small=(x,y,label,color,withTx=false)=>block(x,y,{label,color,withTx,scale:.47});
+    let out=text(93,221,'SHARED PAST','small-label')+small(86,245,'', '#d0d4d7')+small(184,245,'','#d0d4d7');
+    out+=arrow('ch0','M147 280H179','#8a9196')+arrow('ch1','M247 271Q281 271 302 166',state.reorg?'#b7b3a9':'green');
+    const count=1+state.descendants;
+    for(let i=0;i<count;i++){const x=310+i*122;out+=small(x,128,i===0?'TX A':'+'+i,state.reorg?'#d4d6cb':'#a9cb82',i===0);if(i<count-1)out+=arrow('cha'+i,`M${x+62} 163H${x+114}`,state.reorg?'#b7b3a9':'green');}
+    out+=text(310,87,state.reorg?'FORMER ACTIVE BRANCH':'ACTIVE BRANCH','hand-label');
+    out+=text(310,239,`${count} confirmation${count===1?'':'s'} before any reorganization`,'small-label');
+    if(state.reorg){out+=arrow('fork','M247 293Q279 293 302 335','red');for(let i=0;i<count+1;i++){const x=310+i*122;out+=small(x,304,'','#edaa89');if(i<count)out+=arrow('chr'+i,`M${x+62} 339H${x+114}`,'red');}out+=text(310,290,'NEW ACTIVE BRANCH: MORE WORK','hand-label');out+=text(310,408,'TX A is absent here. Its input is still unspent in this example.','small-label');}
+    else{out+=`<path d="M249 293Q279 329 312 344H580" fill="none" stroke="#c9c3b6" stroke-width="2" stroke-dasharray="6 7"/>`;out+=text(320,382,'A competing valid branch can appear.','small-label');}
+    out+=caption(state.reorg?'The reorganization removes TX A’s confirmations. In this example it returns to the mempool.':'Each later block adds work above Alice’s payment. Reversal risk remains nonzero.');return svg(out);
+  }
+  function render(state){return [overview,wallet,relay,()=>mempools(state),candidate,()=>mining(root.PlaygroundProtocol.trials),blockRelay,()=>verify(state),()=>chain(state)][state.step]();}
+  root.PlaygroundArt={render,overview,esc,colors};
+})(typeof window!=='undefined'?window:globalThis);
+</script>
+<script>(function(){
+  'use strict';
+  const P=window.PlaygroundProtocol,A=window.PlaygroundArt,main=document.querySelector('main');
+  // Add future tools here. Each tool owns its route and can reuse the artwork/model conventions.
+  const tools=[{id:'transaction',title:'The life of a transaction',description:'Follow a payment through the network, into a block, and onto the chain. Pause, go back, and see who checks what.',render:renderTool}];
+  let step=0,playing=false,animating=false,elapsed=0,lastTime=0,speed=1,raf=0;
+  let options={invalid:false,reorg:false,descendants:0};
+  const reduced=window.matchMedia('(prefers-reduced-motion: reduce)');
+  const duration=7200;
+  const $=id=>document.getElementById(id);
+  const icon={back:'←',next:'→',play:'▶',pause:'Ⅱ'};
+  document.querySelector('.skip-link').onclick=e=>{e.preventDefault();main.focus({preventScroll:true});};
+  function stop(){playing=false;animating=false;cancelAnimationFrame(raf);raf=0;document.querySelector('.scene-svg')?.pauseAnimations?.();}
+  function hub(){stop();document.title='Bitcoin Playground';document.documentElement.style.setProperty('--accent','#8256d8');
+    main.innerHTML=`<section class="hub-intro"><p class="eyebrow">THE BITCOIN COURSE · INTERACTIVE TOOLS</p><h1>Explore how<br>Bitcoin works.</h1><p>Small experiments. Visible mechanisms.<br>A playground for following the protocol, one step at a time.</p></section>
+    <div class="collection-label"><p class="eyebrow">YOUR PLAYGROUND</p><span>${String(tools.length).padStart(2,'0')} tool${tools.length===1?'':'s'} available</span></div>
+    ${tools.map((tool,i)=>`<article class="tool-card"><div class="tool-card-copy"><div class="toy-number">${String(i+1).padStart(2,'0')} / PROTOCOL OVERVIEW</div><h2>${tool.title}</h2><p>${tool.description}</p><button class="primary" data-launch="${tool.id}">Open the tool &nbsp; →</button></div><div class="tool-card-art" aria-hidden="true">${A.overview()}</div></article>`).join('')}
+    <div class="hub-bottom"><p>This is the first tool in Bitcoin Playground. Future experiments will live here, with the same offline launch experience.</p><span>No account. No connection. Just curiosity.</span></div>`;
+    main.querySelectorAll('[data-launch]').forEach(b=>b.addEventListener('click',()=>{options={invalid:false,reorg:false,descendants:0};location.hash=b.dataset.launch+'/0';}));
+    if(reduced.matches)document.querySelector('.scene-svg')?.pauseAnimations?.();
+  }
+  function renderTool({continuePlaying=false}={}){
+    cancelAnimationFrame(raf);const s=P.stages[step],state=P.snapshot(step,options);
+    const color=A.colors[s.color];document.documentElement.style.setProperty('--accent',color);document.documentElement.style.setProperty('--wash',color+'17');
+    document.title=`${s.name} · Bitcoin Playground`;
+    main.innerHTML=`<div class="tool-heading"><div><p class="eyebrow" style="margin-bottom:8px">TOOL 01 · PROTOCOL OVERVIEW</p><h1>The life of a transaction</h1></div><div class="heading-actions"><button class="quiet" id="fullscreen" aria-pressed="false">⛶ &nbsp; Focus</button><button class="quiet" id="hub">← Playground</button></div></div>
+      <nav class="stepper" aria-label="Transaction stages">${P.stages.map((t,i)=>`<button class="step-tab ${i<step?'complete':''}" data-step="${i}" ${i===step?'aria-current="step"':''} aria-label="Step ${i+1}: ${t.name}"><span class="step-index">${String(i+1).padStart(2,'0')}</span>${t.short}</button>`).join('')}</nav>
+      <div class="workbench"><div class="canvas-wrap"><div class="canvas-meta"><p class="eyebrow">${s.layer}</p><span class="scene-position">M 1.3 / SLIDE ${s.slide}</span></div><div class="scene" id="scene">${A.render(state)}</div><div class="scene-experiment" id="experiment">${experimentControls()}</div><div class="scene-legend"><span class="legend-item"><i class="legend-swatch"></i> Alice’s transaction</span><span class="legend-item"><i class="legend-swatch blue"></i> Independent node</span><span class="legend-item"><i class="legend-swatch yellow"></i> Candidate / block</span></div></div>
+      <aside class="narration" aria-live="polite" aria-atomic="true"><p class="eyebrow">STEP ${String(step+1).padStart(2,'0')} OF 09 · ${s.short.toUpperCase()}</p><h2>${s.title}</h2><p>${s.description}</p><div class="takeaway">${s.takeaway}</div><div class="tx-status"><p class="eyebrow">TRACKING ALICE’S PAYMENT · TX A</p><div class="status-value"><span class="tx-dot"></span><span id="tx-status">${state.status}</span></div><dl><div><dt>Payment</dt><dd>60,000 sats</dd></div><div><dt>Confirmations</dt><dd id="confirmations">${state.confirmations}</dd></div></dl></div></aside></div>
+      <div class="transport"><div class="transport-main"><button id="previous" ${step===0?'disabled':''}>${icon.back} &nbsp; Back</button><button id="play" class="primary">${icon.play} &nbsp; Play</button><button id="next" ${step===8?'disabled':''}>Next &nbsp; ${icon.next}</button></div><div class="transport-options"><button class="quiet" id="replay">↻ &nbsp; Replay step</button><label>Speed <select id="speed" aria-label="Playback speed"><option value="0.5">0.5×</option><option value="1">1×</option><option value="1.5">1.5×</option><option value="2">2×</option></select></label><span class="keyboard-hint">← → step &nbsp; / &nbsp; Space play</span></div></div>
+      <div class="progress-track" aria-hidden="true"><div id="progress" class="progress-fill"></div></div>
+      <details class="teaching-detail"><summary>Look closer · mechanism and teaching notes</summary><p>${s.detail}</p></details>
+      <footer class="tool-footer"><span>Teaching simulation · time compressed · no live Bitcoin network</span><span>Bitcoin Playground / 1.0</span></footer>`;
+    $('speed').value=String(speed);
+    $('hub').onclick=()=>{location.hash='hub';};
+    $('previous').onclick=()=>go(step-1);
+    $('next').onclick=()=>go(step+1);
+    $('play').onclick=togglePlay;
+    $('replay').onclick=()=>{playing=false;beginAnimation();updatePlay();};
+    $('speed').onchange=e=>{speed=Number(e.target.value);};
+    $('fullscreen').onclick=()=>{document.body.classList.toggle('fullscreen');$('fullscreen').setAttribute('aria-pressed',String(document.body.classList.contains('fullscreen')));$('fullscreen').textContent=document.body.classList.contains('fullscreen')?'⛶  Exit focus':'⛶  Focus';};
+    $('fullscreen').setAttribute('aria-pressed',String(document.body.classList.contains('fullscreen')));
+    if(document.body.classList.contains('fullscreen'))$('fullscreen').textContent='⛶  Exit focus';
+    main.querySelectorAll('[data-step]').forEach(b=>b.onclick=()=>go(Number(b.dataset.step)));
+    if($('invalid'))$('invalid').onclick=()=>{options.invalid=!options.invalid;refreshExperiment();};
+    if($('add-confirmation'))$('add-confirmation').onclick=()=>{options.descendants=Math.min(3,options.descendants+1);options.reorg=false;refreshExperiment();};
+    if($('fork'))$('fork').onclick=()=>{options.reorg=!options.reorg;refreshExperiment();};
+    if($('reset-chain'))$('reset-chain').onclick=()=>{options.descendants=0;options.reorg=false;refreshExperiment();};
+    playing=continuePlaying;
+    beginAnimation();updatePlay();
+  }
+  function experimentControls(){
+    if(step===5)return '<span class="experiment-label">An intentionally easy hash puzzle · use Replay step to watch the trials again</span>';
+    if(step===7)return `<span class="experiment-label">What if a mined block breaks a rule?</span><button id="invalid" aria-pressed="${options.invalid}">${options.invalid?'Restore the valid example':'Try an invalid spend'}</button>`;
+    if(step===8)return `<button id="add-confirmation" ${options.descendants===3||options.reorg?'disabled':''}>+ Add a confirmation</button><button id="fork" aria-pressed="${options.reorg}">${options.reorg?'Return to original branch':'Show a reorganization'}</button><button class="quiet" id="reset-chain">Reset chain</button>`;
+    return '';
+  }
+  function refreshExperiment(){playing=false;renderTool();document.querySelector('#experiment button:not(:disabled)')?.focus({preventScroll:true});}
+  function go(n,autoplay=false){
+    const next=Math.max(0,Math.min(8,n));if(next===step&&!autoplay)return;
+    playing=autoplay;options={invalid:false,reorg:false,descendants:0};step=next;
+    history.replaceState(null,'','#transaction/'+step);
+    renderTool({continuePlaying:autoplay});
+  }
+  function updatePlay(){if($('play')){$('play').innerHTML=playing?`${icon.pause} &nbsp; Pause`:`${icon.play} &nbsp; ${step===8?'Play again':'Play'}`;$('play').setAttribute('aria-label',playing?'Pause walkthrough':step===8?'Play walkthrough again':'Play walkthrough');}}
+  function beginAnimation(){
+    cancelAnimationFrame(raf);
+    document.querySelector('#scene')?.classList.remove('motion-paused');
+    elapsed=0;lastTime=0;animating=!reduced.matches;
+    const svg=document.querySelector('#scene svg');svg?.pauseAnimations?.();svg?.setCurrentTime?.(reduced.matches?8:0);
+    if(step===5)updateMining(reduced.matches?1:0);
+    if(!animating&&!playing){$('progress').style.width='100%';return;}
+    raf=requestAnimationFrame(tick);
+  }
+  function tick(now){
+    if(!lastTime)lastTime=now;const delta=Math.min(now-lastTime,100);lastTime=now;
+    elapsed+=delta*speed;
+    const progress=Math.min(1,elapsed/duration);
+    if(animating){document.querySelector('#scene svg')?.setCurrentTime?.(progress*7);if(step===5)updateMining(progress);}
+    if($('progress'))$('progress').style.width=(progress*100)+'%';
+    if(progress>=1){animating=false;if(playing&&step<8){go(step+1,true);return;}playing=false;updatePlay();return;}
+    if(animating||playing)raf=requestAnimationFrame(tick);
+  }
+  function updateMining(progress){
+    const trial=P.trials[Math.min(P.trials.length-1,Math.floor(progress*P.trials.length))];
+    const nonce=document.querySelector('.hash-nonce'),hash=document.querySelector('.hash-display'),tail=document.querySelector('.hash-tail'),verdict=document.querySelector('.hash-verdict');
+    if(!nonce)return;nonce.textContent=trial.nonce;hash.textContent=trial.hash.slice(0,28);tail.textContent=trial.hash.slice(28);verdict.textContent=trial.valid?'✓  Hash ≤ target: proof of work found':'↻  Hash above target. Try another nonce.';
+    $('tx-status').textContent=trial.valid?'Proof of work found':'Searching for proof of work';
+  }
+  function togglePlay(){
+    if(playing){playing=false;animating=false;cancelAnimationFrame(raf);document.querySelector('#scene')?.classList.add('motion-paused');updatePlay();return;}
+    if(step===8){options={invalid:false,reorg:false,descendants:0};go(0,true);return;}
+    playing=true;document.querySelector('#scene')?.classList.remove('motion-paused');
+    if(elapsed>=duration){go(step+1,true);return;}
+    animating=!reduced.matches;lastTime=0;cancelAnimationFrame(raf);raf=requestAnimationFrame(tick);updatePlay();
+  }
+  function route(){
+    stop();document.body.classList.remove('fullscreen');
+    const match=location.hash.match(/^#([a-z-]+)(?:\/(\d+))?$/),tool=match&&tools.find(t=>t.id===match[1]);
+    if(!tool){hub();return;}
+    step=Math.min(8,Number(match[2])||0);options={invalid:false,reorg:false,descendants:0};tool.render();
+  }
+  $('help-button').onclick=()=>{$('help-dialog').showModal();if(playing)togglePlay();};
+  document.addEventListener('keydown',e=>{
+    if($('help-dialog').open||!$('next')||e.metaKey||e.ctrlKey||e.altKey||e.target.closest('input,select,textarea,[contenteditable]'))return;
+    // Native buttons retain Space/Enter semantics; shortcuts work elsewhere on the page.
+    if(e.code==='Space'&&e.target.closest('button,summary,a'))return;
+    const handlers={ArrowRight:()=>go(step+1),ArrowLeft:()=>go(step-1),Home:()=>go(0),End:()=>go(8),KeyR:()=>{playing=false;beginAnimation();updatePlay();},Space:togglePlay};
+    const handler=handlers[e.code];if(handler){e.preventDefault();handler();}
+  });
+  document.addEventListener('visibilitychange',()=>{if(document.hidden){if(playing)togglePlay();animating=false;cancelAnimationFrame(raf);}});
+  reduced.addEventListener('change',()=>{if($('scene'))renderTool();else hub();});
+  window.addEventListener('hashchange',route);
+  // Read-only state hook is useful for repeatable classroom/browser QA.
+  window.BitcoinPlayground={getState:()=>({tool:$('scene')?'transaction':'hub',...P.snapshot(step,options),playing,speed}),version:'1.0.0'};
+  route();
+})();
+</script>
+</body>
+</html>

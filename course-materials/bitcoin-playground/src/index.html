@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+<!-- BUILD:LICENSE -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; connect-src 'none'; font-src 'none'; base-uri 'none'; form-action 'none'">
+<meta name="color-scheme" content="light">
+<title>Bitcoin Playground</title>
+<style>/* BUILD:STYLE */</style>
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+<header class="app-header">
+  <a class="brand" href="#hub" aria-label="Bitcoin Playground home"><span class="brand-mark" aria-hidden="true">₿</span><span>Bitcoin <strong>Playground</strong></span></a>
+  <span class="header-note"><span class="offline-dot"></span> Offline learning lab</span>
+  <button class="quiet" id="help-button" aria-label="Help and keyboard shortcuts">?</button>
+</header>
+<main id="main" tabindex="-1"></main>
+<noscript>Bitcoin Playground needs JavaScript enabled in your browser. It runs entirely offline.</noscript>
+<dialog id="help-dialog" aria-labelledby="help-title">
+  <form method="dialog"><button class="dialog-close" aria-label="Close help">×</button></form>
+  <p class="eyebrow">BITCOIN PLAYGROUND</p><h2 id="help-title">A small lab for big ideas.</h2>
+  <p>Follow the transaction with <strong>Next</strong>, return with <strong>Back</strong>, or select any numbered stage. Play walks through the full sequence. Replay animates only the current stage.</p>
+  <dl class="shortcuts"><dt>← / →</dt><dd>Previous / next stage</dd><dt>Space</dt><dd>Play / pause the walkthrough</dd><dt>R</dt><dd>Replay the current stage</dd><dt>Home / End</dt><dd>First / last stage</dd><dt>Esc</dt><dd>Close this help</dd></dl>
+  <p class="fine-print">This is a teaching simulation of the M 1.3 protocol overview, slides 25–33. No coins, keys, network connections, or Bitcoin software are involved. Time is compressed. The proof-of-work example hashes a toy header, not a live block.</p>
+</dialog>
+<script>/* BUILD:MODEL */</script>
+<script>/* BUILD:ART */</script>
+<script>/* BUILD:APP */</script>
+</body>
+</html>
