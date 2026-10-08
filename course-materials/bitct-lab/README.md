@@ -9,9 +9,13 @@ starts with `docker compose up -d --wait` and is used through a Linux shell insi
 | `ghcr.io/davidepatti/bitct-lab:2026.10` | Debian 13 slim · Bitcoin Core **31.1** · LND **v0.21.4-beta** · Mosquitto · course tools (`bip340`, `addr`, `header`, `merkle`, `hashdiff`, `d17`, `lnview`, dashboard, gateway) |
 | `ghcr.io/davidepatti/bitct-lab:2026.10-ml` | the same + JupyterLab, NumPy, pandas, matplotlib (DLAB 10 only) |
 
-Both are built for `linux/amd64` and `linux/arm64` (Intel/AMD PCs, Apple-silicon Macs, ARM laptops).
+The workflow targets `linux/amd64` and `linux/arm64` (Intel/AMD PCs, Apple-silicon Macs, ARM laptops).
 Binaries are downloaded from bitcoincore.org and the LND GitHub release and checked against
 pinned SHA-256 hashes (`image/Dockerfile`).
+
+**Publication status (`2026-10-08`):** the kit and image workflow are on GitHub.
+The first image build and package visibility change are still pending; students cannot
+pull these tags until that publication is verified.
 
 ## Labs
 
@@ -34,9 +38,12 @@ Each folder has a `compose.yaml` and a student `README.md`. The Wokwi project is
 
 ## Student quick start
 
+Download and extract the [course repository ZIP](https://github.com/davidepatti/bitct/archive/refs/heads/main.zip).
+Once the image publication is complete:
+
 ```sh
 docker version && docker compose version     # both must answer
-cd bitct-lab/labs/dlab00-setup
+cd bitct-main/course-materials/bitct-lab/labs/dlab00-setup
 docker compose up -d --wait                  # first time: downloads the image (~0.5 GB)
 docker compose exec lab bash                 # the lab shell
 bitcoin-cli getblockchaininfo                # "chain": "regtest"
@@ -55,9 +62,12 @@ docker buildx build --load --target runtime -t ghcr.io/davidepatti/bitct-lab:202
 docker buildx build --load --target ml      -t ghcr.io/davidepatti/bitct-lab:2026.10-ml image/
 ```
 
-**Publish to GHCR**: copy `ci/bitct-lab-image.yml` to `.github/workflows/` of the repository,
-run it from the Actions tab (*Run workflow*), then make the `bitct-lab` package **Public** once in
-its GitHub package settings.
+**Publish to GHCR**: the [image workflow](https://github.com/davidepatti/bitct/actions/workflows/bitct-lab-image.yml)
+is installed at `.github/workflows/bitct-lab-image.yml` in `davidepatti/bitct` and reads
+`course-materials/bitct-lab/`. Run it from the Actions tab (*Run workflow*, edition `2026.10`,
+push enabled), then make the `bitct-lab` package **Public** once in its GitHub package settings.
+Verify anonymous pulls of both tags before telling students the image is available.
+Keep this private source kit authoritative; publish changes through the reviewed course allowlist.
 
 **Classroom without Internet**: `docker save ghcr.io/davidepatti/bitct-lab:2026.10 | gzip > bitct-lab.tar.gz`;
 students run `docker load -i bitct-lab.tar.gz`.
