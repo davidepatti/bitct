@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "bitct"
+version = "2026.10"
+description = "Course tools for the BITCT Docker labs (teaching code, not for real funds)"
+requires-python = ">=3.11"
+
+[project.scripts]
+d17 = "bitct.cli_d17:main"
+d17-sim = "bitct.devicesim:main"
+d17-fixture = "bitct.fixtures_d17:main"
+lab-status = "bitct.status:main"
+merkle = "bitct.cli_tools:merkle_main"
+bip340 = "bitct.cli_tools:bip340_main"
+addr = "bitct.cli_tools:addr_main"
+header = "bitct.cli_tools:header_main"
+hashdiff = "bitct.cli_tools:hashdiff_main"
+signet-anchor = "bitct.cli_signet:main"
+ln-fund = "bitct.lntools:main_fund"
+ln-topology = "bitct.lntools:main_topology"
+lnview = "bitct.lntools:main_view"
+lngraph = "bitct.lngraph:main"
+
+[tool.setuptools]
+packages = ["bitct"]
+
+[tool.setuptools.package-data]
+bitct = ["data/*.csv"]

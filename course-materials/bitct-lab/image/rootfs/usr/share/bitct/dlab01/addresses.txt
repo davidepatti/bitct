@@ -1,0 +1,11 @@
+# Decode each address with:  addr decode <address>
+# A  1BvBMSEYstWetqTFn5Au4m4GFg7xJaNVN2
+# B  3J98t1WpEZ73CNmQviecrnyiWrnqRhWNLy
+# C  bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4
+# D  bc1qrp33g0q5c5txsp9arysrx4k6zdkfs4nce4xj0gdcccefvpysxf3qccfmv3
+# E  bc1p0xlxvlhemja6c4dqv22uapctqupfhlxm9h8z3k2e72q4k9hcz7vqzk5jj0
+# F  tb1qw508d6qejxtdg4y5r3zarvary0c5xw7kxpjzsx
+# G  1BvBMSEYstWetqTFn5Au4m4GFg7xJaNVN3
+# H  bc1p0xlxvlhemja6c4dqv22uapctqupfhlxm9h8z3k2e72q4k9hcz7vqh2y7hd
+# I  bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kemeawh
+# J  bc1qw508d6qejxtdg4y5r3zArvary0c5xw7kv8f3t4

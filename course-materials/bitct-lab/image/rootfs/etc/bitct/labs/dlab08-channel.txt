@@ -1,0 +1,19 @@
+DLAB 08 — Lightning Channel Lifecycle
+=====================================
+Open a channel, pay off-chain, close cooperatively, then force-close and follow the time-locked return to the chain.
+
+Network: regtest
+
+Steps:
+  L1    Two Lightning nodes, no channels
+  L2    Give Alice on-chain coins
+  L3    Connect the peers
+  L4    Open a 500,000 sat channel
+  L5    Confirm the funding transaction
+  L6    The funding output is a 2-of-2
+  L7    Bob invoices, Alice pays
+  L8    Balances moved off-chain
+  L9    Cooperative close
+  L10   A second channel and a payment
+  L11   Alice closes alone (force close)
+  L12   Bob is paid at once; Alice waits

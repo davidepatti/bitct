@@ -1,0 +1,17 @@
+DLAB 05 — Watch-Only Coordination and Recovery
+==============================================
+Separate watching from signing with descriptors and PSBTs, then compare a complete and an incomplete backup.
+
+Network: regtest
+
+Steps:
+  W1    The signer is offline
+  W2    Export public descriptors
+  W3    Import them into a watch-only wallet
+  W4    Same addresses on both sides
+  W5    Fund the watched address
+  W6    The coordinator cannot sign
+  W7    The offline signer signs
+  W8    Broadcast from the coordinator
+  W9    Restore from the complete backup
+  W10   Restore from an incomplete backup

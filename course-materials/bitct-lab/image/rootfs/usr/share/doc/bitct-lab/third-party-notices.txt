@@ -1,0 +1,16 @@
+bitct-lab third-party notices
+
+The original BITCT teaching software is covered by the MIT license in the
+davidepatti/bitct repository, copyright 2026 Davide Patti.
+
+The official BIP340 test vectors are from bitcoin/bips/bip-0340/test-vectors.csv.
+Authors: Pieter Wuille, Jonas Nick, and Tim Ruffing.
+Source: https://github.com/bitcoin/bips/blob/master/bip-0340/test-vectors.csv
+License selection: CC0 1.0, as permitted by BIP340's Test Vectors and Reference
+Code section: https://github.com/bitcoin/bips/blob/master/bip-0340.mediawiki
+License text: https://creativecommons.org/publicdomain/zero/1.0/legalcode
+
+Bitcoin Core, LND, Debian packages, and Python dependencies retain their own
+licenses. Package metadata and Debian copyright notices remain in the image.
+Bitcoin Core and LND license files from their downloaded release archives
+are installed alongside this notice.

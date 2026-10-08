@@ -1,0 +1,7 @@
+DLAB 10 — Graph Learning with Hidden Liquidity
+==============================================
+Test whether a small message-passing model beats simpler baselines at predicting directed liquidity, and diagnose leakage.
+
+Network: none (simulation)
+
+Steps:

@@ -1,0 +1,11 @@
+DLAB 00 — Setting Up the Docker Lab
+===================================
+Install Docker, start the course image once, open the lab shell and the dashboard, and practise stop/reset.
+
+Network: regtest
+
+Steps:
+  S1    The node runs regtest
+  S2    Mine one block
+  S3    Status line
+  S4    Dashboard answers

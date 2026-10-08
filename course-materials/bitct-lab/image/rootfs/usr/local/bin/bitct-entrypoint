@@ -1,0 +1,61 @@
+#!/bin/bash
+# Roles of the single course image. Compose chooses one role per service.
+set -euo pipefail
+role="${1:-shell}"; shift || true
+RPCAUTH='lab:6c61622d6f6e6c792d6e6f742d736563$21a6b6efe9af3376131497bac9a37e6afb8cac1e2e1fa9e17466466fc98be9b8'
+
+wait_rpc() {  # wait until a bitcoind answers RPC
+  local host="$1"
+  for _ in $(seq 1 120); do
+    bitcoin-cli -rpcconnect="$host" -rpcwait -rpcwaittimeout=2 getblockchaininfo >/dev/null 2>&1 && return 0
+    sleep 1
+  done
+  echo "bitcoind at $host is not answering" >&2; return 1
+}
+
+case "$role" in
+  bitcoind)
+    mkdir -p /data/bitcoin
+    zmq=()
+    if bitcoind -help 2>/dev/null | grep -q zmqpubrawblock; then
+      zmq=(-zmqpubrawblock=tcp://0.0.0.0:28332 -zmqpubrawtx=tcp://0.0.0.0:28333)
+    fi
+    exec bitcoind -datadir=/data/bitcoin -regtest=1 -server=1 -printtoconsole=1 \
+      -rpcbind=0.0.0.0 -rpcallowip=0.0.0.0/0 -rpcauth="$RPCAUTH" \
+      -fallbackfee=0.0002 -txindex=1 -dbcache=128 \
+      -dnsseed=0 -fixedseeds=0 -discover=0 -listenonion=0 "${zmq[@]}" "$@"
+    ;;
+  lnd)
+    alias_name="${LND_ALIAS:?set LND_ALIAS}"
+    backend="${LND_BITCOIND:-node-a}"
+    wait_rpc "$backend"
+    if [ "${LND_RPCPOLLING:-0}" = "1" ]; then
+      notify=(--bitcoind.rpcpolling --bitcoind.blockpollinginterval=1s --bitcoind.txpollinginterval=1s)
+    else
+      notify=(--bitcoind.zmqpubrawblock="tcp://$backend:28332" --bitcoind.zmqpubrawtx="tcp://$backend:28333")
+    fi
+    exec lnd --lnddir=/data/lnd --alias="$alias_name" --noseedbackup \
+      --bitcoin.active --bitcoin.regtest --bitcoin.node=bitcoind \
+      --bitcoind.rpchost="$backend" --bitcoind.rpcuser=lab --bitcoind.rpcpass=lab \
+      "${notify[@]}" \
+      --listen=0.0.0.0:9735 --rpclisten=0.0.0.0:10009 --restlisten=0.0.0.0:8080 \
+      --tlsextradomain="$alias_name" --externalip="$alias_name" \
+      --trickledelay=1000 --accept-keysend --debuglevel=info "$@"
+    ;;
+  miner)  # produce a block every MINER_INTERVAL seconds (simulated block production)
+    wait_rpc "${MINER_NODE:-node-a}"
+    exec python3 -m bitct.miner "$@"
+    ;;
+  dashboard) exec python3 -m bitct.dashboard "$@" ;;
+  gateway)   exec python3 -m bitct.gateway "$@" ;;
+  broker)    exec mosquitto -c /etc/bitct/mosquitto.conf ;;
+  device-sim) exec d17-sim "$@" ;;
+  shell)
+    rm -f /tmp/lab-ready
+    [ -n "${LAB_SETUP:-}" ] && bash -c "$LAB_SETUP" || true
+    touch /tmp/lab-ready
+    echo "lab shell ready — open it with: docker compose exec lab bash"
+    exec sleep infinity
+    ;;
+  *) exec "$role" "$@" ;;
+esac

@@ -1,0 +1,14 @@
+DLAB 03 — Hashes, Block Header and Merkle Root
+==============================================
+Hash exact bytes, decode a real 80-byte header, rebuild the Merkle root and see why a change breaks the chain of commitments.
+
+Network: regtest
+
+Steps:
+  H1    One byte in, half the bits out
+  H2    A block with several transactions
+  H3    Decode the 80-byte header
+  H4    Rebuild the Merkle root
+  H5    Change one transaction
+  H6    Redo the proof of work
+  H7    The next block still points to the original

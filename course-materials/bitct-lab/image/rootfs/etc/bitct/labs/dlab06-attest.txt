@@ -1,0 +1,25 @@
+DLAB 06 — Device Evidence
+=========================
+Run the D17 collector rule on fixed, signed reports and separate signature validity, authorization, freshness, context and truth.
+
+Network: none (simulation)
+
+Steps:
+  D0    Checkpoint C0
+  D1    What exactly was signed (R42)
+  T01   Accept R42 once → C1
+  T02   Exact retry
+  T04   Value changed after signing (from C0)
+  T05   Signed for another audience
+  T06   Sequence 43 after a long delay
+  T07   Out of order: 43 then 42
+  T08   Huge counter, bad signature
+  T09   Reboot: sequence 0
+  T10   Self-declared enrollment 4
+  T11   Impostor key-X
+  T12   Authority service offline
+  T13   Replay state lost
+  T14   Routine rotation to key-B (from C1)
+  T15   Compromise: revoke key-A, then replace (from C1)
+  T17   History after revocation
+  T18   A perfectly signed false reading

@@ -1,0 +1,5 @@
+# DLAB 10 extras (exact versions are frozen by the image build check)
+numpy>=2.2,<3
+pandas>=2.2,<4
+matplotlib>=3.9,<4
+jupyterlab>=4.3,<5

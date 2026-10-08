@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "author": "BITCT course lab",
+  "editor": "wokwi",
+  "parts": [
+    { "type": "board-esp32-devkit-c-v4", "id": "esp", "top": 0, "left": 0, "attrs": {} },
+    { "type": "wokwi-slide-potentiometer", "id": "ct", "top": 170, "left": -280, "attrs": { "travelLength": "30", "value": "410" } },
+    { "type": "wokwi-lcd1602", "id": "lcd", "top": -180, "left": 140, "attrs": { "pins": "i2c" } },
+    { "type": "wokwi-led", "id": "led", "top": 30, "left": 260, "attrs": { "color": "blue", "label": "SIGNED+SENT" } },
+    { "type": "wokwi-resistor", "id": "r1", "top": 110, "left": 250, "rotate": 90, "attrs": { "value": "220" } },
+    { "type": "wokwi-pushbutton", "id": "replay", "top": 150, "left": 330, "attrs": { "color": "yellow", "label": "REPLAY", "bounce": "0" } },
+    { "type": "wokwi-pushbutton", "id": "tamper", "top": 230, "left": 330, "attrs": { "color": "red", "label": "TAMPER", "bounce": "0" } }
+  ],
+  "connections": [
+    [ "esp:TX", "$serialMonitor:RX", "", [] ],
+    [ "esp:RX", "$serialMonitor:TX", "", [] ],
+    [ "ct:VCC", "esp:3V3", "red", [] ],
+    [ "ct:GND", "esp:GND.1", "black", [] ],
+    [ "ct:SIG", "esp:34", "green", [] ],
+    [ "lcd:VCC", "esp:5V", "red", [] ],
+    [ "lcd:GND", "esp:GND.2", "black", [] ],
+    [ "lcd:SDA", "esp:21", "blue", [] ],
+    [ "lcd:SCL", "esp:22", "purple", [] ],
+    [ "esp:2", "r1:1", "orange", [] ],
+    [ "r1:2", "led:A", "orange", [] ],
+    [ "led:C", "esp:GND.3", "black", [] ],
+    [ "replay:1.l", "esp:4", "yellow", [] ],
+    [ "replay:2.l", "esp:GND.3", "black", [] ],
+    [ "tamper:1.l", "esp:5", "red", [] ],
+    [ "tamper:2.l", "esp:GND.3", "black", [] ]
+  ],
+  "dependencies": {}
+}

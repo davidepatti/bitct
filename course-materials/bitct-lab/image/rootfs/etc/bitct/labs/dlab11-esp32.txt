@@ -1,0 +1,19 @@
+DLAB 11 — ESP32 Sensor Readings Anchored on Bitcoin
+===================================================
+Make D17 concrete: a Wokwi ESP32 signs each reading; the Docker gateway verifies, batches into a Merkle tree, anchors the root and issues receipts that an auditor can check later.
+
+Network: regtest (+ optional signet publication)
+
+Steps:
+  E0    Gateway subscribed, nothing enrolled
+  E1    Create the device key
+  E2    Start the meter (virtual stand-in for Wokwi)
+  E3    Not enrolled → rejected
+  E4    Operator enrolls the device key
+  E5    Accepted readings
+  E6    Batches anchored and confirmed
+  E7    Export and audit a receipt
+  E8    A dishonest collector edits its database
+  E9    Replay and tampering on the wire
+  E10   Look for gaps
+  E11   Dashboard D17 page

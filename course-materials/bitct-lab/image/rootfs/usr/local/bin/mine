@@ -1,0 +1,9 @@
+#!/bin/bash
+# mine N regtest blocks on node-a (default 1) to the 'miner' wallet
+set -e
+n="${1:-1}"; node="${2:-node-a}"
+cli="bitcoin-cli -rpcconnect=$node"
+$cli listwallets | grep -q '"miner"' || $cli loadwallet miner >/dev/null 2>&1 || $cli createwallet miner >/dev/null
+addr=$($cli -rpcwallet=miner getnewaddress mining)
+$cli generatetoaddress "$n" "$addr" >/dev/null
+echo "mined $n block(s) on $node — height now $($cli getblockcount)"

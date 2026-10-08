@@ -1,0 +1,3 @@
+#!/bin/sh
+# bitcoin-cli connected to node-c (regtest)
+exec bitcoin-cli -rpcconnect=node-c "$@"

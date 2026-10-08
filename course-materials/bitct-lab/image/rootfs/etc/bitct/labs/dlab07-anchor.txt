@@ -1,0 +1,16 @@
+DLAB 07 — Sensor Records and Merkle Anchoring
+=============================================
+Batch exact sensor records in a Merkle tree, anchor the root with OP_RETURN, and verify receipts against changed, missing and omitted evidence.
+
+Network: regtest (+ optional signet step)
+
+Steps:
+  M1    Hash every record
+  M2    Build the Merkle batch
+  M3    Anchor the root (OP_RETURN)
+  M4    Mine and inspect
+  M5    Receipt for r03
+  M6    Verify r03
+  M7    Change one byte of r03
+  M8    Missing path: unverifiable
+  M9    Omission: a batch without r05

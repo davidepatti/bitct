@@ -1,0 +1,15 @@
+DLAB 09 — Routing with Hidden Liquidity
+=======================================
+Predict a route from public gossip, watch it fail on hidden liquidity, inspect the retry, then change one condition.
+
+Network: regtest
+
+Steps:
+  R0    Build the frozen topology
+  R1    What the sender can see
+  R2    Predict the route
+  R3    Pay 300,000 sat to Dave
+  R4    The hidden state (evaluator only)
+  R5    What Alice learned
+  R6    Change one condition: Dave refills Bob's side
+  R7    Retry the same payment

@@ -1,0 +1,4 @@
+#!/bin/sh
+# lncli connected to bob's LND node (regtest)
+exec lncli --network=regtest --rpcserver=bob:10009 --tlscertpath=/ln/bob/lnd/tls.cert \
+  --macaroonpath=/ln/bob/lnd/data/chain/bitcoin/regtest/admin.macaroon "$@"

@@ -1,0 +1,10 @@
+
+# ---- BITCT course lab shell ----
+export PS1='\[\e[1;33m\]lab\[\e[0m\]:\[\e[1;34m\]\w\[\e[0m\]\$ '
+alias ll='ls -la'
+if [ -z "$BITCT_BANNER_SHOWN" ]; then
+  export BITCT_BANNER_SHOWN=1
+  echo -e "\e[1mBITCT lab shell\e[0m — image $(cat /etc/bitct/version 2>/dev/null)"
+  echo -e "Lab: \e[1m${LAB_TITLE:-unknown}\e[0m   network: \e[1mregtest\e[0m (local, disposable)"
+  echo -e "Type \e[1mlab-help\e[0m for the commands of this lab; \e[1mexit\e[0m leaves the shell (the lab keeps running)."
+fi

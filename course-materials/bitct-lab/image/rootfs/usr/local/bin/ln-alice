@@ -1,0 +1,4 @@
+#!/bin/sh
+# lncli connected to alice's LND node (regtest)
+exec lncli --network=regtest --rpcserver=alice:10009 --tlscertpath=/ln/alice/lnd/tls.cert \
+  --macaroonpath=/ln/alice/lnd/data/chain/bitcoin/regtest/admin.macaroon "$@"

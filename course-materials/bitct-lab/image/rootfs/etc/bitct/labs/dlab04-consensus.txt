@@ -1,0 +1,17 @@
+DLAB 04 — Competing Histories and Reorganization
+================================================
+Split two nodes, let each extend its own valid history, reconnect them and observe which chain wins and what happens to a transaction.
+
+Network: regtest
+
+Steps:
+  C1    One shared history
+  C2    A payment T in both mempools
+  C3    Isolate node B
+  C4    A mines one block with T
+  C5    B mines two empty blocks
+  C6    Two valid tips
+  C7    Reconnect: the most-work chain wins
+  C8    T is unconfirmed again
+  C9    Mined again on the winning branch
+  C10   Worksheet: fewer blocks, more work

@@ -1,0 +1,10 @@
+# Records the operator expects for 2026-10-05 08:00–15:59 UTC (one file per hour)
+# file   first-seq  last-seq
+r01.csv   101        104
+r02.csv   105        108
+r03.csv   109        112
+r04.csv   113        116
+r05.csv   117        120
+r06.csv   121        124
+r07.csv   125        128
+r08.csv   129        132

@@ -1,0 +1,21 @@
+DLAB 02 — Two Nodes and a Transaction Lifecycle
+===============================================
+Connect two nodes, follow a payment from wallet to mempool to block, then build, sign and broadcast PSBTs for P2WPKH and P2TR outputs.
+
+Network: regtest
+
+Steps:
+  N1    Two empty, isolated nodes
+  N2    Connect A to B
+  N3    Wallets and 101 blocks
+  N4    Send 1 BTC and watch both mempools
+  N5    Confirm with one block
+  P1    Fund a P2WPKH output for Alice
+  P2    Build an unsigned PSBT
+  P3    Sign, finalize, test and broadcast
+  P4    Witness of a P2WPKH spend
+  P5    The same with a Taproot (P2TR) output
+  P6    Confirm both
+  F1    Change a signed transaction
+  F2    An unsigned PSBT cannot be finalized
+  F3    A fee below the relay policy

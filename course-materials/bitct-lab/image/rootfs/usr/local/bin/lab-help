@@ -1,0 +1,12 @@
+#!/bin/bash
+f="/etc/bitct/labs/${LAB_ID:-none}.txt"
+[ -f "$f" ] && cat "$f" && echo
+cat <<'TXT'
+Common commands
+  bitcoin-cli <cmd>   Bitcoin Core RPC on node-a   (btc-a / btc-b / btc-c choose a node)
+  mine [N]            mine N regtest blocks on node-a
+  lab-status          status of every node in this lab
+  lab-help            this help
+  exit                leave the shell (the lab keeps running)
+Dashboard: http://localhost:8080
+TXT

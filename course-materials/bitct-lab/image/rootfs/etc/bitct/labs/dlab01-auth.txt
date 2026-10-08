@@ -1,0 +1,18 @@
+DLAB 01 — Signatures and Address Encodings
+==========================================
+Sign exact data, verify it, cause controlled failures, and decode current Bitcoin address encodings.
+
+Network: regtest
+
+Steps:
+  A1    Create a key pair
+  A2    Sign an exact text
+  A3    Verify it
+  A4    Change one character
+  A5    Another key
+  A6    Official test vectors
+  B1    Core wallet message signing (legacy)
+  C1    Four address types from one wallet
+  C2    Decode a Taproot address
+  C3    Decode the supplied addresses
+  C4    A regtest node and a mainnet address
