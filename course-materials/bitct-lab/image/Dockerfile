@@ -1,4 +1,3 @@
-# syntax=docker/dockerfile:1
 # BITCT course lab image: Bitcoin Core + LND + course tools, one image for every Docker lab.
 # Build (teacher/CI):  docker buildx build --platform linux/amd64,linux/arm64 -t ghcr.io/davidepatti/bitct-lab:2026.10 image/
 ARG DEBIAN_IMAGE=debian:trixie-slim
@@ -72,6 +71,7 @@ RUN useradd -m -u 1000 -s /bin/bash lab \
     && mkdir -p /data/d17 /lab /ln/alice /ln/bob /ln/carol /ln/dave \
     && chown -R lab:lab /data /lab /ln \
     && chmod 0755 /usr/local/bin/* \
+    && chmod -R a+rX /etc/bitct /usr/share/bitct \
     && mkdir -p /home/lab/.bitcoin && cp /etc/bitct/bitcoin-cli.conf /home/lab/.bitcoin/bitcoin.conf \
     && cat /etc/bitct/bashrc >> /home/lab/.bashrc \
     && chown -R lab:lab /home/lab \
@@ -91,6 +91,11 @@ CMD ["shell"]
 FROM runtime AS ml
 USER root
 COPY python/requirements-ml.txt /tmp/requirements-ml.txt
+# One layer per package family: smaller layers survive unreliable student networks better
+# than one ~130 MB layer (a cut download restarts only the layer it was in).
+RUN /opt/venv/bin/pip install --no-cache-dir "$(grep '^numpy' /tmp/requirements-ml.txt)"
+RUN /opt/venv/bin/pip install --no-cache-dir "$(grep '^pandas' /tmp/requirements-ml.txt)"
+RUN /opt/venv/bin/pip install --no-cache-dir "$(grep '^matplotlib' /tmp/requirements-ml.txt)"
 RUN /opt/venv/bin/pip install --no-cache-dir -r /tmp/requirements-ml.txt && rm /tmp/requirements-ml.txt
 USER lab
 EXPOSE 8888
