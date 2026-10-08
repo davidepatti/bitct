@@ -74,6 +74,8 @@ def main():
         if r.returncode != 0:
             print(r.stdout, r.stderr)
             sh(["docker", "compose", "logs", "--tail", "40"], labdir, check=False, capture=False)
+            if not a.keep:  # do not leave half a lab holding ports and memory for the next one
+                sh(["docker", "compose", "--profile", "*", "down", "--volumes", "--remove-orphans"], labdir, check=False)
             sys.exit("lab did not start")
         env_note = f"started in {time.time() - t0:.0f}s"
         print(f"== {a.lab}: {env_note}")
@@ -83,8 +85,14 @@ def main():
         if a.only and st["id"] not in a.only.split(","):
             continue
         if st.get("host"):
+            hcmd = st["host"]
+            if os.environ.get("RUNNER_IN_CONTAINER"):
+                # In a helper container (Windows self-test) 127.0.0.1 is the helper itself: ask the
+                # dashboard container instead. The published port is checked from the host by the caller.
+                hcmd = hcmd.replace("curl -fsS http://127.0.0.1:${DASHBOARD_PORT:-8080}",
+                                    "docker compose exec -T dashboard curl -fsS http://127.0.0.1:8080")
             t0 = time.time()
-            r = subprocess.run(st["host"], cwd=labdir, shell=True, text=True, capture_output=True, timeout=900)
+            r = subprocess.run(hcmd, cwd=labdir, shell=True, text=True, capture_output=True, timeout=900)
             rc, out, dt = r.returncode, r.stdout + r.stderr, time.time() - t0
         else:
             rc, out, dt = run_step(labdir, st.get("service", "lab"), st["cmd"], st.get("timeout", 600))

@@ -81,6 +81,17 @@ students run `docker load -i bitct-lab.tar.gz`.
 tests/run_all.sh                 # or: python3 tests/run_lab.py dlab08-channel
 ```
 
+**Self-test with the published images** on a teacher or volunteer computer (about 15 minutes; leaves no
+lab running except the DLAB 11 demo on macOS/Linux):
+
+```sh
+bash tests/mac_selftest.sh                                         # macOS or Linux
+powershell -ExecutionPolicy Bypass -File tests\windows_selftest.ps1  # Windows (needs only Docker Desktop)
+```
+
+Before the course, run the Windows test once on a fresh Windows PC: `tests/WINDOWS-TEST.md` is the
+one-page procedure for a colleague or a student volunteer.
+
 **Regenerate derived files** after editing the sources:
 
 | Edit | Then run |

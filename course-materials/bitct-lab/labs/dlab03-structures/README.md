@@ -24,8 +24,10 @@ Hash exact bytes, decode a real 80-byte header, rebuild the Merkle root and see 
 
 ## Start
 
+Open a terminal (PowerShell on Windows) in the `bitct-lab` folder (in the course ZIP: `bitct-main/course-materials/bitct-lab`), then:
+
 ```sh
-cd bitct-lab/labs/dlab03-structures
+cd labs/dlab03-structures
 docker compose up -d --wait
 docker compose exec lab bash
 ```
@@ -127,3 +129,5 @@ exit                                  # leave the lab shell
 docker compose down                   # stop, keep your state
 docker compose down --volumes         # reset: next start is a clean lab
 ```
+
+One lab at a time: the labs share port 8080. If `docker compose up` reports `port is already allocated`, run `docker compose down` in the other lab's folder first.

@@ -24,8 +24,10 @@ Make D17 concrete: a Wokwi ESP32 signs each reading; the Docker gateway verifies
 
 ## Start
 
+Open a terminal (PowerShell on Windows) in the `bitct-lab` folder (in the course ZIP: `bitct-main/course-materials/bitct-lab`), then:
+
 ```sh
-cd bitct-lab/labs/dlab11-esp32
+cd labs/dlab11-esp32
 docker compose up -d --wait
 docker compose exec lab bash
 ```
@@ -46,6 +48,10 @@ All commands below are typed **inside the lab shell** (prompt `lab:/lab$`). Shel
 Wokwi's free virtual Wi-Fi reaches the Internet but not your laptop, so the meter publishes to the public
 broker `broker.hivemq.com` on topic `bitct/<GROUP>/d17/report`, and the lab's gateway subscribes to it.
 Anyone can read or inject messages on a public topic: that is exactly why every reading is signed.
+
+Keep the Wokwi tab in front while the meter runs: in a background tab the browser slows the simulator
+and the broker drops the idle connection. If the serial monitor keeps printing `MQTT connect failed`,
+restart the simulation; the counter continues from the new boot time (the gateway notes a gap).
 
 ## Optional: publish one root on signet (public evidence)
 
@@ -103,9 +109,7 @@ d17 keygen
 
 The meter signs and publishes every 15 s.
 
-```sh
-Wokwi: set GROUP and DEVICE_SECRET_HEX in sketch.ino, press ▶
-```
+In Wokwi: set GROUP and DEVICE_SECRET_HEX in sketch.ino, press ▶.
 
 **Checkpoint:** Serial monitor: report bytes, signature, published OK
 
@@ -177,8 +181,11 @@ d17 audit /lab/receipt.json
 
 Attacks on the wire.
 
+In Wokwi: press REPLAY, then TAMPER (no Wokwi: d17-sim --resend-last replay|tamper).
+
+Then, in the lab shell:
+
 ```sh
-Wokwi: press REPLAY, then TAMPER   (no Wokwi: d17-sim --resend-last replay|tamper)
 d17 reports --last 4
 ```
 
@@ -198,9 +205,7 @@ d17 gaps
 
 The whole pipeline on one page.
 
-```sh
-open http://localhost:8080/iot
-```
+In your browser, open <http://localhost:8080/iot>.
 
 **Checkpoint:** registry, reports, batches
 
@@ -221,3 +226,5 @@ exit                                  # leave the lab shell
 docker compose down                   # stop, keep your state
 docker compose down --volumes         # reset: next start is a clean lab
 ```
+
+One lab at a time: the labs share port 8080. If `docker compose up` reports `port is already allocated`, run `docker compose down` in the other lab's folder first.

@@ -26,6 +26,10 @@ Wokwi's free virtual Wi-Fi reaches the Internet but not your laptop, so the mete
 broker `broker.hivemq.com` on topic `bitct/<GROUP>/d17/report`, and the lab's gateway subscribes to it.
 Anyone can read or inject messages on a public topic: that is exactly why every reading is signed.
 
+Keep the Wokwi tab in front while the meter runs: in a background tab the browser slows the simulator
+and the broker drops the idle connection. If the serial monitor keeps printing `MQTT connect failed`,
+restart the simulation; the counter continues from the new boot time (the gateway notes a gap).
+
 ## Optional: publish one root on signet (public evidence)
 
 ```sh
@@ -99,8 +103,10 @@ def readme(lab):
            f"| | |\n|---|---|\n| Stable ID | `{m['stable']}` |\n| Session | {m['session']} |\n| Time | {m['minutes']} min |\n"
            f"| Lecture | {m['lecture']} |\n| Network | **{m['network']}** |", "",
            "## What this experience means", ""] + [f"- {x}" for x in m["meaning"]] + [
-           "", "## Why this network", "", m["network_why"], "", "## Goal", "", m["goal"], "", "## Start", "", "```sh",
-           f"cd bitct-lab/labs/{lab}",
+           "", "## Why this network", "", m["network_why"], "", "## Goal", "", m["goal"], "", "## Start", "",
+           "Open a terminal (PowerShell on Windows) in the `bitct-lab` folder (in the course ZIP: "
+           "`bitct-main/course-materials/bitct-lab`), then:", "", "```sh",
+           f"cd labs/{lab}",
            "docker compose up -d --wait" + ("" if lab != "dlab10-graph" else "      # then open http://localhost:8888"),
            "docker compose exec lab bash" if lab != "dlab10-graph" else "", "```", "",
            "All commands below are typed **inside the lab shell** (prompt `lab:/lab$`). Shell variables such as "
@@ -114,7 +120,16 @@ def readme(lab):
             out += [f"### {st['id']} · {st['title']}", ""]
             if meta[1]:
                 out += [meta[1], ""]
-            out += ["```sh", cmd_for(lab, st), "```", ""]
+            c = cmd_for(lab, st)
+            if c.startswith("open http"):  # a browser action, not a shell command (no 'open' on Windows)
+                out += [f"In your browser, open <{c[len('open '):]}>.", ""]
+            elif c.startswith("Wokwi:"):  # first line happens in Wokwi; any further lines in the lab shell
+                first, _, rest = c.partition("\n")
+                out += [f"In Wokwi: {' '.join(first[len('Wokwi:'):].split())}.", ""]
+                if rest:
+                    out += ["Then, in the lab shell:", "", "```sh", rest, "```", ""]
+            else:
+                out += ["```sh", c, "```", ""]
             if meta[2]:
                 out += [f"**Checkpoint:** {meta[2]}", ""]
     if lab == "dlab10-graph":
@@ -124,7 +139,9 @@ def readme(lab):
     out += ["## Submit", "", m["submit"], "", "## What this does not show", ""] + [f"- {x}" for x in m["limits"]] + [
         "", "## Finish", "", "```sh", "exit                                  # leave the lab shell",
         "docker compose down                   # stop, keep your state",
-        "docker compose down --volumes         # reset: next start is a clean lab", "```", ""]
+        "docker compose down --volumes         # reset: next start is a clean lab", "```", "",
+        "One lab at a time: the labs share port 8080. If `docker compose up` reports `port is already "
+        "allocated`, run `docker compose down` in the other lab's folder first.", ""]
     return "\n".join(x for x in out if x is not None)
 
 

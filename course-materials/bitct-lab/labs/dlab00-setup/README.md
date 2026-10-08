@@ -24,8 +24,10 @@ Install Docker, start the course image once, open the lab shell and the dashboar
 
 ## Start
 
+Open a terminal (PowerShell on Windows) in the `bitct-lab` folder (in the course ZIP: `bitct-main/course-materials/bitct-lab`), then:
+
 ```sh
-cd bitct-lab/labs/dlab00-setup
+cd labs/dlab00-setup
 docker compose up -d --wait
 docker compose exec lab bash
 ```
@@ -68,9 +70,7 @@ lab-status
 
 The dashboard shows the same chain in your browser.
 
-```sh
-open http://localhost:8080
-```
+In your browser, open <http://localhost:8080>.
 
 **Checkpoint:** block height 1 on the Overview page
 
@@ -90,3 +90,5 @@ exit                                  # leave the lab shell
 docker compose down                   # stop, keep your state
 docker compose down --volumes         # reset: next start is a clean lab
 ```
+
+One lab at a time: the labs share port 8080. If `docker compose up` reports `port is already allocated`, run `docker compose down` in the other lab's folder first.

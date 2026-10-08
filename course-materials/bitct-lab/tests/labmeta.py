@@ -4,7 +4,7 @@ Combined with labsteps.py (the executable commands) to generate README.md, lab-h
 `steps` maps a step id to (student command or None to reuse the test command, why, checkpoint).
 """
 
-COMMON_START = "cd bitct-lab/labs/{lab}\ndocker compose up -d --wait\ndocker compose exec lab bash"
+COMMON_START = "cd labs/{lab}\ndocker compose up -d --wait\ndocker compose exec lab bash"
 
 META = {}
 
