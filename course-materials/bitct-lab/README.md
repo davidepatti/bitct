@@ -9,13 +9,14 @@ starts with `docker compose up -d --wait` and is used through a Linux shell insi
 | `ghcr.io/davidepatti/bitct-lab:2026.10` | Debian 13 slim · Bitcoin Core **31.1** · LND **v0.21.4-beta** · Mosquitto · course tools (`bip340`, `addr`, `header`, `merkle`, `hashdiff`, `d17`, `lnview`, dashboard, gateway) |
 | `ghcr.io/davidepatti/bitct-lab:2026.10-ml` | the same + JupyterLab, NumPy, pandas, matplotlib (DLAB 10 only) |
 
-The workflow targets `linux/amd64` and `linux/arm64` (Intel/AMD PCs, Apple-silicon Macs, ARM laptops).
+Both images are published for `linux/amd64` and `linux/arm64` (Intel/AMD PCs, Apple-silicon Macs, ARM laptops).
 Binaries are downloaded from bitcoincore.org and the LND GitHub release and checked against
 pinned SHA-256 hashes (`image/Dockerfile`).
 
-**Publication status (`2026-10-08`):** the kit and image workflow are on GitHub.
-The first image build and package visibility change are still pending; students cannot
-pull these tags until that publication is verified.
+**Publication status (`2026-10-08`):** both tags are available from the
+[public course package](https://github.com/davidepatti/bitct/pkgs/container/bitct-lab).
+Anonymous downloads of every image layer were checksum-verified on both architectures.
+Students do not need a GitHub account or registry login.
 
 ## Labs
 
@@ -39,7 +40,6 @@ Each folder has a `compose.yaml` and a student `README.md`. The Wokwi project is
 ## Student quick start
 
 Download and extract the [course repository ZIP](https://github.com/davidepatti/bitct/archive/refs/heads/main.zip).
-Once the image publication is complete:
 
 ```sh
 docker version && docker compose version     # both must answer
@@ -68,6 +68,9 @@ is installed at `.github/workflows/bitct-lab-image.yml` in `davidepatti/bitct` a
 push enabled), then make the `bitct-lab` package **Public** once in its GitHub package settings.
 Verify anonymous pulls of both tags before telling students the image is available.
 Keep this private source kit authoritative; publish changes through the reviewed course allowlist.
+To recheck an existing public image, disable *Push to ghcr.io* and enable
+*Test the published image without rebuilding*. This runs the student procedures against
+the registry image without changing either tag.
 
 **Classroom without Internet**: `docker save ghcr.io/davidepatti/bitct-lab:2026.10 | gzip > bitct-lab.tar.gz`;
 students run `docker load -i bitct-lab.tar.gz`.

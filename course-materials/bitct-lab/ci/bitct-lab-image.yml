@@ -1,4 +1,4 @@
-# Builds and publishes the course lab image to GitHub Container Registry, then runs every lab check.
+# Builds and publishes course lab images to GitHub Container Registry, then runs the runtime lab checks.
 # Copy to .github/workflows/ of davidepatti/bitct; its allowlisted kit is in course-materials/bitct-lab/.
 # After the first successful run, open the package page on GitHub (Packages → bitct-lab → Package settings)
 # and set its visibility to Public so students can pull without logging in.
