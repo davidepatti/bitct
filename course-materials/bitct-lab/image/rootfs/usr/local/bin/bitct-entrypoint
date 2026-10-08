@@ -17,7 +17,9 @@ case "$role" in
   bitcoind)
     mkdir -p /data/bitcoin
     zmq=()
-    if bitcoind -help 2>/dev/null | grep -q zmqpubrawblock; then
+    # Not "grep -q": it exits at the first match, bitcoind then dies of SIGPIPE and, with
+    # pipefail, the test fails at random (about 1 start in 4) and ZMQ stays off -> lnd cannot start.
+    if bitcoind -help 2>/dev/null | grep zmqpubrawblock >/dev/null; then
       zmq=(-zmqpubrawblock=tcp://0.0.0.0:28332 -zmqpubrawtx=tcp://0.0.0.0:28333)
     fi
     exec bitcoind -datadir=/data/bitcoin -regtest=1 -server=1 -printtoconsole=1 \
