@@ -276,7 +276,7 @@ LABS["dlab06-attest"] = {"steps": [
         "cd /lab/d17 && d17 checkpoint load C1 >/dev/null\nd17 revoke --enrollment 3\nd17 submit cases/R43-after-cutover.json\n"
         "d17 enroll --key key-B --enrollment 4 --pubkey $(jq -r .pubkey keys/key-B.json) | head -1\nd17 submit cases/RB1.json",
      "expect": [r"REJECT_AUTHORITY — binding is revoked", r"ACCEPTED — first report of this enrollment: seq 1"]},
-    {"id": "T17", "title": "History after revocation", "cmd": "cd /lab/d17 && d17 reports --last 5\nd17 show 1 | head -3",
+    {"id": "T17", "title": "History after revocation", "cmd": "cd /lab/d17 && d17 reports --last 5\nd17 show 1",
      "expect": [r"verdict: ACCEPTED"]},
     {"id": "T18", "title": "A perfectly signed false reading", "cmd":
         "cd /lab/d17 && d17 checkpoint load C0 >/dev/null && d17 submit cases/R42-false-reading.json\ncat ground-truth.csv",
