@@ -42,6 +42,7 @@ Exact bytes, exact hashes.
 
 ```sh
 cd /lab/records
+ls
 sha256sum r0*.csv
 ```
 
@@ -53,6 +54,7 @@ RFC 9162 tree: leaf = SHA256(0x00‖bytes), node = SHA256(0x01‖L‖R).
 
 ```sh
 merkle build r0*.csv
+ROOT=$(merkle build r0*.csv | awk '/^root/{print $2}')
 ```
 
 **Checkpoint:** one root
@@ -62,7 +64,9 @@ merkle build r0*.csv
 A transaction with OP_RETURN 'BITCT' 01 root.
 
 ```sh
-merkle anchor $ROOT
+merkle anchor $ROOT | tee /tmp/a.txt
+TXID=$(awk '/anchor transaction/{print $3}' /tmp/a.txt)
+bitcoin-cli getrawmempool
 ```
 
 **Checkpoint:** txid in the mempool
@@ -84,6 +88,7 @@ A receipt for one record.
 
 ```sh
 merkle receipt --index 2 --txid $TXID -o /lab/r03.receipt.json r0*.csv
+jq '{file, leaf_index, tree_size, path: (.path|length), root: .root[0:16], anchor: .anchor.txid[0:16]}' /lab/r03.receipt.json
 ```
 
 **Checkpoint:** leaf 2 of 8, 3 path hashes
@@ -103,7 +108,10 @@ merkle verify /lab/r03.receipt.json r03.csv
 One changed digit.
 
 ```sh
-cd /lab && cp records/r03.csv r03-changed.csv && sed -i 's/,1198$/,1199/' r03-changed.csv && merkle verify r03.receipt.json r03-changed.csv
+cd /lab
+cp records/r03.csv r03-changed.csv
+sed -i 's/,1198$/,1199/' r03-changed.csv
+merkle verify r03.receipt.json r03-changed.csv
 ```
 
 **Checkpoint:** FAIL at file bytes → NOT VERIFIED
@@ -113,7 +121,8 @@ cd /lab && cp records/r03.csv r03-changed.csv && sed -i 's/,1198$/,1199/' r03-ch
 No path, no proof: the root cannot rebuild missing evidence.
 
 ```sh
-cd /lab && jq '.path=[]' r03.receipt.json > r03-nopath.json && merkle verify r03-nopath.json records/r03.csv
+jq '.path=[]' r03.receipt.json > r03-nopath.json
+merkle verify r03-nopath.json records/r03.csv
 ```
 
 **Checkpoint:** FAIL at Merkle path
@@ -123,11 +132,13 @@ cd /lab && jq '.path=[]' r03.receipt.json > r03-nopath.json && merkle verify r03
 A batch that silently omits r05 still yields valid receipts.
 
 ```sh
-cd /lab/records && ROOT7=$(merkle build r01.csv r02.csv r03.csv r04.csv r06.csv r07.csv r08.csv | awk '/^root/{print $2}')
-TX7=$(merkle anchor $ROOT7 | awk '/anchor transaction/{print $3}'); mine 1 >/dev/null
-merkle receipt --index 4 --txid $TX7 -o /lab/r06.receipt.json r01.csv r02.csv r03.csv r04.csv r06.csv r07.csv r08.csv >/dev/null
+cd /lab/records
+ROOT7=$(merkle build r01.csv r02.csv r03.csv r04.csv r06.csv r07.csv r08.csv | awk '/^root/{print $2}')
+TX7=$(merkle anchor $ROOT7 | awk '/anchor transaction/{print $3}')
+mine 1
+merkle receipt --index 4 --txid $TX7 -o /lab/r06.receipt.json r01.csv r02.csv r03.csv r04.csv r06.csv r07.csv r08.csv
 merkle verify /lab/r06.receipt.json r06.csv | tail -1
-cat expected-set.txt | sed -n '1,8p'
+head -8 expected-set.txt
 ```
 
 **Checkpoint:** VERIFIED — compare with expected-set.txt

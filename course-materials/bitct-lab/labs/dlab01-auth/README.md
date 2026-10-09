@@ -41,7 +41,8 @@ All commands below are typed **inside the lab shell** (prompt `lab:/lab$`). Shel
 A BIP340 key pair: 32-byte secret, 32-byte x-only public key.
 
 ```sh
-bip340 keygen
+bip340 keygen | tee /tmp/k.txt
+SK=$(awk '/secret/{print $3}' /tmp/k.txt); PK=$(awk '/public/{print $3}' /tmp/k.txt)
 ```
 
 **Checkpoint:** secret key and public key in hex
@@ -51,7 +52,8 @@ bip340 keygen
 Sign the tagged hash of the exact text.
 
 ```sh
-bip340 sign --secret $SK --text 'D17 reports 1200 W'
+bip340 sign --secret $SK --text 'D17 reports 1200 W' | tee /tmp/s.txt
+SIG=$(awk '/^signature/{print $2}' /tmp/s.txt)
 ```
 
 **Checkpoint:** a 64-byte signature: R.x and s
@@ -81,6 +83,7 @@ bip340 verify --pubkey $PK --text 'D17 reports 1201 W' --sig $SIG
 A different key cannot verify it.
 
 ```sh
+OTHER=$(bip340 keygen | awk '/public/{print $3}')
 bip340 verify --pubkey $OTHER --text 'D17 reports 1200 W' --sig $SIG
 ```
 
@@ -104,6 +107,7 @@ Bitcoin Core's legacy message signing: ECDSA tied to a P2PKH address.
 bitcoin-cli createwallet alice
 LEG=$(bitcoin-cli -rpcwallet=alice getnewaddress '' legacy)
 MSIG=$(bitcoin-cli -rpcwallet=alice signmessage $LEG 'D17 reports 1200 W')
+echo $LEG; echo $MSIG
 bitcoin-cli verifymessage $LEG $MSIG 'D17 reports 1200 W'
 bitcoin-cli verifymessage $LEG $MSIG 'D17 reports 1201 W'
 ```
@@ -136,7 +140,8 @@ Real and broken examples: which checks fail?
 
 ```sh
 cat /usr/share/bitct/dlab01/addresses.txt
-addr decode <address>     # for each of A … J
+# decode all ten, keeping the lines that matter:
+for a in $(grep -o '[13bt][a-zA-Z0-9]\{25,\}' /usr/share/bitct/dlab01/addresses.txt); do echo "== $a"; addr decode $a 2>&1 | grep -E 'encoding|valid|checksum|mixed'; echo; done
 ```
 
 **Checkpoint:** G: checksum; H, I: wrong variant; J: mixed case

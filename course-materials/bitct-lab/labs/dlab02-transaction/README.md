@@ -68,7 +68,7 @@ btc-b getconnectioncount
 btc-a createwallet miner
 btc-b createwallet receiver
 MINER=$(btc-a -rpcwallet=miner getnewaddress)
-btc-a generatetoaddress 101 $MINER
+btc-a generatetoaddress 101 $MINER > /dev/null
 btc-b getblockcount
 btc-a -rpcwallet=miner getbalance
 ```
@@ -84,7 +84,7 @@ RECV=$(btc-b -rpcwallet=receiver getnewaddress)
 TX1=$(btc-a -rpcwallet=miner sendtoaddress $RECV 1)
 echo $TX1
 btc-a getrawmempool
-btc-b getrawmempool      # repeat after a few seconds if empty
+btc-b getrawmempool      # empty? wait a few seconds and repeat
 ```
 
 **Checkpoint:** the same txid in both mempools
@@ -94,7 +94,7 @@ btc-b getrawmempool      # repeat after a few seconds if empty
 One block confirms it on both nodes.
 
 ```sh
-btc-a generatetoaddress 1 $MINER
+btc-a generatetoaddress 1 $MINER > /dev/null
 btc-b getblockcount
 btc-b -rpcwallet=receiver getbalance
 ```
@@ -191,8 +191,16 @@ btc-b getrawtransaction $TX3 true | jq '{txid, confirmations}'
 The signature covers the outputs.
 
 ```sh
-# change one output amount after signing, then:
-btc-a testmempoolaccept '["'$TAMPERED'"]'
+A_TR2=$(btc-a -rpcwallet=alice getnewaddress '' bech32m)
+F2=$(btc-a -rpcwallet=miner sendtoaddress $A_TR2 0.5)
+mine 1
+V2=$(btc-a -rpcwallet=alice listunspent 1 9999 '["'$A_TR2'"]' | jq '.[0].vout')
+P=$(btc-a -rpcwallet=alice walletcreatefundedpsbt \
+  '[{"txid":"'$F2'","vout":'$V2'}]' '[{"'$DEST'":0.2}]' 0 \
+  '{"add_inputs":false,"fee_rate":5}' | jq -r .psbt)
+R=$(btc-a finalizepsbt $(btc-a -rpcwallet=alice walletprocesspsbt $P | jq -r .psbt) | jq -r .hex)
+TAMPERED=${R/002d310100000000/002e310100000000}     # output 0.2 BTC -> 0.20000256 BTC
+btc-a testmempoolaccept '["'$TAMPERED'"]' | jq -r '.[0]["reject-reason"]'
 ```
 
 **Checkpoint:** Invalid Schnorr signature (consensus)
@@ -202,7 +210,7 @@ btc-a testmempoolaccept '["'$TAMPERED'"]'
 An unsigned PSBT is not a transaction yet.
 
 ```sh
-btc-a finalizepsbt $P
+btc-a finalizepsbt $P | jq '{complete}'
 ```
 
 **Checkpoint:** complete: false
@@ -212,8 +220,11 @@ btc-a finalizepsbt $P
 Valid, but below the node's relay policy.
 
 ```sh
-# a PSBT built with fee_rate 0.01 sat/vB
-btc-a testmempoolaccept '["'$RL'"]'
+LOW=$(btc-a -rpcwallet=alice walletcreatefundedpsbt \
+  '[{"txid":"'$F2'","vout":'$V2'}]' '[{"'$DEST'":0.2}]' 0 \
+  '{"add_inputs":false,"fee_rate":0.01}' | jq -r .psbt)
+RL=$(btc-a finalizepsbt $(btc-a -rpcwallet=alice walletprocesspsbt $LOW | jq -r .psbt) | jq -r .hex)
+btc-a testmempoolaccept '["'$RL'"]' | jq -r '.[0]["reject-reason"]'
 ```
 
 **Checkpoint:** min relay fee not met (policy)

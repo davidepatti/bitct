@@ -87,9 +87,6 @@ Stop everything, including the virtual meter, with `docker compose --profile sim
 The gateway listens; nobody is enrolled.
 
 ```sh
-# 1. edit .env: GROUP=<your group code>
-docker compose up -d --wait
-docker compose exec lab bash
 d17 registry
 ```
 
@@ -100,12 +97,13 @@ d17 registry
 Factory provisioning: create the meter's key.
 
 ```sh
-d17 keygen
+d17 keygen --out /lab/device-key.json
+PUB=$(jq -r .pubkey /lab/device-key.json)
 ```
 
 **Checkpoint:** secret (paste into Wokwi) and public key
 
-### E2 · Start the meter (virtual stand-in for Wokwi)
+### E2 · Start the meter in Wokwi
 
 The meter signs and publishes every 15 s.
 
@@ -118,7 +116,7 @@ In Wokwi: set GROUP and DEVICE_SECRET_HEX in sketch.ino, press ▶.
 Signed, but not authorized.
 
 ```sh
-d17 reports
+d17 reports --last 3
 ```
 
 **Checkpoint:** REJECT_AUTHORITY
@@ -128,7 +126,7 @@ d17 reports
 Operator O binds the key to D17.
 
 ```sh
-d17 enroll --enrollment 1 --pubkey <public key shown by the ESP32>
+d17 enroll --enrollment 1 --pubkey $PUB      # the key the ESP32 prints at boot
 ```
 
 **Checkpoint:** operator O authorized (D17, key-A, enrollment 1)
@@ -138,7 +136,7 @@ d17 enroll --enrollment 1 --pubkey <public key shown by the ESP32>
 Readings are now accepted.
 
 ```sh
-d17 reports
+d17 reports --last 6
 ```
 
 **Checkpoint:** ACCEPTED
@@ -148,7 +146,7 @@ d17 reports
 Every minute: Merkle batch → OP_RETURN → block.
 
 ```sh
-d17 batches
+d17 batches      # no batch confirmed yet? repeat in a minute
 ```
 
 **Checkpoint:** anchored → confirmed
@@ -158,8 +156,10 @@ d17 batches
 An independent four-step audit.
 
 ```sh
-d17 receipt <id> -o /lab/receipt.json
-d17 audit /lab/receipt.json
+RID=$(sqlite3 $D17_DB "select r.id from reports r join batches b on r.batch_id = b.id where b.status = 'confirmed' order by r.id limit 1")
+echo $RID
+d17 receipt $RID -o /lab/receipt-$RID.json
+d17 audit /lab/receipt-$RID.json
 ```
 
 **Checkpoint:** VERIFIED, with its claim limits
@@ -169,10 +169,10 @@ d17 audit /lab/receipt.json
 A dishonest collector rewrites history.
 
 ```sh
-d17 tamper <id> --value 400
-d17 receipt <id> -o /lab/after.json
-d17 audit /lab/after.json
-d17 audit /lab/receipt.json
+d17 tamper $RID --value 400
+d17 receipt $RID -o /lab/receipt-$RID-after.json
+d17 audit /lab/receipt-$RID-after.json
+d17 audit /lab/receipt-$RID.json | tail -5      # the receipt the auditor kept
 ```
 
 **Checkpoint:** after: NOT VERIFIED; kept receipt: VERIFIED
@@ -181,7 +181,7 @@ d17 audit /lab/receipt.json
 
 Attacks on the wire.
 
-In Wokwi: press REPLAY, then TAMPER (no Wokwi: d17-sim --resend-last replay|tamper).
+In Wokwi: press REPLAY, then TAMPER (without Wokwi: d17-sim --resend-last replay, then d17-sim --resend-last tamper).
 
 Then, in the lab shell:
 

@@ -53,9 +53,10 @@ A block with a coinbase and three payments.
 ```sh
 bitcoin-cli createwallet miner
 mine 101
-# send three payments, then
+for v in 1 2 3; do bitcoin-cli -rpcwallet=miner sendtoaddress $(bitcoin-cli -rpcwallet=miner getnewaddress) $v; done
 mine 1
-bitcoin-cli getblock $(bitcoin-cli getbestblockhash) | jq '{height, nTx, merkleroot}'
+H=$(bitcoin-cli getblockcount)
+bitcoin-cli getblock $(bitcoin-cli getblockhash $H) | jq '{height, nTx, merkleroot, previousblockhash}'
 ```
 
 **Checkpoint:** nTx: 4
@@ -85,7 +86,7 @@ merkle bitcoin $H
 One bit in one txid.
 
 ```sh
-merkle bitcoin $H --change 2
+merkle bitcoin $H --change 2 | tail -3
 ```
 
 **Checkpoint:** DIFFERENT
@@ -95,8 +96,11 @@ merkle bitcoin $H --change 2
 Regtest proof of work is trivial: the forged header is 'valid' in isolation.
 
 ```sh
+OLD=$(bitcoin-cli getblockheader $(bitcoin-cli getblockhash $H) false)
+NEWROOT=$(merkle bitcoin $H --change 2 | awk '/computed root/{print $3}')
 FORGED=$(bitcoin-util grind $(header replace-root $OLD $NEWROOT))
-header decode $FORGED
+header decode $FORGED | tail -6
+echo "original block hash: $(bitcoin-cli getblockhash $H)"
 ```
 
 **Checkpoint:** a new block hash
@@ -106,7 +110,7 @@ header decode $FORGED
 But the next block still names the original hash.
 
 ```sh
-mine 1 >/dev/null
+mine 1
 bitcoin-cli getblockheader $(bitcoin-cli getblockhash $((H+1))) | jq -r .previousblockhash
 header decode $FORGED | sed -n '/block hash/{n;p}'
 ```

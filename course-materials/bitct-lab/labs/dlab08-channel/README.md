@@ -41,8 +41,9 @@ All commands below are typed **inside the lab shell** (prompt `lab:/lab$`). Shel
 Two LND nodes on one regtest node.
 
 ```sh
-ln-alice getinfo
-ln-bob getinfo
+bitcoin-cli createwallet miner
+mine 1
+for n in alice bob; do ln-$n getinfo | jq -c '{alias, synced_to_chain, num_active_channels, id: .identity_pubkey[0:16]}'; done
 ```
 
 **Checkpoint:** 0 channels
@@ -52,7 +53,8 @@ ln-bob getinfo
 On-chain coins for Alice.
 
 ```sh
-ln-fund alice 1
+ln-fund alice 1 | head -1
+ln-alice walletbalance | jq '{confirmed_balance}'
 ```
 
 **Checkpoint:** 100,000,000 sat
@@ -64,6 +66,7 @@ Peer connection (no money yet).
 ```sh
 BOB=$(ln-bob getinfo | jq -r .identity_pubkey)
 ln-alice connect $BOB@bob:9735
+ln-alice listpeers | jq -r '.peers[].address'
 ```
 
 **Checkpoint:** bob listed as peer
@@ -73,7 +76,10 @@ ln-alice connect $BOB@bob:9735
 The funding transaction enters the mempool.
 
 ```sh
-ln-alice openchannel --node_key $BOB --local_amt 500000
+FUNDTX=$(ln-alice openchannel --node_key $BOB --local_amt 500000 | jq -r .funding_txid)
+echo $FUNDTX
+bitcoin-cli getrawmempool
+ln-alice pendingchannels | jq '.pending_open_channels | length'
 ```
 
 **Checkpoint:** 1 pending channel
@@ -84,7 +90,7 @@ Confirmed: the channel is active.
 
 ```sh
 mine 3
-ln-alice listchannels
+ln-alice listchannels | jq '.channels[] | {capacity, local_balance, remote_balance, channel_point}'
 ```
 
 **Checkpoint:** capacity 500000
@@ -104,8 +110,10 @@ bitcoin-cli getrawtransaction $FUNDTX true | jq '.vout[] | {value, type: .script
 A payment with no on-chain transaction.
 
 ```sh
-INV=$(ln-bob addinvoice --amt 50000 | jq -r .payment_request)
-ln-alice payinvoice --force $INV
+INV=$(ln-bob addinvoice --amt 50000 --memo 'DLAB08 coffee' | jq -r .payment_request)
+echo ${INV:0:60}…
+ln-alice payinvoice --force --json $INV | jq '{status, value_sat, fee_sat}'
+echo "on-chain mempool: $(bitcoin-cli getmempoolinfo | jq .size) transactions"
 ```
 
 **Checkpoint:** SUCCEEDED; mempool empty
@@ -125,8 +133,12 @@ for n in alice bob; do echo "$n: $(ln-$n listchannels | jq -c '.channels[0] | {l
 Both sign one closing transaction.
 
 ```sh
-ln-alice closechannel --funding_txid … --output_index …
+CP=$(ln-alice listchannels | jq -r '.channels[0].channel_point')
+CLOSETX=$(ln-alice closechannel --funding_txid ${CP%:*} --output_index ${CP#*:} | jq -r .closing_txid)
+echo $CLOSETX
 mine 6
+bitcoin-cli getrawtransaction $CLOSETX true | jq '.vout[] | {value, type: .scriptPubKey.type}'
+ln-alice closedchannels | jq '.channels[-1] | {close_type, settled_balance}'
 ```
 
 **Checkpoint:** COOPERATIVE_CLOSE
@@ -136,10 +148,10 @@ mine 6
 A second channel and a payment.
 
 ```sh
-ln-alice openchannel --node_key $BOB --local_amt 400000
+ln-alice openchannel --node_key $BOB --local_amt 400000 | jq -r .funding_txid
 mine 3
 INV2=$(ln-bob addinvoice --amt 20000 | jq -r .payment_request)
-ln-alice payinvoice --force $INV2
+ln-alice payinvoice --force --json $INV2 | jq -r .status      # FAILED? wait a few seconds and pay again
 ```
 
 **Checkpoint:** SUCCEEDED
@@ -149,9 +161,13 @@ ln-alice payinvoice --force $INV2
 Alice publishes her commitment alone.
 
 ```sh
-ln-alice closechannel --force --funding_txid … --output_index …
+CP2=$(ln-alice listchannels | jq -r '.channels[0].channel_point')
+ln-alice closechannel --force --funding_txid ${CP2%:*} --output_index ${CP2#*:} > /dev/null
+FORCETX=$(ln-alice pendingchannels | jq -r '.waiting_close_channels[0].closing_txid')
+echo $FORCETX
+bitcoin-cli getrawtransaction $FORCETX true | jq '[.vout[] | {value, type: .scriptPubKey.type}]'
 mine 6
-ln-alice pendingchannels
+ln-alice pendingchannels | jq '.pending_force_closing_channels[] | {limbo_balance, maturity_height, blocks_til_maturity}'
 ```
 
 **Checkpoint:** 4 outputs; blocks_til_maturity ≈ 139
@@ -161,8 +177,12 @@ ln-alice pendingchannels
 Bob was paid at once; Alice's coins return after the delay.
 
 ```sh
-mine <blocks_til_maturity>
-ln-alice closedchannels
+ln-bob walletbalance | jq '{confirmed_balance, unconfirmed_balance}'
+N=$(ln-alice pendingchannels | jq '.pending_force_closing_channels[0].blocks_til_maturity')
+echo "Alice must wait $N blocks"
+mine $N
+# still listed in pendingchannels? mine 1 more block and check again
+ln-alice closedchannels | jq -r '.channels[] | .close_type'
 ```
 
 **Checkpoint:** LOCAL_FORCE_CLOSE

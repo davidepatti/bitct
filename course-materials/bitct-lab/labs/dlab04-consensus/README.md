@@ -41,9 +41,12 @@ All commands below are typed **inside the lab shell** (prompt `lab:/lab$`). Shel
 One shared history.
 
 ```sh
-btc-a createwallet miner; btc-b createwallet bob
+btc-a getpeerinfo | jq -r '.[].addr'
+btc-a createwallet miner
+btc-b createwallet bob
 mine 101
 btc-b getblockcount
+btc-a getconnectioncount
 ```
 
 **Checkpoint:** both at 101
@@ -55,6 +58,7 @@ Payment T is known to both nodes.
 ```sh
 BOB=$(btc-b -rpcwallet=bob getnewaddress)
 T=$(btc-a -rpcwallet=miner sendtoaddress $BOB 2)
+echo $T
 btc-b getrawmempool
 ```
 
@@ -67,6 +71,7 @@ Cut the network.
 ```sh
 btc-b setnetworkactive false
 btc-a getconnectioncount
+btc-b getnetworkinfo | jq .networkactive
 ```
 
 **Checkpoint:** 0 connections
@@ -77,7 +82,7 @@ A confirms T in block 102.
 
 ```sh
 mine 1
-btc-a -rpcwallet=miner gettransaction $T | jq .confirmations
+btc-a -rpcwallet=miner gettransaction $T | jq '{confirmations}'
 ```
 
 **Checkpoint:** 1 confirmation
@@ -87,7 +92,11 @@ btc-a -rpcwallet=miner gettransaction $T | jq .confirmations
 B mines two blocks without T.
 
 ```sh
-btc-b generateblock $BADDR '[]'     # twice
+BADDR=$(btc-b -rpcwallet=bob getnewaddress)
+btc-b generateblock $BADDR '[]' | jq -r .hash
+btc-b generateblock $BADDR '[]' | jq -r .hash
+btc-b getblockcount
+btc-b getrawmempool | grep -c $T
 ```
 
 **Checkpoint:** B at height 103
@@ -97,8 +106,9 @@ btc-b generateblock $BADDR '[]'     # twice
 Two different active tips.
 
 ```sh
-btc-a getchaintips
-btc-b getchaintips
+btc-a getchaintips | jq -c '.[] | {height, status}'
+btc-b getchaintips | jq -c '.[] | {height, status}'
+for n in a b; do echo "$n chainwork $(btc-$n getblockheader $(btc-$n getbestblockhash) | jq -r .chainwork | sed 's/^0*//')"; done
 ```
 
 **Checkpoint:** 102 on A, 103 on B
@@ -110,7 +120,7 @@ Reconnect: A switches to B's chain.
 ```sh
 btc-b setnetworkactive true
 btc-a addnode node-b:18444 onetry
-btc-a getchaintips
+btc-a getchaintips | jq -c '.[] | {height, status}'
 ```
 
 **Checkpoint:** 103 active, 102 valid-fork
@@ -120,8 +130,8 @@ btc-a getchaintips
 T was un-confirmed, not cancelled.
 
 ```sh
-btc-a -rpcwallet=miner gettransaction $T | jq .confirmations
-btc-a getrawmempool
+btc-a -rpcwallet=miner gettransaction $T | jq '{confirmations}'
+btc-a getrawmempool | grep -c $T
 ```
 
 **Checkpoint:** 0 confirmations, back in the mempool
@@ -132,6 +142,7 @@ T is confirmed again, in a different block.
 
 ```sh
 mine 1
+btc-a -rpcwallet=miner gettransaction $T | jq '{confirmations, blockheight}'
 ```
 
 **Checkpoint:** blockheight 104

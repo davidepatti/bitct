@@ -33,12 +33,16 @@ def sh(args, cwd, check=True, capture=True, timeout=900):
     return r
 
 
-def run_step(labdir, service, cmd, timeout=600):
+def run_step(labdir, service, cmd, timeout=600, ci=""):
+    # One step = one fresh `bash`, so the variables a step creates and its working directory are saved
+    # to VARS and restored by the next step: the runner behaves like one student shell. `ci` lines run
+    # before the step, unechoed (they stand in for actions outside the shell, e.g. Wokwi).
+    pre = ("{ " + ci.replace("\n", "; ") + "; } >/dev/null 2>&1; ") if ci else ""
     script = (f"set -o pipefail; [ -f {VARS} ] && source {VARS}; export FORCE_COLOR=; "
-              f"__before=$(compgen -v | sort); set -v; source /tmp/step.sh 2>&1; __rc=$?; set +v; "
-              f"for v in $(comm -13 <(echo \"$__before\") <(compgen -v | sort)); do "
-              f"case $v in __*|BASH*|_|PIPESTATUS|FUNCNAME|COLUMNS|LINES) ;; *) declare -p $v 2>/dev/null >> {VARS};; esac; done; "
-              f"exit $__rc")
+              f"__before=$(compgen -v | sort); {pre}set -v; source /tmp/step.sh 2>&1; __rc=$?; set +v; "
+              f"__names=$({{ comm -13 <(echo \"$__before\") <(compgen -v | sort); cat {VARS}.names 2>/dev/null; }} | sort -u "
+              f"| grep -vE '^(__.*|BASH.*|_|PIPESTATUS|FUNCNAME|COLUMNS|LINES|OLDPWD)$'); echo \"$__names\" > {VARS}.names; "
+              f"{{ for v in $__names; do declare -p $v 2>/dev/null; done; printf 'cd %q\\n' \"$PWD\"; }} > {VARS}; exit $__rc")
     subprocess.run(["docker", "compose", "exec", "-T", service, "bash", "-c", "cat > /tmp/step.sh"], cwd=labdir,
                    input=cmd + "\n", text=True, capture_output=True, timeout=60)
     t0 = time.time()
@@ -79,7 +83,7 @@ def main():
             sys.exit("lab did not start")
         env_note = f"started in {time.time() - t0:.0f}s"
         print(f"== {a.lab}: {env_note}")
-        sh(["docker", "compose", "exec", "-T", "lab", "bash", "-c", f"rm -f {VARS}"], labdir, check=False)
+        sh(["docker", "compose", "exec", "-T", "lab", "bash", "-c", f"rm -f {VARS} {VARS}.names"], labdir, check=False)
     transcript, failures = [], 0
     for st in spec["steps"]:
         if a.only and st["id"] not in a.only.split(","):
@@ -95,7 +99,7 @@ def main():
             r = subprocess.run(hcmd, cwd=labdir, shell=True, text=True, capture_output=True, timeout=900)
             rc, out, dt = r.returncode, r.stdout + r.stderr, time.time() - t0
         else:
-            rc, out, dt = run_step(labdir, st.get("service", "lab"), st["cmd"], st.get("timeout", 600))
+            rc, out, dt = run_step(labdir, st.get("service", "lab"), st["cmd"], st.get("timeout", 600), st.get("ci", ""))
         ok = (rc == 0) == (not st.get("fails", False))
         for pat in st.get("expect", []):
             if not re.search(pat, out, re.M):

@@ -22,6 +22,22 @@ A private regtest chain starts at block 0 on your laptop, mines blocks on demand
 
 Install Docker, start the course image once, open the lab shell and the dashboard, and practise stop/reset.
 
+## Install and check Docker
+
+Install [Docker Desktop](https://docs.docker.com/desktop/) (Windows 10/11 with WSL 2, macOS) or Docker Engine
+with the Compose plugin (Linux); leave it at least 4 GB of memory and 10 GB of disk. Start it, then in a
+terminal (PowerShell on Windows):
+
+```sh
+docker version
+docker compose version
+```
+
+**Checkpoint:** `docker version` shows a **Server** section: the engine is running.
+
+Get the kit: download the [course ZIP](https://github.com/davidepatti/bitct/archive/refs/heads/main.zip), unzip
+it and use the folder `course-materials/bitct-lab` (one folder per lab under `labs/`).
+
 ## Start
 
 Open a terminal (PowerShell on Windows) in the `bitct-lab` folder (in the course ZIP: `bitct-main/course-materials/bitct-lab`), then:

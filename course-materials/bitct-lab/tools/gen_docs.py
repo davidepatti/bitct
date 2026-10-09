@@ -7,7 +7,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 sys.path.insert(0, os.path.join(ROOT, "tests"))
 from labmeta import META  # noqa: E402
-from labsteps import LABS  # noqa: E402
+from labsteps import LABS, student_lines  # noqa: E402
 
 EXTRA = {}
 
@@ -58,6 +58,23 @@ For a fully offline run set `MQTT_HOST=broker` in `.env` (local broker) before `
 Stop everything, including the virtual meter, with `docker compose --profile sim down`.
 """
 
+EXTRA["dlab00-setup"] = """## Install and check Docker
+
+Install [Docker Desktop](https://docs.docker.com/desktop/) (Windows 10/11 with WSL 2, macOS) or Docker Engine
+with the Compose plugin (Linux); leave it at least 4 GB of memory and 10 GB of disk. Start it, then in a
+terminal (PowerShell on Windows):
+
+```sh
+docker version
+docker compose version
+```
+
+**Checkpoint:** `docker version` shows a **Server** section: the engine is running.
+
+Get the kit: download the [course ZIP](https://github.com/davidepatti/bitct/archive/refs/heads/main.zip), unzip
+it and use the folder `course-materials/bitct-lab` (one folder per lab under `labs/`).
+"""
+
 EXTRA["dlab10-graph"] = """
 ## Steps
 
@@ -90,10 +107,14 @@ Anyone can now look up the transaction on mempool.space/signet and check your re
 
 
 def cmd_for(lab, st):
+    """What the student does for one step: an explicit override for actions outside the lab shell
+    (browser, Wokwi), otherwise exactly the lines the automated test types (minus its plumbing)."""
     meta = META[lab]["steps"].get(st["id"])
     if meta and meta[0]:
         return meta[0]
-    return st.get("show") or st.get("cmd") or st.get("host")
+    if st.get("cmd"):
+        return "\n".join(student_lines(st["cmd"]))
+    return st.get("host")
 
 
 def readme(lab):
@@ -103,7 +124,8 @@ def readme(lab):
            f"| | |\n|---|---|\n| Stable ID | `{m['stable']}` |\n| Session | {m['session']} |\n| Time | {m['minutes']} min |\n"
            f"| Lecture | {m['lecture']} |\n| Network | **{m['network']}** |", "",
            "## What this experience means", ""] + [f"- {x}" for x in m["meaning"]] + [
-           "", "## Why this network", "", m["network_why"], "", "## Goal", "", m["goal"], "", "## Start", "",
+           "", "## Why this network", "", m["network_why"], "", "## Goal", "", m["goal"], "",
+           EXTRA[lab] if lab == "dlab00-setup" else None, "## Start", "",
            "Open a terminal (PowerShell on Windows) in the `bitct-lab` folder (in the course ZIP: "
            "`bitct-main/course-materials/bitct-lab`), then:", "", "```sh",
            f"cd labs/{lab}",

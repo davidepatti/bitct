@@ -62,7 +62,8 @@ Predicted route.
 
 ```sh
 DAVE=$(ln-dave getinfo | jq -r .identity_pubkey)
-ln-alice queryroutes --dest $DAVE --amt 300000
+ln-alice queryroutes --dest $DAVE --amt 300000 | jq '.routes[0] | {total_fees_msat, hops: [.hops[].pub_key[0:8]]}'
+lnview names
 ```
 
 **Checkpoint:** via bob, 4 sat fee
@@ -72,7 +73,7 @@ ln-alice queryroutes --dest $DAVE --amt 300000
 Attempt, failure, retry.
 
 ```sh
-INV=$(ln-dave addinvoice --amt 300000 | jq -r .payment_request)
+INV=$(ln-dave addinvoice --amt 300000 --memo 'DLAB09' | jq -r .payment_request)
 ln-alice payinvoice --force --json $INV > /lab/pay1.json
 lnview payment /lab/pay1.json
 ```
@@ -94,7 +95,7 @@ lnview balances
 What Alice remembers.
 
 ```sh
-ln-alice querymc
+ln-alice querymc | jq -c '.pairs[] | {from: .node_from[0:8], to: .node_to[0:8], fail_amt: .history.fail_amt_sat, success_amt: .history.success_amt_sat}'
 ```
 
 **Checkpoint:** bob→dave failed at 300000
@@ -105,8 +106,9 @@ Change one condition: refill bob→dave.
 
 ```sh
 BINV=$(ln-bob addinvoice --amt 400000 | jq -r .payment_request)
-ln-dave payinvoice --force $BINV
+ln-dave payinvoice --force --json $BINV | jq -r .status
 ln-alice resetmc
+lnview balances
 ```
 
 **Checkpoint:** SUCCEEDED

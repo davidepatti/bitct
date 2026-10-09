@@ -42,6 +42,7 @@ Node B never talks to the network.
 
 ```sh
 btc-b getnetworkinfo | jq '{networkactive, connections}'
+btc-b getblockcount
 btc-b createwallet signer
 ```
 
@@ -52,7 +53,7 @@ btc-b createwallet signer
 Public descriptors: xpub + derivation path, receive /0/* and change /1/*.
 
 ```sh
-btc-b -rpcwallet=signer listdescriptors | jq -r '.descriptors[].desc'
+btc-b -rpcwallet=signer listdescriptors | jq -r '.descriptors[] | select(.desc|startswith("wpkh(")) | .desc'
 ```
 
 **Checkpoint:** wpkh([fingerprint/84h/1h/0h]tpub…/0/*)
@@ -63,8 +64,8 @@ The coordinator imports only public information.
 
 ```sh
 btc-a -named createwallet wallet_name=watch disable_private_keys=true blank=true
-DESCS=$(btc-b -rpcwallet=signer listdescriptors | jq -c '[… public wpkh descriptors …]')
-btc-a -rpcwallet=watch importdescriptors "$DESCS"
+DESCS=$(btc-b -rpcwallet=signer listdescriptors | jq -c '[.descriptors[] | select(.desc|startswith("wpkh(")) | {desc, active: true, internal, timestamp: "now", range: [0,999]}]')
+btc-a -rpcwallet=watch importdescriptors "$DESCS" | jq -c '[.[].success]'
 ```
 
 **Checkpoint:** [true, true]
@@ -85,9 +86,10 @@ echo "watch:  $W"; echo "signer: $S"; [ "$W" = "$S" ] && echo SAME
 The coordinator sees the funds; the signer cannot (no chain).
 
 ```sh
-btc-a createwallet miner >/dev/null; mine 101 >/dev/null
-btc-a -rpcwallet=miner sendtoaddress $W 1 >/dev/null
-mine 1 >/dev/null
+btc-a createwallet miner
+mine 101
+btc-a -rpcwallet=miner sendtoaddress $W 1
+mine 1
 btc-a -rpcwallet=watch getbalance; btc-b -rpcwallet=signer getbalance
 ```
 
@@ -99,7 +101,7 @@ Build the PSBT where the chain is known.
 
 ```sh
 DEST=$(btc-a -rpcwallet=miner getnewaddress)
-PSBT=$(btc-a -rpcwallet=watch walletcreatefundedpsbt '[]' "[{\"$DEST\":0.3}]" 0 '{"fee_rate":5}' | jq -r .psbt)
+PSBT=$(btc-a -rpcwallet=watch walletcreatefundedpsbt '[]' '[{"'$DEST'":0.3}]' 0 '{"fee_rate":5}' | jq -r .psbt)
 btc-a -rpcwallet=watch walletprocesspsbt $PSBT | jq '{complete}'
 ```
 
@@ -111,6 +113,8 @@ Sign where the keys are.
 
 ```sh
 SIGNED=$(btc-b -rpcwallet=signer walletprocesspsbt $PSBT | jq -r .psbt)
+btc-a decodepsbt $SIGNED | jq '.inputs[0] | has("final_scriptwitness")'
+btc-b getblockcount
 ```
 
 **Checkpoint:** final witness present, signer height still 0
@@ -120,8 +124,9 @@ SIGNED=$(btc-b -rpcwallet=signer walletprocesspsbt $PSBT | jq -r .psbt)
 Broadcast from the online side.
 
 ```sh
-btc-a sendrawtransaction $(btc-a finalizepsbt $SIGNED | jq -r .hex)
+TX=$(btc-a sendrawtransaction $(btc-a finalizepsbt $SIGNED | jq -r .hex))
 mine 1
+btc-a -rpcwallet=watch getbalance
 ```
 
 **Checkpoint:** watch balance ≈ 0.6999
@@ -132,7 +137,7 @@ Restore keys + both descriptors into a clean wallet.
 
 ```sh
 FULL=$(btc-b -rpcwallet=signer listdescriptors true | jq -c '[.descriptors[] | select(.desc|startswith("wpkh(")) | {desc, active: true, internal, timestamp: 0, range: [0,999]}]')
-btc-a -named createwallet wallet_name=restored blank=true >/dev/null
+btc-a -named createwallet wallet_name=restored blank=true
 btc-a -rpcwallet=restored importdescriptors "$FULL" | jq -c '[.[].success]'
 btc-a -rpcwallet=restored getbalance; btc-a -rpcwallet=restored listtransactions | jq length
 ```
@@ -145,7 +150,7 @@ Restore without the change descriptor.
 
 ```sh
 PART=$(echo "$FULL" | jq -c '[.[] | select(.internal == false)]')
-btc-a -named createwallet wallet_name=partial blank=true >/dev/null
+btc-a -named createwallet wallet_name=partial blank=true
 btc-a -rpcwallet=partial importdescriptors "$PART" | jq -c '[.[].success]'
 btc-a -rpcwallet=partial getbalance
 ```

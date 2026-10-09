@@ -42,6 +42,7 @@ Checkpoint C0: (D17, key-A, enrollment 3), last accepted 41.
 
 ```sh
 cd /lab/d17
+ls cases
 d17 prepare-c0
 d17 registry
 ```
@@ -74,7 +75,7 @@ d17 checkpoint save C1
 Exact retry.
 
 ```sh
-cd /lab/d17 && d17 submit cases/R42.json
+d17 submit cases/R42.json
 ```
 
 **Checkpoint:** NO_NEW_EVENT
@@ -95,7 +96,8 @@ d17 submit cases/R42-altered.json
 Validly signed for the wrong audience.
 
 ```sh
-cd /lab/d17 && d17 checkpoint load C0 >/dev/null && d17 submit cases/R42-wrong-audience.json
+d17 checkpoint load C0
+d17 submit cases/R42-wrong-audience.json
 d17 explain cases/R42-wrong-audience.json | tail -2
 ```
 
@@ -106,7 +108,8 @@ d17 explain cases/R42-wrong-audience.json | tail -2
 Delayed but unseen: ordering passes, age unknown.
 
 ```sh
-cd /lab/d17 && d17 checkpoint load C0 >/dev/null && d17 submit cases/R43-delayed.json
+d17 checkpoint load C0
+d17 submit cases/R43-delayed.json
 ```
 
 **Checkpoint:** ACCEPTED (gap of 1)
@@ -116,7 +119,9 @@ cd /lab/d17 && d17 checkpoint load C0 >/dev/null && d17 submit cases/R43-delayed
 Late lower sequence.
 
 ```sh
-cd /lab/d17 && d17 checkpoint load C0 >/dev/null && d17 submit cases/R43.json && d17 submit cases/R42.json
+d17 checkpoint load C0
+d17 submit cases/R43.json
+d17 submit cases/R42.json
 ```
 
 **Checkpoint:** NO_NEW_EVENT
@@ -126,7 +131,9 @@ cd /lab/d17 && d17 checkpoint load C0 >/dev/null && d17 submit cases/R43.json &&
 A bad signature cannot poison the counter.
 
 ```sh
-cd /lab/d17 && d17 checkpoint load C0 >/dev/null && d17 submit cases/R1000000-badsig.json && d17 submit cases/R42.json
+d17 checkpoint load C0
+d17 submit cases/R1000000-badsig.json
+d17 submit cases/R42.json
 ```
 
 **Checkpoint:** REJECT_SIGNATURE, then R42 still ACCEPTED
@@ -136,7 +143,8 @@ cd /lab/d17 && d17 checkpoint load C0 >/dev/null && d17 submit cases/R1000000-ba
 Reboot does not reset the collector.
 
 ```sh
-cd /lab/d17 && d17 checkpoint load C0 >/dev/null && d17 submit cases/R0-reboot.json
+d17 checkpoint load C0
+d17 submit cases/R0-reboot.json
 ```
 
 **Checkpoint:** NO_NEW_EVENT
@@ -146,7 +154,8 @@ cd /lab/d17 && d17 checkpoint load C0 >/dev/null && d17 submit cases/R0-reboot.j
 A device cannot enrol itself.
 
 ```sh
-cd /lab/d17 && d17 checkpoint load C0 >/dev/null && d17 submit cases/R-self-enrolled-4.json
+d17 checkpoint load C0
+d17 submit cases/R-self-enrolled-4.json
 ```
 
 **Checkpoint:** REJECT_AUTHORITY
@@ -156,7 +165,8 @@ cd /lab/d17 && d17 checkpoint load C0 >/dev/null && d17 submit cases/R-self-enro
 Possession of a key ≠ authorized binding.
 
 ```sh
-cd /lab/d17 && d17 checkpoint load C0 >/dev/null && d17 submit cases/R-impostor-keyX.json
+d17 checkpoint load C0
+d17 submit cases/R-impostor-keyX.json
 ```
 
 **Checkpoint:** REJECT_AUTHORITY
@@ -166,6 +176,7 @@ cd /lab/d17 && d17 checkpoint load C0 >/dev/null && d17 submit cases/R-impostor-
 Authority unknown → queue, do not accept.
 
 ```sh
+d17 checkpoint load C0
 d17 authority offline
 d17 submit cases/R42.json
 d17 authority online
@@ -178,7 +189,9 @@ d17 authority online
 Unknown replay state is not zero.
 
 ```sh
-cd /lab/d17 && d17 checkpoint load C0 >/dev/null && d17 lose-state --enrollment 3 && d17 submit cases/R42.json
+d17 checkpoint load C0
+d17 lose-state --enrollment 3
+d17 submit cases/R42.json
 ```
 
 **Checkpoint:** INDETERMINATE
@@ -204,7 +217,8 @@ Compromise branch: revoke first.
 d17 checkpoint load C1
 d17 revoke --enrollment 3
 d17 submit cases/R43-after-cutover.json
-# then enrol key-B and submit RB1
+d17 enroll --key key-B --enrollment 4 --pubkey $(jq -r .pubkey keys/key-B.json)
+d17 submit cases/RB1.json
 ```
 
 **Checkpoint:** REJECT_AUTHORITY, then RB1 ACCEPTED
@@ -214,8 +228,8 @@ d17 submit cases/R43-after-cutover.json
 History keeps the original decision.
 
 ```sh
-d17 reports
-d17 show 1
+d17 reports --last 5
+d17 show 1 | head -3
 ```
 
 **Checkpoint:** #1 ACCEPTED is still recorded
@@ -225,6 +239,7 @@ d17 show 1
 A signed lie passes every digital check.
 
 ```sh
+d17 checkpoint load C0
 d17 submit cases/R42-false-reading.json
 cat ground-truth.csv
 ```
