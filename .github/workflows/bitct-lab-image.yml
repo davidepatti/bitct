@@ -73,7 +73,8 @@ jobs:
       fail-fast: false
       matrix:
         lab: [dlab00-setup, dlab01-auth, dlab02-transaction, dlab03-structures, dlab04-consensus,
-              dlab05-wallet, dlab06-attest, dlab07-anchor, dlab08-channel, dlab09-routing, dlab11-esp32]
+              dlab05-wallet, dlab06-attest, dlab07-anchor, dlab08-channel, dlab09-routing, dlab11-esp32,
+              dlab12-conditions, dlab13-oracles]
     steps:
       - uses: actions/checkout@v4
       - uses: docker/setup-buildx-action@v3
