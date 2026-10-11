@@ -1,0 +1,25 @@
+DLAB 13 — Oracles and Federations: Who Must Sign?
+=================================================
+Settle a bet through an escrow oracle, recover the stakes when the oracle stays silent, run a DLC-style oracle (announce, attest, equivocate), and test what a 2-of-3 federation can and cannot do.
+
+Network: regtest
+
+Steps:
+  O0    Two players, one oracle
+  O1    The bet: a 2-of-3 output
+  O2    A refund, valid only from block H
+  O3    It was dry: the oracle and Bob sign
+  O4    The refund comes too late
+  O5    A second bet; the oracle stays silent
+  O6    After H2 the refund settles it
+  D1    A DLC oracle announces the event
+  D2    It rains: the oracle attests
+  D3    Which payout can be completed?
+  D4    An honest oracle signs once
+  D5    A cheating oracle signs both
+  F0    A federation and its user
+  F1    Peg-in: the user deposits
+  F2    Peg-out: two members release it
+  F3    Two members collude
+  F4    The federation goes silent
+  F5    Twenty confirmations later

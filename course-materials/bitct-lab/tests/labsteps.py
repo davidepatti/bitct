@@ -429,25 +429,34 @@ LABS["dlab08-channel"] = {"steps": [
         "bitcoin-cli getrawmempool\nln-alice pendingchannels | jq '.pending_open_channels | length'",
      "expect": [r"[0-9a-f]{64}", r"length'\n1$"]},
     {"id": "L5", "title": "Confirm the funding transaction", "cmd":
-        "mine 3\nfor i in $(seq 60); do [ \"$(ln-alice getinfo | jq .num_active_channels)\" = 1 ] && break; sleep 1; done\n"
+        "mine 3\nfor i in $(seq 60); do [ \"$(ln-alice getinfo | jq .num_active_channels)\" = 1 ] && [ \"$(ln-bob getinfo | jq .num_active_channels)\" = 1 ] && break; sleep 1; done\n"
         "ln-alice listchannels | jq '.channels[] | {capacity, local_balance, remote_balance, channel_point}'",
      "expect": [r'"capacity": "500000"']},
     {"id": "L6", "title": "The funding output is a 2-of-2", "cmd":
-        "bitcoin-cli getrawtransaction $FUNDTX true | jq '.vout[] | {value, type: .scriptPubKey.type}'",
-     "expect": [r'"type": "witness_v0_scripthash"|"type": "witness_v1_taproot"']},
+        "bitcoin-cli getrawtransaction $FUNDTX true | jq -c '.vout[] | {value, type: .scriptPubKey.type}'",
+     "expect": [r'"type":"witness_v0_scripthash"']},
+    {"id": "L6a", "title": "What did the two nodes negotiate?", "cmd":
+        "CH=$(ln-alice listchannels | jq '.channels[0]')\n"
+        "echo $CH | jq '{commitment_type, initiator, local_chan_reserve_sat, remote_chan_reserve_sat}'\n"
+        "echo $CH | jq -c '{alice_delay: .local_constraints.csv_delay, bob_delay: .remote_constraints.csv_delay}'",
+     "expect": [r'"commitment_type": "ANCHORS"', r'"alice_delay":\d+,"bob_delay":\d+']},
     {"id": "L7", "title": "Bob invoices, Alice pays", "cmd":
+        "for i in $(seq 30); do ln-alice queryroutes --dest $BOB --amt 50000 >/dev/null 2>&1 && break; sleep 1; done\n"
         "INV=$(ln-bob addinvoice --amt 50000 --memo 'DLAB08 coffee' | jq -r .payment_request)\necho ${INV:0:60}…\n"
-        "ln-alice payinvoice --force --json $INV | jq '{status, value_sat, fee_sat}'\n"
+        "ln-alice payinvoice --force --json $INV | jq '{status, value_sat, fee_sat}'      # FAILED? wait a few seconds and pay again\n"
         "echo \"on-chain mempool: $(bitcoin-cli getmempoolinfo | jq .size) transactions\"",
      "expect": [r'"status": "SUCCEEDED"', r"on-chain mempool: 0 transactions"]},
     {"id": "L8", "title": "Balances moved off-chain", "cmd":
-        "for n in alice bob; do echo \"$n: $(ln-$n listchannels | jq -c '.channels[0] | {local_balance, remote_balance}')\"; done",
-     "expect": [r'bob: \{"local_balance":"50000"']},
+        "for n in alice bob; do echo \"$n: $(ln-$n listchannels | jq -c '.channels[0] | {local_balance, remote_balance}')\"; done\n"
+        "# the 500,000 also pay for the commitment fee and two 330-sat anchor outputs\n"
+        "ln-alice listchannels | jq -c '.channels[0] | {capacity, local_balance, remote_balance, commit_fee}' | tee bal.json\n"
+        "jq 'map_values(tonumber) | .capacity - .local_balance - .remote_balance - .commit_fee' bal.json",
+     "expect": [r'bob: \{"local_balance":"50000"', r'"commit_fee":"\d+"', r"^660$"]},
     {"id": "L9", "title": "Cooperative close", "cmd":
         "CP=$(ln-alice listchannels | jq -r '.channels[0].channel_point')\n"
         "CLOSETX=$(ln-alice closechannel --funding_txid ${CP%:*} --output_index ${CP#*:} | jq -r .closing_txid)\necho $CLOSETX\nmine 6\n"
         "for i in $(seq 30); do [ \"$(ln-alice closedchannels | jq '.channels | length')\" = 1 ] && break; sleep 1; done\n"
-        "bitcoin-cli getrawtransaction $CLOSETX true | jq '.vout[] | {value, type: .scriptPubKey.type}'\n"
+        "bitcoin-cli getrawtransaction $CLOSETX true | jq -c '.vout[] | {value, type: .scriptPubKey.type}'\n"
         "ln-alice closedchannels | jq '.channels[-1] | {close_type, settled_balance}'",
      "expect": [r'"close_type": "COOPERATIVE_CLOSE"']},
     {"id": "L10", "title": "A second channel and a payment", "cmd":
@@ -462,10 +471,10 @@ LABS["dlab08-channel"] = {"steps": [
         "CP2=$(ln-alice listchannels | jq -r '.channels[0].channel_point')\n"
         "ln-alice closechannel --force --funding_txid ${CP2%:*} --output_index ${CP2#*:} > /dev/null\nsleep 2\n"
         "FORCETX=$(ln-alice pendingchannels | jq -r '.waiting_close_channels[0].closing_txid')\necho $FORCETX\n"
-        "bitcoin-cli getrawtransaction $FORCETX true | jq '[.vout[] | {value, type: .scriptPubKey.type}]'\nmine 6\nsleep 4\n"
+        "bitcoin-cli getrawtransaction $FORCETX true | jq -c '.vout[] | {value, type: .scriptPubKey.type}'\nmine 6\nsleep 4\n"
         "ln-alice pendingchannels | jq '.pending_force_closing_channels[] | {limbo_balance, maturity_height, blocks_til_maturity}'",
      "expect": [r"[0-9a-f]{64}", r'"blocks_til_maturity": \d+']},
-    {"id": "L12", "title": "Bob is paid at once; Alice waits", "cmd":
+    {"id": "L12", "title": "Alice waits out her delay", "cmd":
         "ln-bob walletbalance | jq '{confirmed_balance, unconfirmed_balance}'\n"
         "N=$(ln-alice pendingchannels | jq '.pending_force_closing_channels[0].blocks_til_maturity')\necho \"Alice must wait $N blocks\"\n"
         "mine $N\n"
@@ -473,6 +482,25 @@ LABS["dlab08-channel"] = {"steps": [
         "for i in $(seq 40); do mine 1 >/dev/null; sleep 2; [ \"$(ln-alice pendingchannels | jq '.pending_force_closing_channels | length')\" = 0 ] && break; done\n"
         "ln-alice closedchannels | jq -r '.channels[] | .close_type'",
      "expect": [r"Alice must wait \d+ blocks", r"LOCAL_FORCE_CLOSE"], "timeout": 400},
+    {"id": "L13", "title": "What proves the funds were swept?", "cmd":
+        "R='.channels[-1].resolutions[] | select(.resolution_type == \"COMMIT\")'\n"
+        "ln-alice closedchannels | jq -c \"$R | {outcome, amount_sat, sweep_txid}\"\n"
+        "ln-bob closedchannels | jq -c \"$R | {outcome, amount_sat, sweep_txid}\"\n"
+        "ASWEEP=$(ln-alice closedchannels | jq -r \"$R | .sweep_txid\")\n"
+        "BSWEEP=$(ln-bob closedchannels | jq -r \"$R | .sweep_txid\")\n"
+        "for t in $ASWEEP $BSWEEP; do bitcoin-cli getrawtransaction $t true | jq -c '{confirmations, swept_btc: .vout[0].value}'; done\n"
+        "for n in alice bob; do echo \"$n: $(ln-$n walletbalance | jq -c '{confirmed_balance, unconfirmed_balance}')\"; done",
+     "expect": [r'"outcome":"CLAIMED","amount_sat":"\d+","sweep_txid":"[0-9a-f]{64}"', r'\{"confirmations":[1-9]\d*,"swept_btc"',
+                r'bob: \{"confirmed_balance":"\d+","unconfirmed_balance":"0"\}']},
+    {"id": "L14", "title": "Which script did each sweep satisfy?", "cmd":
+        "SEL='.vin[] | select(.txid == $f)'\n"
+        "bitcoin-cli getrawtransaction $ASWEEP true | jq --arg f $FORCETX \"$SEL\" > alice-in.json\n"
+        "bitcoin-cli getrawtransaction $BSWEEP true | jq --arg f $FORCETX \"$SEL\" > bob-in.json\n"
+        "jq -c '{spends_output: .vout, sequence}' alice-in.json bob-in.json\n"
+        "bitcoin-cli decodescript $(jq -r '.txinwitness[-1]' alice-in.json) | jq -r .asm\n"
+        "bitcoin-cli decodescript $(jq -r '.txinwitness[-1]' bob-in.json) | jq -r .asm",
+     "expect": [r'"sequence":144\}', r'"sequence":1\}', r"OP_ELSE 144 OP_CHECKSEQUENCEVERIFY OP_DROP",
+                r"OP_CHECKSIGVERIFY 1 OP_CHECKSEQUENCEVERIFY$"]},
 ]}
 
 # --------------------------------------------------------------------------
@@ -481,19 +509,239 @@ LABS["dlab09-routing"] = {"steps": [
     {"id": "R1", "title": "What the sender can see", "cmd": "lnview graph", "expect": [r"bob→dave", r"carol→dave\s+\d+\s+2000"]},
     {"id": "R2", "title": "Predict the route", "cmd":
         "DAVE=$(ln-dave getinfo | jq -r .identity_pubkey)\n"
-        "ln-alice queryroutes --dest $DAVE --amt 300000 | jq '.routes[0] | {total_fees_msat, hops: [.hops[].pub_key[0:8]]}'\nlnview names",
-     "expect": [r'"total_fees_msat"']},
+        "ln-alice queryroutes --dest $DAVE --amt 300000 | jq -c '.routes[0] | {total_fees_msat, hops: [.hops[].pub_key[0:8]]}'\n"
+        "lnview names",
+     "expect": [r'\{"total_fees_msat":"4000","hops":\["[0-9a-f]{8}","[0-9a-f]{8}"\]\}']},
     {"id": "R3", "title": "Pay 300,000 sat to Dave", "cmd":
         "INV=$(ln-dave addinvoice --amt 300000 --memo 'DLAB09' | jq -r .payment_request)\nln-alice payinvoice --force --json $INV > /lab/pay1.json\nlnview payment /lab/pay1.json",
      "expect": [r"SUCCEEDED", r"attempt 1: alice → bob → dave\s+FAILED\s+TEMPORARY_CHANNEL_FAILURE", r"alice → carol → dave\s+SUCCEEDED"], "timeout": 180},
-    {"id": "R4", "title": "The hidden state (evaluator only)", "cmd": "lnview balances", "expect": [r"bob–dave"]},
+    {"id": "R4", "title": "The hidden state (evaluator only)", "cmd": "lnview balances", "expect": [r"bob–dave", r"bob\s+96,530"]},
     {"id": "R5", "title": "What Alice learned", "cmd":
-        "ln-alice querymc | jq -c '.pairs[] | {from: .node_from[0:8], to: .node_to[0:8], fail_amt: .history.fail_amt_sat, success_amt: .history.success_amt_sat}'",
-     "expect": [r'"fail_amt"']},
-    {"id": "R6", "title": "Change one condition: Dave refills Bob's side", "cmd":
-        "BINV=$(ln-bob addinvoice --amt 400000 | jq -r .payment_request)\nln-dave payinvoice --force --json $BINV | jq -r .status\nln-alice resetmc\nlnview balances",
-     "expect": [r"SUCCEEDED"], "timeout": 180},
+        "ln-alice querymc | jq -c '.pairs[] | {from: .node_from[0:8], to: .node_to[0:8], fail_amt: .history.fail_amt_sat, success_amt: .history.success_amt_sat}'\n"
+        "# which probability model turns this memory into route choices?\n"
+        "ln-alice getmccfg | jq -c '.config | {model, half_life_seconds, hop_probability, weight}'",
+     "expect": [r'"fail_amt"', r'"model":"(APRIORI|BIMODAL)"']},
+    {"id": "R6", "title": "Two interventions: refill Bob's side, reset Alice's memory", "cmd":
+        "# intervention 1 (liquidity): Dave pays Bob 400,000 sat over their channel\n"
+        "BINV=$(ln-bob addinvoice --amt 400000 | jq -r .payment_request)\nln-dave payinvoice --force --json $BINV | jq -r .status\n"
+        "# intervention 2 (memory): Alice forgets what Mission Control learned\n"
+        "ln-alice resetmc\nlnview balances",
+     "expect": [r"SUCCEEDED", r"bob\s+496,530"], "timeout": 180},
     {"id": "R7", "title": "Retry the same payment", "cmd":
         "INV2=$(ln-dave addinvoice --amt 300000 | jq -r .payment_request)\nln-alice payinvoice --force --json $INV2 > /lab/pay2.json\nlnview payment /lab/pay2.json",
      "expect": [r"SUCCEEDED", r"attempt 1: alice → bob → dave\s+SUCCEEDED"], "timeout": 180},
+    {"id": "R8", "title": "Optional: fail and learn again", "cmd":
+        "INV3=$(ln-dave addinvoice --amt 300000 | jq -r .payment_request)\nln-alice payinvoice --force --json $INV3 > /lab/pay3.json\nlnview payment /lab/pay3.json",
+     "expect": [r"attempt 1: alice → bob → dave\s+FAILED", r"alice → carol → dave\s+SUCCEEDED"], "timeout": 180},
+    {"id": "R9", "title": "Optional: refill only, memory kept", "cmd":
+        "BINV2=$(ln-bob addinvoice --amt 300000 | jq -r .payment_request)\nln-dave payinvoice --force --json $BINV2 | jq -r .status\n"
+        "lnview balances | grep bob–dave\n"
+        "ln-alice querymc | jq -c '.pairs[] | select(.history.fail_amt_sat != \"0\") | {from: .node_from[0:8], to: .node_to[0:8], fail_amt: .history.fail_amt_sat}'",
+     "expect": [r"SUCCEEDED", r"bob\s+496,530", r'"fail_amt":"300000"'], "timeout": 180},
+    {"id": "R10", "title": "Optional: the same payment, memory kept", "cmd":
+        "INV4=$(ln-dave addinvoice --amt 300000 | jq -r .payment_request)\nln-alice payinvoice --force --json $INV4 > /lab/pay4.json\nlnview payment /lab/pay4.json",
+     "expect": [r"SUCCEEDED", r"attempt 1: alice → carol → dave\s+SUCCEEDED"], "absent": [r"alice → bob → dave"], "timeout": 180},
+]}
+
+# --------------------------------------------------------------------------
+# Additional labs (outside the ten-session plan). Commands are raw strings: what you see is what you type.
+TMA = r"""bitcoin-cli testmempoolaccept "[\"$%s\"]" | jq -c '.[0] | {allowed, "reject-reason"}'"""
+WIT = r"""bitcoin-cli decoderawtransaction $%s > tx.json
+jq -c '.vin[0] | {sequence, witness: [.txinwitness[] | length / 2]}' tx.json"""
+
+LABS["dlab12-conditions"] = {"steps": [
+    {"id": "K1", "title": "Three keyholders", "cmd": r"""for w in alice bob carol; do bitcoin-cli createwallet $w; done
+mine 101
+A=$(lab-key alice); B=$(lab-key bob); C=$(lab-key carol)
+echo "A=$A"; echo "B=$B"; echo "C=$C"
+DEST=$(bitcoin-cli -rpcwallet=carol getnewaddress)""",
+     "expect": [r"^A=\[[0-9a-f]{8}/84h/1h/0h/0/0\]0[23][0-9a-f]{64}$", r"^C=\[[0-9a-f]{8}/84h"]},
+    {"id": "M1", "title": "A 2-of-3 output", "cmd": r"""SHARED=$(lab-watch shared "wsh(multi(2,$A,$B,$C))")
+echo $SHARED
+INFO=$(bitcoin-cli -rpcwallet=shared getaddressinfo $SHARED)
+echo $INFO | jq -c '{script, sigsrequired, pubkeys: (.pubkeys | length)}'
+bitcoin-cli decodescript $(echo $INFO | jq -r .hex) | jq -r .asm""",
+     "expect": [r"^bcrt1q[0-9a-z]{58}$", r'"script":"multisig","sigsrequired":2,"pubkeys":3', r"^2 0[23][0-9a-f]{64} .* 3 OP_CHECKMULTISIG$"]},
+    {"id": "M2", "title": "Fund it", "cmd": "bitcoin-cli -rpcwallet=miner sendtoaddress $SHARED 1\nmine 1\nbitcoin-cli -rpcwallet=shared getbalance",
+     "expect": [r"^1\.00000000$"]},
+    {"id": "M3", "title": "One signature is not enough", "cmd": r"""PSBT=$(lab-spend shared $DEST)
+PSBT=$(bitcoin-cli -rpcwallet=alice walletprocesspsbt $PSBT | jq -r .psbt)
+bitcoin-cli analyzepsbt $PSBT | jq -c '{next, missing: .inputs[0].missing}'""",
+     "expect": [r'"next":"signer"', r'"missing":\{"signatures":\["[0-9a-f]{40}","[0-9a-f]{40}"\]\}']},
+    {"id": "M4", "title": "Bob adds the second signature", "cmd": r"""PSBT=$(bitcoin-cli -rpcwallet=bob walletprocesspsbt $PSBT | jq -r .psbt)
+TX=$(bitcoin-cli finalizepsbt $PSBT | jq -r .hex)
+""" + WIT % "TX" + r"""
+bitcoin-cli sendrawtransaction $TX
+mine 1
+bitcoin-cli -rpcwallet=shared getbalance""",
+     "expect": [r'"witness":\[0,7[0-2],7[0-2],105\]', r"^0\.00000000$"]},
+    {"id": "T1", "title": "A vault: Alice now, Carol after 10 blocks", "cmd": r"""VAULT=$(lab-watch vault "wsh(or_d(pk($A),and_v(v:pk($C),older(10))))")
+HEX=$(bitcoin-cli -rpcwallet=vault getaddressinfo $VAULT | jq -r .hex)
+bitcoin-cli decodescript $HEX | jq -r .asm
+bitcoin-cli -rpcwallet=miner sendtoaddress $VAULT 1
+mine 1
+bitcoin-cli -rpcwallet=vault getbalance""",
+     "expect": [r"OP_CHECKSIG OP_IFDUP OP_NOTIF 0[23][0-9a-f]{64} OP_CHECKSIGVERIFY 10 OP_CHECKSEQUENCEVERIFY OP_ENDIF", r"^1\.00000000$"]},
+    {"id": "T2", "title": "Alice spends at once", "cmd": r"""P=$(lab-spend vault $DEST)
+P=$(bitcoin-cli -rpcwallet=alice walletprocesspsbt $P | jq -r .psbt)
+TXA=$(bitcoin-cli finalizepsbt $P | jq -r .hex)
+""" + TMA % "TXA" + "\n" + WIT % "TXA",
+     "expect": [r'"allowed":true,', r'"witness":\[7[0-2],75\]']},
+    {"id": "T3", "title": "Carol signs a normal transaction", "cmd": r"""P=$(lab-spend vault $DEST)
+bitcoin-cli -rpcwallet=carol walletprocesspsbt $P | jq -c '{complete}'""",
+     "expect": [r'\{"complete":false\}']},
+    {"id": "T4", "title": "Carol sets nSequence = 10, too early", "cmd": r"""P=$(lab-spend vault $DEST --sequence 10)
+P=$(bitcoin-cli -rpcwallet=carol walletprocesspsbt $P | jq -r .psbt)
+TXC=$(bitcoin-cli finalizepsbt $P | jq -r .hex)
+bitcoin-cli -rpcwallet=vault listunspent | jq '.[0].confirmations'
+""" + TMA % "TXC",
+     "expect": [r"^1$", r'"reject-reason":"non-BIP68-final"']},
+    {"id": "T5", "title": "Ten confirmations later", "cmd": r"""mine 9
+bitcoin-cli -rpcwallet=vault listunspent | jq '.[0].confirmations'
+""" + TMA % "TXC" + "\n" + WIT % "TXC" + r"""
+bitcoin-cli sendrawtransaction $TXC
+mine 1
+""" + TMA % "TXA",
+     "expect": [r"^10$", r'"allowed":true,', r'"sequence":10,"witness":\[7[0-2],0,75\]', r'"reject-reason":"missing-inputs"']},
+    {"id": "L1", "title": "An absolute timelock: Bob from block H", "cmd": r"""H=$(( $(bitcoin-cli getblockcount) + 5 ))
+LOCK=$(lab-watch lock "wsh(and_v(v:pk($B),after($H)))")
+bitcoin-cli -rpcwallet=miner sendtoaddress $LOCK 1
+mine 1
+P=$(lab-spend lock $DEST --locktime $H)
+P=$(bitcoin-cli -rpcwallet=bob walletprocesspsbt $P | jq -r .psbt)
+TXL=$(bitcoin-cli finalizepsbt $P | jq -r .hex)
+echo "height $(bitcoin-cli getblockcount), H = $H"
+""" + TMA % "TXL",
+     "expect": [r"^height \d+, H = \d+$", r'"reject-reason":"non-final"']},
+    {"id": "L2", "title": "At height H", "cmd": r"""mine $(( H - $(bitcoin-cli getblockcount) ))
+""" + TMA % "TXL" + r"""
+bitcoin-cli decoderawtransaction $TXL | jq -c '{locktime, sequence: .vin[0].sequence}'""",
+     "expect": [r'"allowed":true,', r'"locktime":\d+,"sequence":4294967293']},
+    {"id": "P1", "title": "A Taproot output with a hidden branch", "cmd": r"""TAP=$(lab-watch tap "tr($A,and_v(v:pk($C),older(10)))")
+echo $TAP
+bitcoin-cli -rpcwallet=miner sendtoaddress $TAP 1
+mine 1
+bitcoin-cli -rpcwallet=tap getbalance""",
+     "expect": [r"^bcrt1p[0-9a-z]{58}$", r"^1\.00000000$"]},
+    {"id": "P2", "title": "Key path: Alice alone", "cmd": r"""P=$(lab-spend tap $DEST)
+P=$(bitcoin-cli -rpcwallet=alice walletprocesspsbt $P | jq -r .psbt)
+TXK=$(bitcoin-cli finalizepsbt $P | jq -r .hex)
+bitcoin-cli testmempoolaccept "[\"$TXK\"]" | jq -c '.[0] | {allowed, vsize}'
+""" + WIT % "TXK",
+     "expect": [r'\{"allowed":true,"vsize":99\}', r'"witness":\[64\]']},
+    {"id": "P3", "title": "Script path: Carol after 10 blocks", "cmd": r"""P=$(lab-spend tap $DEST --sequence 10)
+P=$(bitcoin-cli -rpcwallet=carol walletprocesspsbt $P | jq -r .psbt)
+TXS=$(bitcoin-cli finalizepsbt $P | jq -r .hex)
+mine 9
+bitcoin-cli testmempoolaccept "[\"$TXS\"]" | jq -c '.[0] | {allowed, vsize}'
+""" + WIT % "TXS" + r"""
+bitcoin-cli decodescript $(jq -r '.vin[0].txinwitness[1]' tx.json) | jq -r .asm""",
+     "expect": [r'\{"allowed":true,"vsize":117\}', r'"witness":\[64,36,33\]', r"^[0-9a-f]{64} OP_CHECKSIGVERIFY 10 OP_CHECKSEQUENCEVERIFY$"]},
+]}
+
+# --------------------------------------------------------------------------
+LABS["dlab13-oracles"] = {"steps": [
+    {"id": "O0", "title": "Two players, one oracle", "cmd": r"""for w in alice bob oracle; do bitcoin-cli createwallet $w; done
+mine 101
+bitcoin-cli -rpcwallet=miner sendtoaddress $(bitcoin-cli -rpcwallet=alice getnewaddress) 1
+bitcoin-cli -rpcwallet=miner sendtoaddress $(bitcoin-cli -rpcwallet=bob getnewaddress) 1
+mine 1
+A=$(lab-key alice); B=$(lab-key bob); O=$(lab-key oracle)
+echo "A=$A"; echo "B=$B"; echo "O=$O""" + '"',
+     "expect": [r"^O=\[[0-9a-f]{8}/84h/1h/0h/0/0\]0[23][0-9a-f]{64}$"]},
+    {"id": "O1", "title": "The bet: a 2-of-3 output", "cmd": r"""BET=$(lab-watch bet "wsh(multi(2,$A,$B,$O))")
+bitcoin-cli -rpcwallet=alice sendtoaddress $BET 0.1
+bitcoin-cli -rpcwallet=bob sendtoaddress $BET 0.1
+mine 1
+bitcoin-cli -rpcwallet=bet getbalance""",
+     "expect": [r"^0\.20000000$"]},
+    {"id": "O2", "title": "A refund, valid only from block H", "cmd": r"""H=$(( $(bitcoin-cli getblockcount) + 12 ))
+RA=$(bitcoin-cli -rpcwallet=alice getnewaddress)
+RB=$(bitcoin-cli -rpcwallet=bob getnewaddress)
+REFUND=$(lab-spend bet $RA $RB --locktime $H)
+REFUND=$(bitcoin-cli -rpcwallet=alice walletprocesspsbt $REFUND | jq -r .psbt)
+REFUND=$(bitcoin-cli -rpcwallet=bob walletprocesspsbt $REFUND | jq -r .hex)
+bitcoin-cli decoderawtransaction $REFUND | jq -c '{locktime, outputs: [.vout[].value]}'
+""" + TMA % "REFUND",
+     "expect": [r'"outputs":\[0\.0999\d+,0\.0999\d+\]', r'"reject-reason":"non-final"']},
+    {"id": "O3", "title": "It was dry: the oracle and Bob sign", "cmd": r"""PAY=$(lab-spend bet $(bitcoin-cli -rpcwallet=bob getnewaddress))
+PAY=$(bitcoin-cli -rpcwallet=oracle walletprocesspsbt $PAY | jq -r .psbt)
+PAY=$(bitcoin-cli -rpcwallet=bob walletprocesspsbt $PAY | jq -r .hex)
+bitcoin-cli sendrawtransaction $PAY
+mine 1
+bitcoin-cli -rpcwallet=alice getbalance
+bitcoin-cli -rpcwallet=bob getbalance""",
+     "expect": [r"getbalance\n0\.8999\d+\n", r"getbalance\n1\.0999\d+$"]},
+    {"id": "O4", "title": "The refund comes too late", "cmd": r"""mine $(( H - $(bitcoin-cli getblockcount) ))
+""" + TMA % "REFUND",
+     "expect": [r'"reject-reason":"missing-inputs"']},
+    {"id": "O5", "title": "A second bet; the oracle stays silent", "cmd": r"""A2=$(lab-key alice); B2=$(lab-key bob); O2=$(lab-key oracle)
+BET2=$(lab-watch bet2 "wsh(multi(2,$A2,$B2,$O2))")
+bitcoin-cli -rpcwallet=alice sendtoaddress $BET2 0.1
+bitcoin-cli -rpcwallet=bob sendtoaddress $BET2 0.1
+mine 1
+H2=$(( $(bitcoin-cli getblockcount) + 12 ))
+RA2=$(bitcoin-cli -rpcwallet=alice getnewaddress)
+RB2=$(bitcoin-cli -rpcwallet=bob getnewaddress)
+R2=$(lab-spend bet2 $RA2 $RB2 --locktime $H2)
+R2=$(bitcoin-cli -rpcwallet=alice walletprocesspsbt $R2 | jq -r .psbt)
+R2=$(bitcoin-cli -rpcwallet=bob walletprocesspsbt $R2 | jq -r .hex)
+""" + TMA % "R2",
+     "expect": [r'"reject-reason":"non-final"']},
+    {"id": "O6", "title": "After H2 the refund settles it", "cmd": r"""mine 12
+""" + TMA % "R2" + r"""
+bitcoin-cli sendrawtransaction $R2
+mine 1
+bitcoin-cli -rpcwallet=bet2 getbalance""",
+     "expect": [r'"allowed":true,', r"^0\.00000000$"]},
+    {"id": "D1", "title": "A DLC oracle announces the event", "cmd": r"""dlc-oracle announce rain-catania-2026-11-02 rain dry
+jq -c '{event, outcomes}' oracle/event.json""",
+     "expect": [r"^S\(rain\) = R \+ e·P = 0[23][0-9a-f]{64}$", r"^S\(dry\) = R \+ e·P = 0[23][0-9a-f]{64}$"]},
+    {"id": "D2", "title": "It rains: the oracle attests", "cmd": "dlc-oracle attest rain",
+     "expect": [r"attestation for 'rain': s = [0-9a-f]{64}", r"\): valid$"]},
+    {"id": "D3", "title": "Which payout can be completed?", "cmd": "dlc-oracle check",
+     "expect": [r"= S\(rain\)\s+→ this payout can be completed", r"≠ S\(dry\)"]},
+    {"id": "D4", "title": "An honest oracle signs once", "cmd": "dlc-oracle attest dry",
+     "fails": True, "expect": [r"already attested another outcome"]},
+    {"id": "D5", "title": "A cheating oracle signs both", "cmd": "dlc-oracle attest dry --force\ndlc-oracle extract",
+     "expect": [r"d·G matches the oracle key P: yes"]},
+    {"id": "F0", "title": "A federation and its user", "cmd": r"""for w in fed1 fed2 fed3 user; do bitcoin-cli createwallet $w; done
+bitcoin-cli -rpcwallet=miner sendtoaddress $(bitcoin-cli -rpcwallet=user getnewaddress) 3
+mine 1
+F1=$(lab-key fed1); F2=$(lab-key fed2); F3=$(lab-key fed3); U=$(lab-key user)
+FED=$(lab-watch fed "wsh(or_d(multi(2,$F1,$F2,$F3),and_v(v:pk($U),older(20))))")
+echo $FED""",
+     "expect": [r"^bcrt1q[0-9a-z]{58}$"]},
+    {"id": "F1", "title": "Peg-in: the user deposits", "cmd": "bitcoin-cli -rpcwallet=user sendtoaddress $FED 0.5\nmine 1\nbitcoin-cli -rpcwallet=fed getbalance",
+     "expect": [r"^0\.50000000$"]},
+    {"id": "F2", "title": "Peg-out: two members release it", "cmd": r"""P=$(lab-spend fed $(bitcoin-cli -rpcwallet=user getnewaddress))
+P=$(bitcoin-cli -rpcwallet=fed1 walletprocesspsbt $P | jq -r .psbt)
+P=$(bitcoin-cli -rpcwallet=fed3 walletprocesspsbt $P | jq -r .hex)
+bitcoin-cli sendrawtransaction $P
+mine 1
+bitcoin-cli -rpcwallet=fed getbalance
+bitcoin-cli -rpcwallet=user getbalance""",
+     "expect": [r"getbalance\n0\.00000000\n", r"getbalance\n2\.9999\d+$"]},
+    {"id": "F3", "title": "Two members collude", "cmd": r"""bitcoin-cli -rpcwallet=user sendtoaddress $FED 0.5
+mine 1
+P=$(lab-spend fed $(bitcoin-cli -rpcwallet=fed1 getnewaddress))
+P=$(bitcoin-cli -rpcwallet=fed1 walletprocesspsbt $P | jq -r .psbt)
+P=$(bitcoin-cli -rpcwallet=fed2 walletprocesspsbt $P | jq -r .hex)
+""" + TMA % "P" + r"""
+bitcoin-cli sendrawtransaction $P
+mine 1
+bitcoin-cli -rpcwallet=fed1 getbalance""",
+     "expect": [r'"allowed":true,', r"^0\.4999\d+$"]},
+    {"id": "F4", "title": "The federation goes silent", "cmd": r"""bitcoin-cli -rpcwallet=user sendtoaddress $FED 0.5
+mine 1
+P=$(lab-spend fed $(bitcoin-cli -rpcwallet=user getnewaddress) --sequence 20)
+EXIT=$(bitcoin-cli -rpcwallet=user walletprocesspsbt $P | jq -r .hex)
+""" + TMA % "EXIT",
+     "expect": [r'"reject-reason":"non-BIP68-final"']},
+    {"id": "F5", "title": "Twenty confirmations later", "cmd": r"""mine 19
+""" + TMA % "EXIT" + r"""
+bitcoin-cli sendrawtransaction $EXIT
+mine 1
+bitcoin-cli -rpcwallet=fed getbalance""",
+     "expect": [r'"allowed":true,', r"^0\.00000000$"]},
 ]}

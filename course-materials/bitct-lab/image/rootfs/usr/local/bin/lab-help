@@ -6,6 +6,7 @@ Common commands
   bitcoin-cli <cmd>   Bitcoin Core RPC on node-a   (btc-a / btc-b / btc-c choose a node)
   mine [N]            mine N regtest blocks on node-a
   lab-status          status of every node in this lab
+  lab-key, lab-watch, lab-spend   key, watch-only wallet and PSBT helpers (DLAB 12–13)
   lab-help            this help
   exit                leave the shell (the lab keeps running)
 Dashboard: http://localhost:8080

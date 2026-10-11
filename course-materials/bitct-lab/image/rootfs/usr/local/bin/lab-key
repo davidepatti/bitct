@@ -1,0 +1,9 @@
+#!/bin/bash
+# lab-key WALLET — print one fresh public key of WALLET with its key origin, ready for a descriptor.
+#   lab-key alice   ->   [1a2b3c4d/84h/1h/0h/0/0]02a1…
+# The origin [fingerprint/path] lets that wallet recognise and sign its key inside a shared script.
+set -euo pipefail
+w="${1:?usage: lab-key WALLET}"
+cli="bitcoin-cli -rpcconnect=${NODE:-node-a}"
+addr=$($cli -rpcwallet="$w" getnewaddress "" bech32)
+$cli -rpcwallet="$w" getaddressinfo "$addr" | jq -r '.desc' | sed -E 's/^wpkh\((.*)\)#.*$/\1/'

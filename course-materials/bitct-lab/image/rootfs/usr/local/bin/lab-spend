@@ -1,0 +1,27 @@
+#!/bin/bash
+# lab-spend WALLET DEST [DEST ...] [--sequence N] [--locktime H] — unsigned PSBT that sends every coin
+# of WALLET to the destinations in equal parts (fee 5 sat/vB, taken from the outputs).
+#   --sequence N   set nSequence = N on every input (a relative timelock of N blocks, BIP68)
+#   --locktime H   set nLockTime = H (the transaction is invalid before block height H)
+set -euo pipefail
+w="${1:?usage: lab-spend WALLET DEST [DEST ...] [--sequence N] [--locktime H]}"; shift
+dests=(); seq=""; lt=0
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --sequence) seq="$2"; shift 2 ;;
+    --locktime) lt="$2"; shift 2 ;;
+    *) dests+=("$1"); shift ;;
+  esac
+done
+[ ${#dests[@]} -gt 0 ] || { echo "lab-spend: no destination" >&2; exit 1; }
+cli="bitcoin-cli -rpcconnect=${NODE:-node-a}"
+utxos=$($cli -rpcwallet="$w" listunspent 0)
+[ "$(echo "$utxos" | jq length)" -gt 0 ] || { echo "lab-spend: wallet $w has no coins" >&2; exit 1; }
+inputs=$(echo "$utxos" | jq -c --arg s "$seq" '[.[] | {txid, vout} + (if $s == "" then {} else {sequence: ($s | tonumber)} end)]')
+sats=$(echo "$utxos" | jq '[.[].amount * 100000000 | round] | add')
+n=${#dests[@]}
+outputs=$(for d in "${dests[@]}"; do printf '%s\n' "$d"; done | jq -R . | jq -sc --argjson s "$sats" --argjson n "$n" \
+  '($s / $n | floor) as $part | to_entries | map({(.value): ((if .key == 0 then $s - $part * ($n - 1) else $part end) / 100000000)})')
+opts=$(jq -nc --argjson n "$n" --arg c "${dests[0]}" \
+  '{add_inputs: false, subtractFeeFromOutputs: [range($n)], fee_rate: 5, changeAddress: $c}')
+$cli -rpcwallet="$w" walletcreatefundedpsbt "$inputs" "$outputs" "$lt" "$opts" | jq -r .psbt

@@ -301,6 +301,7 @@ static void connectWiFi() {
 }
 
 static void connectMQTT() {
+  int failures = 0;
   while (!mqtt.connected()) {
     lcdLine(1, "MQTT...");
     String id = String("d17-") + GROUP + "-" + String((uint32_t)esp_random(), HEX);
@@ -308,6 +309,11 @@ static void connectMQTT() {
       Serial.printf("MQTT connected to %s:%d, topic %s\n", MQTT_HOST, MQTT_PORT, topic);
     } else {
       Serial.printf("MQTT connect failed (state %d), retrying\n", mqtt.state());
+      if (++failures % 5 == 0) {
+        // Seen after the Wokwi tab spent time in the background: a fresh start reconnects at once.
+        Serial.println("hint: keep the Wokwi tab in front; if this repeats, restart the simulation");
+        lcdLine(1, "MQTT? restart");
+      }
       delay(2000);
     }
   }
@@ -319,6 +325,43 @@ static void publish(const String &msg, const char *what) {
   Serial.printf("published %s (%u bytes): %s\n", what, msg.length(), ok ? "OK" : "FAILED");
   delay(80);
   digitalWrite(LED_PIN, LOW);
+}
+
+// Fallback clock: the Date header of a plain HTTP response. Wokwi's virtual Wi-Fi always
+// carries TCP (as for MQTT), while NTP over UDP sometimes gets no answer.
+static int monthIndex(const char *m) {
+  const char *names = "JanFebMarAprMayJunJulAugSepOctNovDec";
+  for (int i = 0; i < 12; i++) if (strncmp(m, names + 3 * i, 3) == 0) return i;
+  return -1;
+}
+
+static long long daysFromCivil(int y, int m, int d) {  // days since 1970-01-01 (proleptic Gregorian)
+  y -= m <= 2;
+  const long long era = (y >= 0 ? y : y - 399) / 400;
+  const int yoe = (int)(y - era * 400);
+  const int doy = (153 * (m + (m > 2 ? -3 : 9)) + 2) / 5 + d - 1;
+  const int doe = yoe * 365 + yoe / 4 - yoe / 100 + doy;
+  return era * 146097 + doe - 719468;
+}
+
+static time_t httpDateEpoch(const char *host) {
+  WiFiClient c;
+  if (!c.connect(host, 80)) return 0;
+  c.printf("HEAD / HTTP/1.1\r\nHost: %s\r\nConnection: close\r\n\r\n", host);
+  unsigned long t0 = millis();
+  while (millis() - t0 < 6000 && (c.connected() || c.available())) {
+    String line = c.readStringUntil('\n');
+    if (line.length() == 0) continue;
+    if (line.startsWith("Date: ") || line.startsWith("date: ")) {
+      char wd[4], mon[4];
+      int d, y, hh, mm, ss;
+      if (sscanf(line.c_str() + 6, "%3s, %d %3s %d %d:%d:%d", wd, &d, mon, &y, &hh, &mm, &ss) == 7) {
+        int mi = monthIndex(mon);
+        if (mi >= 0) return (time_t)(daysFromCivil(y, mi + 1, d) * 86400LL + hh * 3600L + mm * 60L + ss);
+      }
+    }
+  }
+  return 0;
 }
 
 void setup() {
@@ -339,7 +382,7 @@ void setup() {
   }
   bip340_hex(pubkey, 32, pubhex);
 #ifdef D17_SELFTEST
-  {  // maintainers: compare with the Python reference (tests/selftest_esp32.sh)
+  {  // maintainers: compare with the Python reference (README, "Verification")
     String r = buildReport(42, 1200);
     uint8_t m[32], aux[32] = {0}, sig[64];
     char hx[129];
@@ -362,12 +405,17 @@ void setup() {
   // Wokwi does not keep flash between runs, so the counter starts from the
   // boot time (seconds since 1970). It still increases across restarts.
   configTime(0, 0, "pool.ntp.org", "time.google.com");
-  lcdLine(1, "NTP time...");
+  lcdLine(1, "Clock...");
   time_t now = 0;
-  for (int i = 0; i < 100 && now < 1700000000; i++) { delay(100); time(&now); }
+  const char *clk = "";
+#ifndef D17_SKIP_NTP
+  for (int i = 0; i < 150 && now < 1700000000; i++) { delay(100); time(&now); }
+#endif
+  if (now < 1700000000) { clk = ", HTTP Date header"; now = httpDateEpoch("www.google.com"); }
+  if (now < 1700000000) now = httpDateEpoch("example.com");
   if (now >= 1700000000) {
     seq = (uint64_t)now;
-    Serial.printf("first sequence number (boot time): %llu\n", (unsigned long long)seq);
+    Serial.printf("first sequence number (boot time%s): %llu\n", clk, (unsigned long long)seq);
   } else {
     Serial.println("WARNING: no network time; counter restarts at 1 (expect NO_NEW_EVENT)");
   }

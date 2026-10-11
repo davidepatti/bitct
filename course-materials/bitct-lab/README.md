@@ -6,7 +6,7 @@ starts with `docker compose up -d --wait` and is used through a Linux shell insi
 
 | Image | Contents |
 |---|---|
-| `ghcr.io/davidepatti/bitct-lab:2026.10` | Debian 13 slim · Bitcoin Core **31.1** · LND **v0.21.4-beta** · Mosquitto · course tools (`bip340`, `addr`, `header`, `merkle`, `hashdiff`, `d17`, `lnview`, dashboard, gateway) |
+| `ghcr.io/davidepatti/bitct-lab:2026.10` | Debian 13 slim · Bitcoin Core **31.1** · LND **v0.21.4-beta** · Mosquitto · course tools (`bip340`, `addr`, `header`, `merkle`, `hashdiff`, `d17`, `lnview`, `dlc-oracle`, `lab-key`/`lab-watch`/`lab-spend`, dashboard, gateway) |
 | `ghcr.io/davidepatti/bitct-lab:2026.10-ml` | the same + JupyterLab, NumPy, pandas, matplotlib (DLAB 10 only) |
 
 Both images are published for `linux/amd64` and `linux/arm64` (Intel/AMD PCs, Apple-silicon Macs, ARM laptops).
@@ -17,6 +17,9 @@ pinned SHA-256 hashes (`image/Dockerfile`).
 [public course package](https://github.com/davidepatti/bitct/pkgs/container/bitct-lab).
 Anonymous downloads of every image layer were checksum-verified on both architectures.
 Students do not need a GitHub account or registry login.
+
+**DLAB 12–13 (added `2026-10-09`)** need the helpers `lab-key`, `lab-watch`, `lab-spend` and `dlc-oracle`,
+which are not in the image published on `2026-10-08`: rebuild and republish the `2026.10` tags before using them.
 
 ## Labs
 
@@ -34,6 +37,8 @@ Students do not need a GitHub account or registry login.
 | `labs/dlab09-routing` | DLAB 09 — Routing with Hidden Liquidity | LAB-LN-ROUTING | regtest |
 | `labs/dlab10-graph` | DLAB 10 — Graph Learning with Hidden Liquidity | LAB-LN-GRAPH | none (simulation) |
 | `labs/dlab11-esp32` | DLAB 11 — ESP32 Sensor Readings Anchored on Bitcoin | LAB-IOT-ESP32-ANCHOR (new) | regtest + optional signet |
+| `labs/dlab12-conditions` | DLAB 12 — Spending Conditions: Multisig, Timelocks, Taproot | LAB-BTC-CONDITIONS (new, additional) | regtest |
+| `labs/dlab13-oracles` | DLAB 13 — Oracles and Federations: Who Must Sign? | LAB-ORACLE-FEDERATION (new, additional) | regtest |
 
 Each folder has a `compose.yaml` and a student `README.md`. The Wokwi project is in `wokwi/d17-esp32/`.
 

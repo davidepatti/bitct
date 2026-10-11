@@ -23,6 +23,7 @@ ln-fund = "bitct.lntools:main_fund"
 ln-topology = "bitct.lntools:main_topology"
 lnview = "bitct.lntools:main_view"
 lngraph = "bitct.lngraph:main"
+dlc-oracle = "bitct.dlc_oracle:main"
 
 [tool.setuptools]
 packages = ["bitct"]

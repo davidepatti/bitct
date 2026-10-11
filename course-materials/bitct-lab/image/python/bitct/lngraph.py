@@ -3,13 +3,24 @@
 A small simulator produces a temporal Lightning-like channel graph with hidden
 balances. Three tables are kept apart on purpose:
 
-  observations  what a sender could legitimately know at observation time
+  observations  public channel data, the queried amount and earlier feedback
   evaluator     the hidden truth (balances) — never a model input
-  labels        y = 1 if the source side can send `amount` (reserve-adjusted)
+  labels        y = 1 if balance − 1% of capacity >= amount (the fixture's reserve rule)
 
-Models compared on the same chronological test periods:
-  majority · capacity heuristic · edge-only logistic regression ·
-  2-hop message-passing model (SGC-style neighbour averaging + logistic head)
+Observation model (a simplification, stated before any score): each period the
+generator samples arbitrary directed channels and amounts and records their labels
+directly. It does not simulate whether one sender could reach that channel, nor how
+an earlier failure on a route hides (censors) the hops after it. "Feedback" is the
+label of the same directed channel when it was sampled in the previous period.
+
+Models compared on the same chronological test rows (one generated topology):
+  training-rate constant · capacity rules (with and without the reserve) ·
+  edge-only logistic regression · endpoint-feature control (no aggregation) ·
+  fixed neighbour averaging for K hops + a trained logistic head (K chosen on validation).
+The averaging has no learned weights (SGC-style analogy); a trainable GNN is an extension.
+
+Metrics: balanced accuracy at threshold 0.5; average precision (step-wise PR curve,
+tied scores grouped); Brier score (lower is better).
 
 Teaching code: transparent and small, not a research benchmark.
 """
@@ -38,9 +49,10 @@ class Config:
     val_periods: tuple = (8, 9)
     test_periods: tuple = (10, 11)
     notes: list = field(default_factory=lambda: [
-        "roles: hubs route, sources mostly pay, sinks mostly receive",
-        "balances drift with simulated payments; topology and fees are public",
-        "the observer learns only from its own past attempts (previous period)"])
+        "roles: hubs route, sources mostly pay, sinks mostly receive (roles and topology are coupled by construction)",
+        "balances drift with simulated payments and periodic redistribution; topology and fees are public",
+        "observations sample arbitrary directed channels; feedback is the same channel's label in the previous period",
+        "no sender reachability, route censoring, fees paid, HTLC limits or timelocks are simulated"])
 
 
 # ------------------------------------------------------------------ simulator
@@ -138,13 +150,14 @@ def simulate(cfg: Config):
         ds = rng.integers(0, 2 * m, size=cfg.obs_per_period)
         for d in ds:
             c = cap[chan[d]]
-            amt = float(np.exp(rng.uniform(np.log(1e4), np.log(0.9 * c))))
+            # the label uses the same whole-satoshi amount that the observations table stores
+            amt = float(round(np.exp(rng.uniform(np.log(1e4), np.log(0.9 * c)))))
             spendable = local[d] - RESERVE * c
             y = int(spendable >= amt)
             fb = feedback.get(int(d))
             obs_rows.append({
                 "period": t, "dir": int(d), "channel": int(chan[d]), "src": int(src[d]), "dst": int(dst[d]),
-                "amount": round(amt), "capacity": c, "fee_base_msat": base[d], "fee_ppm": ppm[d],
+                "amount": int(amt), "capacity": c, "fee_base_msat": base[d], "fee_ppm": ppm[d],
                 "deg_src": len(adj[src[d]]), "deg_dst": len(adj[dst[d]]),
                 "prev_attempts": 0 if fb is None else len(fb),
                 "prev_success_rate": np.nan if fb is None else float(np.mean(fb)),
@@ -197,10 +210,18 @@ def propagate(H, src, dst, n, hops=2):
 
 
 def gnn_features(o, topo, hops=2):
+    """Edge features + both endpoints' features after K rounds of fixed neighbour averaging (9 + 2·3(K+1))."""
     H0, src, dst = node_features(topo)
     Z = propagate(H0, src, dst, topo["n"], hops)
     s, d = o["src"].astype(int), o["dst"].astype(int)
     return np.hstack([edge_features(o), Z[s], Z[d]])
+
+
+def endpoint_features(o, topo):
+    """Control: edge features + both endpoints' own node features h⁽⁰⁾, no aggregation (9 + 3 + 3 = 15)."""
+    H0, _, _ = node_features(topo)
+    s, d = o["src"].astype(int), o["dst"].astype(int)
+    return np.hstack([edge_features(o), H0[s], H0[d]])
 
 
 # ------------------------------------------------------------------ model and metrics
@@ -225,20 +246,59 @@ class Logistic:
         return 1 / (1 + np.exp(-(((X - self.mu) / self.sd) @ self.w + self.b)))
 
 
-def pr_auc(y, s):
-    order = np.argsort(-s)
-    y = y[order]
-    tp = np.cumsum(y)
-    precision = tp / np.arange(1, len(y) + 1)
-    return float((precision * y).sum() / max(y.sum(), 1))
+def average_precision(y, s):
+    """Average precision: sum over distinct score thresholds (highest first) of
+    (recall gained) × (precision at that threshold). Tied scores form one threshold,
+    so the result does not depend on the order of equal scores; a constant score gives
+    the positive rate. Same definition as scikit-learn's average_precision_score."""
+    y = np.asarray(y, dtype=int)
+    s = np.asarray(s, dtype=float)
+    if y.sum() == 0:
+        return 0.0
+    order = np.argsort(-s, kind="mergesort")
+    s, y = s[order], y[order]
+    last = np.r_[np.where(np.diff(s) != 0)[0], len(s) - 1]   # last row of each group of equal scores
+    tp = np.cumsum(y)[last]
+    precision = tp / (last + 1)
+    recall = tp / y.sum()
+    return float(np.sum(np.diff(np.r_[0.0, recall]) * precision))
 
 
 def metrics(y, p, thr=0.5):
     pred = (p >= thr).astype(int)
     tpr = (pred[y == 1] == 1).mean() if (y == 1).any() else 0.0
     tnr = (pred[y == 0] == 0).mean() if (y == 0).any() else 0.0
-    return {"balanced_acc": round(float((tpr + tnr) / 2), 3), "pr_auc": round(pr_auc(y, p), 3),
+    return {"balanced_acc": round(float((tpr + tnr) / 2), 3), "avg_precision": round(average_precision(y, p), 3),
             "brier": round(float(np.mean((p - y) ** 2)), 3)}
+
+
+def wilson(k, n, z=1.96):
+    """95% Wilson interval for k successes in n trials."""
+    if n == 0:
+        return (float("nan"), float("nan"))
+    f = k / n
+    c = z * math.sqrt(f * (1 - f) / n + z * z / (4 * n * n)) / (1 + z * z / n)
+    m = (f + z * z / (2 * n)) / (1 + z * z / n)
+    return (max(0.0, m - c), min(1.0, m + c))
+
+
+def calibration_table(y, p, bins=10):
+    """Equal-width bins over [0, 1] (p = 1 falls in the last bin). Every non-empty bin is kept,
+    with its count and a 95% Wilson interval for the observed frequency."""
+    y, p = np.asarray(y, dtype=int), np.asarray(p, dtype=float)
+    edges = np.linspace(0, 1, bins + 1)
+    idx = np.clip(np.digitize(p, edges[1:-1]), 0, bins - 1)
+    rows = []
+    for b in range(bins):
+        m = idx == b
+        n = int(m.sum())
+        if n == 0:
+            continue
+        k = int(y[m].sum())
+        lo, hi = wilson(k, n)
+        rows.append({"bin": f"{edges[b]:.1f}–{edges[b + 1]:.1f}", "n": n, "mean_predicted": round(float(p[m].mean()), 3),
+                     "observed": round(k / n, 3), "ci_low": round(lo, 3), "ci_high": round(hi, 3)})
+    return rows
 
 
 def split(o, periods):
@@ -253,20 +313,27 @@ def run(cfg: Config = None, outdir: str | None = None, verbose=True):
     tr, va, te = split(o, cfg.train_periods), split(o, cfg.val_periods), split(o, cfg.test_periods)
     res = {}
     base_rate = y[tr].mean()
-    res["majority (always 'can send')" if base_rate >= 0.5 else "majority (always 'cannot')"] = metrics(y[te], np.full(te.sum(), base_rate))
-    res["capacity heuristic 1 − amount/capacity"] = metrics(y[te], 1 - o["amount"][te] / o["capacity"][te])
+    # emits the training positive rate; thresholded at 0.5 it always predicts the majority class
+    res["training-rate constant"] = metrics(y[te], np.full(te.sum(), base_rate))
+    a_over_c = o["amount"][te] / o["capacity"][te]
+    res["capacity rule 1 − a/C"] = metrics(y[te], 1 - a_over_c)               # ignores the reserve
+    res["capacity rule, reserve-aware"] = metrics(y[te], np.clip(1 - RESERVE - a_over_c, 0, 1))
     Xe = edge_features(o)
     m1 = Logistic().fit(Xe[tr], y[tr])
-    res["edge-only logistic regression"] = metrics(y[te], m1.predict_proba(Xe[te]))
-    best = None
-    for hops in (1, 2, 3):                                   # choose hops on validation only
+    res["edge-only logistic"] = metrics(y[te], m1.predict_proba(Xe[te]))
+    Xc = endpoint_features(o, topo)
+    mc = Logistic().fit(Xc[tr], y[tr])
+    res["endpoint-only control"] = metrics(y[te], mc.predict_proba(Xc[te]))
+    best, val_scores = None, {}
+    for hops in (1, 2, 3):                                   # choose K on validation only
         Xg = gnn_features(o, topo, hops)
         m = Logistic().fit(Xg[tr], y[tr])
-        score = pr_auc(y[va], m.predict_proba(Xg[va]))
+        score = average_precision(y[va], m.predict_proba(Xg[va]))
+        val_scores[hops] = round(score, 4)
         if best is None or score > best[0]:
             best = (score, hops, m, Xg)
     _, hops, m2, Xg = best
-    res[f"message passing ({hops}-hop) + logistic head"] = metrics(y[te], m2.predict_proba(Xg[te]))
+    res[f"neighbour averaging K={hops} + logistic"] = metrics(y[te], m2.predict_proba(Xg[te]))
     # leakage demonstrations (what NOT to do)
     Xleak = np.column_stack([Xe, e["local_balance"] / o["capacity"]])
     m3 = Logistic().fit(Xleak[tr], y[tr])
@@ -279,7 +346,9 @@ def run(cfg: Config = None, outdir: str | None = None, verbose=True):
     summary = {"config": {k: (list(v) if isinstance(v, tuple) else v) for k, v in cfg.__dict__.items()},
                "rows": int(len(y)), "train/val/test rows": [int(tr.sum()), int(va.sum()), int(te.sum())],
                "positive rate (train, test)": [round(float(y[tr].mean()), 3), round(float(y[te].mean()), 3)],
-               "chosen hops (validation)": hops, "results (test periods)": res}
+               "chosen hops (validation)": hops, "validation average precision by K": val_scores,
+               "inputs (edge, endpoint control, graph)": [int(Xe.shape[1]), int(Xc.shape[1]), int(Xg.shape[1])],
+               "results (test periods)": res}
     if outdir:
         os.makedirs(outdir, exist_ok=True)
         _write_csv(os.path.join(outdir, "observations.csv"), obs)
@@ -287,9 +356,9 @@ def run(cfg: Config = None, outdir: str | None = None, verbose=True):
         _write_csv(os.path.join(outdir, "labels.csv"), [{"period": r["period"], "dir": r["dir"], "label": r["label"]} for r in ev])
         with open(os.path.join(outdir, "manifest.json"), "w") as f:
             json.dump({"generator": "bitct.lngraph.simulate", **summary["config"], "rows": summary["rows"],
-                       "tables": {"observations.csv": "model inputs (observable at observation time)",
+                       "tables": {"observations.csv": "model inputs: public channel data, amount, previous-period feedback",
                                   "evaluator_only.csv": "hidden balances — never a model input",
-                                  "labels.csv": "1 if spendable(source side) >= amount, reserve 1%"}}, f, indent=2)
+                                  "labels.csv": "1 if balance − 1% of capacity >= amount (fixture rule)"}}, f, indent=2)
         with open(os.path.join(outdir, "results.json"), "w") as f:
             json.dump(summary, f, indent=2)
     if verbose:
@@ -308,9 +377,9 @@ def _write_csv(path, rows):
 
 def print_summary(s):
     print(f"rows {s['rows']}  train/val/test {s['train/val/test rows']}  positive rate train/test {s['positive rate (train, test)']}")
-    print(f"{'model (evaluated on later periods)':<44}{'bal.acc':>8}{'PR-AUC':>8}{'Brier':>7}")
+    print(f"{'model (evaluated on later periods)':<40}{'bal.acc':>8}{'avg.prec':>9}{'Brier':>7}")
     for k, v in s["results (test periods)"].items():
-        print(f"{k:<44}{v['balanced_acc']:>8}{v['pr_auc']:>8}{v['brier']:>7}")
+        print(f"{k:<40}{v['balanced_acc']:>8}{v['avg_precision']:>9}{v['brier']:>7}")
 
 
 def main(argv=None):

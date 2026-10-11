@@ -1,0 +1,22 @@
+DLAB 12 — Spending Conditions: Multisig, Timelocks, Taproot
+===========================================================
+Lock coins under four conditions written as descriptors (2-of-3, a relative timelock, an absolute timelock, a Taproot tree), try every spending path, and read what the chain enforces and what each spend reveals.
+
+Network: regtest
+
+Steps:
+  K1    Three keyholders
+  M1    A 2-of-3 output
+  M2    Fund it
+  M3    One signature is not enough
+  M4    Bob adds the second signature
+  T1    A vault: Alice now, Carol after 10 blocks
+  T2    Alice spends at once
+  T3    Carol signs a normal transaction
+  T4    Carol sets nSequence = 10, too early
+  T5    Ten confirmations later
+  L1    An absolute timelock: Bob from block H
+  L2    At height H
+  P1    A Taproot output with a hidden branch
+  P2    Key path: Alice alone
+  P3    Script path: Carol after 10 blocks

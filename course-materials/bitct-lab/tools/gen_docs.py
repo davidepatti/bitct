@@ -84,14 +84,19 @@ Open **http://localhost:8888** and run `dlab10-graph-learning.ipynb` top to bott
 |---:|---|---|
 | 20 | 1 · Observable or hidden? | feature / hidden / label classification |
 | 25 | 2 · Chronological split and class balance | split table |
-| 45 | 3 · Baselines and models on the same test periods | metric table (balanced accuracy, PR-AUC, Brier) and calibration plot |
+| 45 | 3 · Baselines, control and models on the same test periods | metric table (balanced accuracy, average precision, Brier) and calibration plot with bin counts |
 | 35 | 4 · Leakage diagnosis | why each "improvement" is invalid |
 | 30 | 5 · One failure case, 6 · variability across seeds | one wrong prediction explained |
 | 25 | 7 · Conclusion | written conclusion with limits |
 
-Expected shape of the results with seed 7: the capacity heuristic beats the majority baseline, the edge-only
-model beats the heuristic, and the 2-hop message-passing model adds a small improvement that changes
-from seed to seed. The two "LEAKY" rows look better and are invalid.
+Expected shape of the results with seed 7 (balanced accuracy): training-rate constant 0.500, capacity rules
+0.609 (ignoring the reserve) and 0.614 (reserve-aware), edge-only 0.754, endpoint-only control 0.760,
+neighbour averaging with K = 2 and a logistic head 0.769. Most of the edge-to-graph gap is small and the part
+due to aggregation (0.760 → 0.769) changes sign across seeds. The two "LEAKY" rows look better and are invalid.
+
+Read the observation model first: the generator samples arbitrary directed channels and records their labels
+directly, so this is not what one real sender could observe. The neighbour averaging has no learned weights;
+a trainable GNN is an extension, not part of this lab.
 """
 
 EXTRA["dlab07-anchor"] = """

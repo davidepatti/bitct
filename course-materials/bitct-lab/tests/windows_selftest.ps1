@@ -18,7 +18,8 @@ Set-Content -Path $Log -Value "bitct-lab Windows self-test" -Encoding UTF8
 $Img = 'ghcr.io/davidepatti/bitct-lab:2026.10'
 $Helper = 'docker:29-cli'
 $RuntimeLabs = @('dlab00-setup', 'dlab01-auth', 'dlab02-transaction', 'dlab03-structures', 'dlab04-consensus',
-                 'dlab05-wallet', 'dlab06-attest', 'dlab07-anchor', 'dlab08-channel', 'dlab09-routing', 'dlab11-esp32')
+                 'dlab05-wallet', 'dlab06-attest', 'dlab07-anchor', 'dlab08-channel', 'dlab09-routing', 'dlab11-esp32',
+                 'dlab12-conditions', 'dlab13-oracles')
 
 function Say([string]$Line) { Write-Host $Line; Add-Content -Path $Log -Value $Line -Encoding UTF8 }
 function Step([string]$Title) { Say ''; Say ('=================== {0} ({1})' -f $Title, (Get-Date -Format 'HH:mm:ss')) }
@@ -142,4 +143,4 @@ $results | ForEach-Object { Write-Host $_ }
 $failed = @($results | Where-Object { $_ -match '^result ' -and $_ -notmatch ': 0$' }).Count
 $total = @($results | Where-Object { $_ -match '^result ' }).Count
 Say ("{0} of {1} checks passed. Log: {2}" -f ($total - $failed), $total, $Log)
-if ($failed -gt 0 -or $total -lt 12) { exit 1 } else { exit 0 }
+if ($failed -gt 0 -or $total -lt 14) { exit 1 } else { exit 0 }

@@ -83,7 +83,7 @@ def open_channel(a, b, amt, push=0):
         except RuntimeError as exc:
             last = str(exc)
             if "not enough witness outputs" in last or "is not online" in last or "syncing" in last \
-                    or "pending" in last or "insufficient" in last:
+                    or "pending" in last or "insufficient" in last or "internal error" in last:
                 time.sleep(1)
                 continue
             raise
@@ -111,8 +111,9 @@ def topology():
     open_channel("alice", "bob", 1_000_000)
     open_channel("bob", "dave", 600_000, push=500_000)     # bob keeps only ~100k outbound: hidden!
     open_channel("carol", "dave", 1_000_000)
-    mine(1)
-    wait_synced("alice", None)
+    h = mine(1)
+    for n in NODES:                 # every peer must have seen the block before the next funding flow
+        wait_synced(n, h)
     open_channel("alice", "carol", 1_000_000)
     print("3/5 confirming funding transactions (6 blocks) …", flush=True)
     h = mine(6)
@@ -176,8 +177,11 @@ def view_payment(path=None):
 
 
 def view_balances():
+    """Evaluator view: each side's local balance as LND reports it (listchannels), with its channel reserve.
+    A local balance is an upper bound on what that side can send now, not an exact spendable amount."""
     nm = names()
-    print("EVALUATOR VIEW — real balances, hidden from the sender")
+    print("EVALUATOR VIEW — local balance (reserve) of each side, from listchannels; hidden from the sender")
+    print(f"  {'channel':<13}{'capacity':>10}   {'side A':<28}{'side B'}")
     seen = set()
     for n in NODES:
         for c in ln(n, "listchannels").get("channels", []):
@@ -185,8 +189,11 @@ def view_balances():
                 continue
             seen.add(c["channel_point"])
             peer = nm.get(c["remote_pubkey"], c["remote_pubkey"][:8])
-            print(f"  {n + '–' + peer:<12} capacity {int(c['capacity']):>9,}   {n} can send {int(c['local_balance']):>9,}   "
-                  f"{peer} can send {int(c['remote_balance']):>9,}")
+            lres = int((c.get("local_constraints") or {}).get("chan_reserve_sat", c.get("local_chan_reserve_sat", 0)))
+            rres = int((c.get("remote_constraints") or {}).get("chan_reserve_sat", c.get("remote_chan_reserve_sat", 0)))
+            print(f"  {n + '–' + peer:<13}{int(c['capacity']):>10,}   {n:<6}{int(c['local_balance']):>9,} ({lres:>6,})    "
+                  f"{peer:<6}{int(c['remote_balance']):>9,} ({rres:>6,})")
+    print("  a local balance is an upper bound: reserve, fees and HTLC limits reduce what can be sent")
 
 
 def main_fund(argv=None):

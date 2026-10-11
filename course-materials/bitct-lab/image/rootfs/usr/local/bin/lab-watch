@@ -1,0 +1,12 @@
+#!/bin/bash
+# lab-watch NAME 'DESCRIPTOR' — watch-only wallet NAME that follows one output descriptor; prints its address.
+#   VAULT=$(lab-watch vault "wsh(or_d(pk($A),and_v(v:pk($C),older(10))))")
+# The wallet holds no private keys: it tracks the coins and builds PSBTs for the key holders to sign.
+set -euo pipefail
+name="${1:?usage: lab-watch NAME DESCRIPTOR}"; desc="${2:?usage: lab-watch NAME DESCRIPTOR}"
+cli="bitcoin-cli -rpcconnect=${NODE:-node-a}"
+full=$($cli getdescriptorinfo "$desc" | jq -r .descriptor)
+$cli -named createwallet wallet_name="$name" disable_private_keys=true blank=true >/dev/null
+ok=$($cli -rpcwallet="$name" importdescriptors "$(jq -nc --arg d "$full" '[{desc: $d, timestamp: "now"}]')" | jq -r '.[0].success')
+[ "$ok" = true ] || { echo "import failed for $full" >&2; exit 1; }
+$cli deriveaddresses "$full" | jq -r '.[0]'

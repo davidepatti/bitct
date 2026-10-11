@@ -7,7 +7,7 @@ Network: regtest (+ optional signet publication)
 Steps:
   E0    Gateway subscribed, nothing enrolled
   E1    Create the device key
-  E2    Start the meter (virtual stand-in for Wokwi)
+  E2    Start the meter in Wokwi
   E3    Not enrolled → rejected
   E4    Operator enrolls the device key
   E5    Accepted readings

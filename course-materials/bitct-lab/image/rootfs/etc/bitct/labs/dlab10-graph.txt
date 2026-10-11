@@ -1,6 +1,6 @@
 DLAB 10 — Graph Learning with Hidden Liquidity
 ==============================================
-Test whether a small message-passing model beats simpler baselines at predicting directed liquidity, and diagnose leakage.
+Test whether fixed neighbour averaging with a trained logistic head beats simpler baselines and an endpoint-only control at predicting directed-edge feasibility, and diagnose leakage.
 
 Network: none (simulation)
 

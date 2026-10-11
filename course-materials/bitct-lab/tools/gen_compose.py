@@ -26,6 +26,8 @@ LABS = {
     "dlab09-routing": dict(title="DLAB 09 — Routing with hidden liquidity", nodes=["node-a"], ln=["alice", "bob", "carol", "dave"]),
     "dlab11-esp32": dict(title="DLAB 11 — ESP32 sensor readings anchored on Bitcoin", nodes=["node-a"], d17=True,
                          gateway=True, miner=True, internet=True),
+    "dlab12-conditions": dict(title="DLAB 12 — Spending conditions: multisig, timelocks, Taproot", nodes=["node-a"]),
+    "dlab13-oracles": dict(title="DLAB 13 — Oracles and federations: who must sign?", nodes=["node-a"]),
 }
 
 

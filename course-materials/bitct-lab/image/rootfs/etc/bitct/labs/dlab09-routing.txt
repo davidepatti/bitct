@@ -1,6 +1,6 @@
 DLAB 09 — Routing with Hidden Liquidity
 =======================================
-Predict a route from public gossip, watch it fail on hidden liquidity, inspect the retry, then change one condition.
+Predict a route from public gossip, watch it fail on hidden liquidity, inspect the retry and Alice's memory, then separate two interventions: refilling liquidity and resetting memory.
 
 Network: regtest
 
@@ -11,5 +11,8 @@ Steps:
   R3    Pay 300,000 sat to Dave
   R4    The hidden state (evaluator only)
   R5    What Alice learned
-  R6    Change one condition: Dave refills Bob's side
+  R6    Two interventions: refill Bob's side, reset Alice's memory
   R7    Retry the same payment
+  R8    Optional: fail and learn again
+  R9    Optional: refill only, memory kept
+  R10   Optional: the same payment, memory kept

@@ -37,17 +37,28 @@ the key the operator enrolled.
 
 ## Verification done by the maintainers
 
-* `hosttest/test_bip340.cpp` compiles `bip340.cpp` against mbedTLS 3.6 and reproduces BIP340
+* `../hosttest/test_bip340.cpp` compiles `bip340.cpp` against mbedTLS 3.6 and reproduces BIP340
   test vectors 0–3 and the Python reference signature of report R42.
 * The sketch compiles with arduino-esp32 **3.3.9** (mbedTLS 3.6.5, secp256k1 enabled).
 * Built with `-DD17_SELFTEST`, the firmware runs in Espressif QEMU and prints the same R42
   signature as the Python reference (hardware SHA/MPI accelerators in use).
+* Built with `#define D17_SKIP_NTP` (test only), the sketch takes the HTTP-Date clock path; in
+  Wokwi (`2026-10-08`) it started the counter at the right boot time and the lab gateway on a Mac
+  accepted the readings, flagging the jump from the previous counter as a gap.
 
 ## Known simulator limits
 
 * Wokwi keeps no flash between runs, so the sequence counter starts from the boot time
-  (NTP seconds) and increases by one per report. It stays increasing across restarts; the
+  (seconds since 1970) and increases by one per report. It stays increasing across restarts; the
   gateway sees a gap, which the lab discusses. A real meter keeps its counter in protected storage.
+* The boot time comes from NTP. Wokwi's virtual Wi-Fi sometimes drops NTP (UDP), so after 15 s
+  the sketch reads the `Date` header of an HTTP reply instead; the serial monitor then prints
+  `first sequence number (boot time, HTTP Date header)`. Only if both fail does the counter
+  restart at 1, and the gateway answers NO_NEW_EVENT (a replay, as far as it can tell).
+* Keep the Wokwi tab in front. In a background tab (or a minimised window) the browser slows the
+  simulator to a few percent, the broker closes the idle connection, and the meter may keep
+  printing `MQTT connect failed (state -2)`. After five failures it prints a hint; restarting the
+  simulation reconnects at once and the counter continues from the new boot time.
 * The free Wokwi gateway reaches the Internet, not your laptop: hence the public MQTT broker.
 * The secret key is pasted into the sketch: acceptable only for a lab. A real device generates
   it inside a secure element and never exposes it.

@@ -48,7 +48,7 @@ powershell -ExecutionPolicy Bypass -File tests\windows_selftest.ps1
 
 It downloads the course images, runs every lab's student procedure, checks the dashboard
 (http://localhost:8080) and JupyterLab (http://localhost:8888) as a browser sees them, and leaves
-nothing running. The last lines must read `13 of 13 checks passed`. If not, the lines just above
+nothing running. The last lines must read `15 of 15 checks passed`. If not, the lines just above
 name the lab that failed. The log is `tests\out\selftest-windows.log`.
 
 ## D · By hand: what a script cannot judge (about 20 minutes)
