@@ -91,8 +91,20 @@ def open_channel(a, b, amt, push=0):
 
 
 def set_policy(node, chan_point, base_msat, ppm, tld=40):
-    ln(node, "updatechanpolicy", "--base_fee_msat", str(base_msat), "--fee_rate_ppm", str(ppm),
-       "--time_lock_delta", str(tld), "--chan_point", chan_point)
+    if not chan_point:
+        raise RuntimeError(f"missing channel point for {node}'s policy update")
+    for _ in range(60):
+        response = ln(node, "updatechanpolicy", "--base_fee_msat", str(base_msat), "--fee_rate_ppm", str(ppm),
+                      "--time_lock_delta", str(tld), "--chan_point", chan_point)
+        failed = response.get("failed_updates", [])
+        if not failed:
+            return
+        if all(item.get("reason") in ("UPDATE_FAILURE_PENDING", "UPDATE_FAILURE_NOT_FOUND", 1, 2)
+               for item in failed):
+            time.sleep(1)
+            continue
+        raise RuntimeError(f"{node} policy update rejected: {failed}")
+    raise RuntimeError(f"{node} policy update did not become available: {failed}")
 
 
 def chan_point(a, b_pub):
@@ -100,6 +112,33 @@ def chan_point(a, b_pub):
         if c["remote_pubkey"] == b_pub:
             return c["channel_point"]
     return None
+
+
+def graph_has_channels(graph, expected):
+    """Both directions of every public channel must exist before updating fees."""
+    announced = {frozenset((edge.get("node1_pub"), edge.get("node2_pub")))
+                 for edge in graph.get("edges", [])
+                 if edge.get("node1_policy") and edge.get("node2_policy")}
+    return bool(expected) and expected <= announced
+
+
+def graph_has_policies(graph, expected):
+    """Require every directed fee policy, not merely one expensive channel."""
+    actual = {}
+    for edge in graph.get("edges", []):
+        a, b = edge.get("node1_pub"), edge.get("node2_pub")
+        for src, dst, policy in ((a, b, edge.get("node1_policy")),
+                                 (b, a, edge.get("node2_policy"))):
+            if not policy or policy.get("disabled", False):
+                continue
+            try:
+                actual[src, dst] = (int(policy["fee_base_msat"]),
+                                    int(policy["fee_rate_milli_msat"]),
+                                    int(policy["time_lock_delta"]))
+            except (KeyError, TypeError, ValueError):
+                continue  # incomplete gossip must not count as ready
+    return bool(expected) and all(actual.get(direction) == values
+                                  for direction, values in expected.items())
 
 
 def topology():
@@ -124,25 +163,40 @@ def topology():
                (("alice", 2), ("bob", 2), ("carol", 2), ("dave", 2))):
             break
         time.sleep(1)
+    else:
+        raise RuntimeError("topology channels did not all become active")
+    # Active links can precede their graph edges; an early policy RPC can report
+    # failed_updates even when lncli exits successfully. Wait for announcements
+    # on every node, then check each update response and Alice's final fee view.
+    expected_channels = {frozenset((pk[a], pk[b])) for a, b in
+                         (("alice", "bob"), ("bob", "dave"), ("carol", "dave"), ("alice", "carol"))}
+    for _ in range(180):
+        if all(graph_has_channels(ln(n, "describegraph"), expected_channels) for n in NODES):
+            break
+        time.sleep(1)
+    else:
+        raise RuntimeError("topology channels were not announced on every node")
     print("4/5 setting routing fees (bob cheap, carol expensive) …", flush=True)
-    set_policy("alice", chan_point("alice", pk["bob"]), 1000, 1)
-    set_policy("alice", chan_point("alice", pk["carol"]), 1000, 1)
-    set_policy("bob", chan_point("bob", pk["dave"]), 1000, 10)
-    set_policy("bob", chan_point("bob", pk["alice"]), 1000, 10)
-    set_policy("carol", chan_point("carol", pk["dave"]), 1000, 2000)
-    set_policy("carol", chan_point("carol", pk["alice"]), 1000, 2000)
-    for n in ("dave",):
-        for peer in ("bob", "carol"):
-            set_policy(n, chan_point(n, pk[peer]), 1000, 1)
+    policies = {("alice", "bob"): (1000, 1, 40),
+                ("alice", "carol"): (1000, 1, 40),
+                ("bob", "dave"): (1000, 10, 40),
+                ("bob", "alice"): (1000, 10, 40),
+                ("carol", "dave"): (1000, 2000, 40),
+                ("carol", "alice"): (1000, 2000, 40),
+                ("dave", "bob"): (1000, 1, 40),
+                ("dave", "carol"): (1000, 1, 40)}
+    for (src, dst), (base, ppm, delta) in policies.items():
+        set_policy(src, chan_point(src, pk[dst]), base, ppm, delta)
+    expected = {(pk[src], pk[dst]): values for (src, dst), values in policies.items()}
     mine(1)
     print("5/5 waiting until alice has heard about every channel and fee (gossip) …", flush=True)
     for _ in range(180):
         g = ln("alice", "describegraph")
-        edges = g.get("edges", [])
-        ok = len(edges) >= 4 and all(e.get("node1_policy") and e.get("node2_policy") for e in edges)
-        if ok and any(int(e["node1_policy"]["fee_rate_milli_msat"]) == 2000 or int(e["node2_policy"]["fee_rate_milli_msat"]) == 2000 for e in edges):
+        if graph_has_policies(g, expected):
             break
         time.sleep(1)
+    else:
+        raise RuntimeError("alice did not learn every configured directional fee policy")
     print("topology ready: alice–bob–dave (cheap) and alice–carol–dave (expensive)")
 
 
