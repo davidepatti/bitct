@@ -13,13 +13,14 @@ Both images are published for `linux/amd64` and `linux/arm64` (Intel/AMD PCs, Ap
 Binaries are downloaded from bitcoincore.org and the LND GitHub release and checked against
 pinned SHA-256 hashes (`image/Dockerfile`).
 
-**Publication status (`2026-10-08`):** both tags are available from the
+**Publication status (`2026-10-11`):** both refreshed tags are available from the
 [public course package](https://github.com/davidepatti/bitct/pkgs/container/bitct-lab).
-Anonymous downloads of every image layer were checksum-verified on both architectures.
+Their indexes, architecture manifests and image configurations were checksum-verified
+without account credentials on both architectures.
 Students do not need a GitHub account or registry login.
 
-**DLAB 12–13 (added `2026-10-09`)** need the helpers `lab-key`, `lab-watch`, `lab-spend` and `dlc-oracle`,
-which are not in the image published on `2026-10-08`: rebuild and republish the `2026.10` tags before using them.
+The refreshed images include the DLAB 12–13 helpers (`lab-key`, `lab-watch`, `lab-spend`
+and `dlc-oracle`), the repaired Lightning tools, updated help and DLAB 10 notebook.
 
 ## Labs
 
@@ -58,6 +59,22 @@ docker compose down --volumes                # reset
 
 Only one lab at a time: run `docker compose down` in the previous lab folder first (they share port 8080).
 
+### Update an existing installation
+
+Download the latest kit ZIP first. The `2026.10` tags are reused: Docker will not
+automatically replace an image you already downloaded. In the lab folder, run:
+
+```sh
+docker compose down
+docker compose pull
+docker compose up -d --wait
+```
+
+**DLAB 10:** the updated notebook is copied only into a fresh lab volume. Save or
+export any notebook work first; then use `docker compose down --volumes` instead
+of `docker compose down` above. This deletes that lab's saved data, not just its
+containers. New installations do not need this extra reset.
+
 ## Teacher tasks
 
 **Build locally** (no registry needed):
@@ -86,7 +103,8 @@ students run `docker load -i bitct-lab.tar.gz`.
 tests/run_all.sh                 # or: python3 tests/run_lab.py dlab08-channel
 ```
 
-**Self-test with the published images** on a teacher or volunteer computer (about 15 minutes; leaves no
+**Self-test with the published images** on a teacher or volunteer computer (allow 20–30 minutes or longer
+for downloads and the additional labs; leaves no
 lab running except the DLAB 11 demo on macOS/Linux):
 
 ```sh

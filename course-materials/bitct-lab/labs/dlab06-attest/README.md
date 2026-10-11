@@ -229,7 +229,7 @@ History keeps the original decision.
 
 ```sh
 d17 reports --last 5
-d17 show 1 | head -3
+d17 show 1 | sed -n '1,3p'
 ```
 
 **Checkpoint:** #1 ACCEPTED is still recorded

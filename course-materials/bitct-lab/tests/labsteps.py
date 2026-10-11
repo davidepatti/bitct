@@ -338,7 +338,8 @@ LABS["dlab06-attest"] = {"steps": [
         "d17 checkpoint load C1\nd17 revoke --enrollment 3\nd17 submit cases/R43-after-cutover.json\n"
         "d17 enroll --key key-B --enrollment 4 --pubkey $(jq -r .pubkey keys/key-B.json)\nd17 submit cases/RB1.json",
      "expect": [r"REJECT_AUTHORITY — binding is revoked", r"ACCEPTED — first report of this enrollment: seq 1"]},
-    {"id": "T17", "title": "History after revocation", "cmd": "d17 reports --last 5\nd17 show 1 | head -3",
+    # Drain stdout while showing the first three lines: head can terminate d17 with SIGPIPE under pipefail.
+    {"id": "T17", "title": "History after revocation", "cmd": "d17 reports --last 5\nd17 show 1 | sed -n '1,3p'",
      "expect": [r"verdict: ACCEPTED"]},
     {"id": "T18", "title": "A perfectly signed false reading", "cmd":
         "d17 checkpoint load C0\nd17 submit cases/R42-false-reading.json\ncat ground-truth.csv",
