@@ -1,8 +1,16 @@
 (function(){
   'use strict';
-  const P=window.PlaygroundProtocol,A=window.PlaygroundArt,main=document.querySelector('main');
+  const P=window.PlaygroundProtocol,A=window.PlaygroundArt,K=window.PlaygroundKit,main=document.querySelector('main');
   // Add future tools here. Each tool owns its route and can reuse the artwork/model conventions.
-  const tools=[{id:'transaction',title:'The life of a transaction',description:'Follow a payment through the network, into a block, and onto the chain. Pause, go back, and see who checks what.',render:renderTool}];
+  // Interactive demos register themselves through PlaygroundKit.register in src/demos/*.js.
+  const tools=[{id:'transaction',number:'01',module:'M 1.3',moduleName:'Blockchain properties',title:'The life of a transaction',description:'Follow a payment through the network, into a block, and onto the chain. Pause, go back, and see who checks what.',render:renderTool},
+    ...K.demos.map(d=>({...d,render:()=>mountDemo(d)}))];
+  let cleanup=null;
+  function mountDemo(demo){
+    document.title=`${demo.title} · Bitcoin Playground`;
+    document.documentElement.style.setProperty('--accent',demo.color);document.documentElement.style.setProperty('--wash',demo.color+'17');
+    const result=demo.mount(main,{reduced:reduced.matches});K.bindShell(main);cleanup=typeof result==='function'?result:null;
+  }
   let step=0,playing=false,animating=false,elapsed=0,lastTime=0,speed=1,raf=0;
   let options={invalid:false,reorg:false,descendants:0};
   const reduced=window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -10,17 +18,20 @@
   const $=id=>document.getElementById(id);
   const icon={back:'←',next:'→',play:'▶',pause:'Ⅱ'};
   document.querySelector('.skip-link').onclick=e=>{e.preventDefault();main.focus({preventScroll:true});};
-  function stop(){playing=false;animating=false;cancelAnimationFrame(raf);raf=0;document.querySelector('.scene-svg')?.pauseAnimations?.();}
-  function hub(){stop();document.title='Bitcoin Playground';document.documentElement.style.setProperty('--accent','#8256d8');
-    main.innerHTML=`<section class="hub-intro"><p class="eyebrow">THE BITCOIN COURSE · INTERACTIVE TOOLS</p><h1>Explore how<br>Bitcoin works.</h1><p>Small experiments. Visible mechanisms.<br>A playground for following the protocol, one step at a time.</p></section>
-    <div class="collection-label"><p class="eyebrow">YOUR PLAYGROUND</p><span>${String(tools.length).padStart(2,'0')} tool${tools.length===1?'':'s'} available</span></div>
-    ${tools.map((tool,i)=>`<article class="tool-card"><div class="tool-card-copy"><div class="toy-number">${String(i+1).padStart(2,'0')} / PROTOCOL OVERVIEW</div><h2>${tool.title}</h2><p>${tool.description}</p><button class="primary" data-launch="${tool.id}">Open the tool &nbsp; →</button></div><div class="tool-card-art" aria-hidden="true">${A.overview()}</div></article>`).join('')}
-    <div class="hub-bottom"><p>This is the first tool in Bitcoin Playground. Future experiments will live here, with the same offline launch experience.</p><span>No account. No connection. Just curiosity.</span></div>`;
-    main.querySelectorAll('[data-launch]').forEach(b=>b.addEventListener('click',()=>{options={invalid:false,reorg:false,descendants:0};location.hash=b.dataset.launch+'/0';}));
+  function stop(){if(cleanup){cleanup();cleanup=null;}playing=false;animating=false;cancelAnimationFrame(raf);raf=0;document.querySelector('.scene-svg')?.pauseAnimations?.();}
+  function hub(){stop();setHelp('hub');document.title='Bitcoin Playground';document.documentElement.style.setProperty('--accent','#8256d8');
+    const [first,...rest]=tools,modules=[];
+    rest.forEach(t=>{let m=modules.find(x=>x.module===t.module);if(!m)modules.push(m={module:t.module,name:t.moduleName,items:[]});m.items.push(t);});
+    main.innerHTML=`<section class="hub-intro"><p class="eyebrow">THE BITCOIN COURSE · INTERACTIVE TOOLS</p><h1>Explore how<br>Bitcoin works.</h1><p>Small experiments. Visible mechanisms.<br>Change a parameter, watch the consequence.</p></section>
+    <div class="collection-label"><p class="eyebrow">YOUR PLAYGROUND</p><span>${String(tools.length).padStart(2,'0')} tools available</span></div>
+    <article class="tool-card"><div class="tool-card-copy"><div class="toy-number">${first.number} / PROTOCOL OVERVIEW · ${first.module}</div><h2>${first.title}</h2><p>${first.description}</p><button class="primary" data-launch="${first.id}">Open the tool &nbsp; →</button></div><div class="tool-card-art" aria-hidden="true">${A.overview()}</div></article>
+    ${modules.map(m=>`<section class="module-group" aria-label="${A.esc(m.module+' '+m.name)}"><div class="module-label"><span class="module-chip">${m.module}</span><span>${A.esc(m.name)}</span></div><div class="demo-grid">${m.items.map(t=>`<article class="demo-card" style="--card:${t.color}"><div class="demo-card-art" aria-hidden="true">${t.preview()}</div><div class="demo-card-copy"><div class="toy-number" style="color:${t.color}">${t.number} / ${A.esc(t.kind)}</div><h3>${A.esc(t.title)}</h3><p>${A.esc(t.description)}</p><button data-launch="${t.id}" aria-label="Open ${A.esc(t.title)}">Open &nbsp; →</button></div></article>`).join('')}</div></section>`).join('')}
+    <div class="hub-bottom"><p>Each experiment is a simulation or toy model: it runs offline, uses no real keys, coins or network connections, and states its simplifications under “Look closer”.</p><span>No account. No connection. Just curiosity.</span></div>`;
+    main.querySelectorAll('[data-launch]').forEach(b=>b.addEventListener('click',()=>{options={invalid:false,reorg:false,descendants:0};location.hash=b.dataset.launch+(b.dataset.launch==='transaction'?'/0':'');}));
     if(reduced.matches)document.querySelector('.scene-svg')?.pauseAnimations?.();
   }
   function renderTool({continuePlaying=false}={}){
-    cancelAnimationFrame(raf);const s=P.stages[step],state=P.snapshot(step,options);
+    cancelAnimationFrame(raf);setHelp('transaction');const s=P.stages[step],state=P.snapshot(step,options);
     const color=A.colors[s.color];document.documentElement.style.setProperty('--accent',color);document.documentElement.style.setProperty('--wash',color+'17');
     document.title=`${s.name} · Bitcoin Playground`;
     main.innerHTML=`<div class="tool-heading"><div><p class="eyebrow" style="margin-bottom:8px">TOOL 01 · PROTOCOL OVERVIEW</p><h1>The life of a transaction</h1></div><div class="heading-actions"><button class="quiet" id="fullscreen" aria-pressed="false">⛶ &nbsp; Focus</button><button class="quiet" id="hub">← Playground</button></div></div>
@@ -30,7 +41,7 @@
       <div class="transport"><div class="transport-main"><button id="previous" ${step===0?'disabled':''}>${icon.back} &nbsp; Back</button><button id="play" class="primary">${icon.play} &nbsp; Play</button><button id="next" ${step===8?'disabled':''}>Next &nbsp; ${icon.next}</button></div><div class="transport-options"><button class="quiet" id="replay">↻ &nbsp; Replay step</button><label>Speed <select id="speed" aria-label="Playback speed"><option value="0.5">0.5×</option><option value="1">1×</option><option value="1.5">1.5×</option><option value="2">2×</option></select></label><span class="keyboard-hint">← → step &nbsp; / &nbsp; Space play</span></div></div>
       <div class="progress-track" aria-hidden="true"><div id="progress" class="progress-fill"></div></div>
       <details class="teaching-detail"><summary>Look closer · mechanism and teaching notes</summary><p>${s.detail}</p></details>
-      <footer class="tool-footer"><span>Teaching simulation · time compressed · no live Bitcoin network</span><span>Bitcoin Playground / 1.0</span></footer>`;
+      <footer class="tool-footer"><span>Teaching simulation · time compressed · no live Bitcoin network</span><span>Bitcoin Playground / ${K.version}</span></footer>`;
     $('speed').value=String(speed);
     $('hub').onclick=()=>{location.hash='hub';};
     $('previous').onclick=()=>go(step-1);
@@ -94,10 +105,12 @@
     if(elapsed>=duration){go(step+1,true);return;}
     animating=!reduced.matches;lastTime=0;cancelAnimationFrame(raf);raf=requestAnimationFrame(tick);updatePlay();
   }
+  function setHelp(kind){document.querySelectorAll('[data-help]').forEach(el=>{el.hidden=el.dataset.help!==(kind==='transaction'?'transaction':'demo');});}
   function route(){
     stop();document.body.classList.remove('fullscreen');
     const match=location.hash.match(/^#([a-z-]+)(?:\/(\d+))?$/),tool=match&&tools.find(t=>t.id===match[1]);
     if(!tool){hub();return;}
+    if(tool.id!=='transaction'){setHelp('demo');tool.render();main.focus({preventScroll:true});return;}
     step=Math.min(8,Number(match[2])||0);options={invalid:false,reorg:false,descendants:0};tool.render();
   }
   $('help-button').onclick=()=>{$('help-dialog').showModal();if(playing)togglePlay();};
@@ -109,9 +122,9 @@
     const handler=handlers[e.code];if(handler){e.preventDefault();handler();}
   });
   document.addEventListener('visibilitychange',()=>{if(document.hidden){if(playing)togglePlay();animating=false;cancelAnimationFrame(raf);}});
-  reduced.addEventListener('change',()=>{if($('scene'))renderTool();else hub();});
+  reduced.addEventListener('change',route);
   window.addEventListener('hashchange',route);
   // Read-only state hook is useful for repeatable classroom/browser QA.
-  window.BitcoinPlayground={getState:()=>({tool:$('scene')?'transaction':'hub',...P.snapshot(step,options),playing,speed}),version:'1.0.0'};
+  window.BitcoinPlayground={getState:()=>{const id=(location.hash.match(/^#([a-z-]+)/)||[])[1],demo=K.demos.find(d=>d.id===id);if(demo)return {tool:demo.id,...(demo.state?demo.state():{})};return {tool:$('next')?'transaction':'hub',...P.snapshot(step,options),playing,speed};},tools:tools.map(t=>t.id),version:'2.0.0'};
   route();
 })();

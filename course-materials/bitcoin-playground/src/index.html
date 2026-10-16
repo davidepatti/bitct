@@ -21,12 +21,17 @@
 <dialog id="help-dialog" aria-labelledby="help-title">
   <form method="dialog"><button class="dialog-close" aria-label="Close help">×</button></form>
   <p class="eyebrow">BITCOIN PLAYGROUND</p><h2 id="help-title">A small lab for big ideas.</h2>
-  <p>Follow the transaction with <strong>Next</strong>, return with <strong>Back</strong>, or select any numbered stage. Play walks through the full sequence. Replay animates only the current stage.</p>
+  <div data-help="demo"><p>Each tool is one experiment. Move a slider or press a button and the picture, numbers and explanation update together. Start with the <strong>Try this</strong> prompts; <strong>Look closer</strong> states the model and its simplifications.</p>
+  <dl class="shortcuts"><dt>Tab</dt><dd>Move between controls</dd><dt>← / →</dt><dd>Adjust the focused slider</dd><dt>Esc</dt><dd>Close this help</dd></dl>
+  <p class="fine-print">Teaching simulations and toy models. No coins, keys, network connections, or Bitcoin software are involved. Random runs are seeded, so a class can repeat the same run; draw a new seed to see variation.</p></div>
+  <div data-help="transaction" hidden><p>Follow the transaction with <strong>Next</strong>, return with <strong>Back</strong>, or select any numbered stage. Play walks through the full sequence. Replay animates only the current stage.</p>
   <dl class="shortcuts"><dt>← / →</dt><dd>Previous / next stage</dd><dt>Space</dt><dd>Play / pause the walkthrough</dd><dt>R</dt><dd>Replay the current stage</dd><dt>Home / End</dt><dd>First / last stage</dd><dt>Esc</dt><dd>Close this help</dd></dl>
-  <p class="fine-print">This is a teaching simulation of the M 1.3 protocol overview, slides 25–33. No coins, keys, network connections, or Bitcoin software are involved. Time is compressed. The proof-of-work example hashes a toy header, not a live block.</p>
+  <p class="fine-print">This is a teaching simulation of the M 1.3 protocol overview. No coins, keys, network connections, or Bitcoin software are involved. Time is compressed. The proof-of-work example hashes a toy header, not a live block.</p></div>
 </dialog>
 <script>/* BUILD:MODEL */</script>
 <script>/* BUILD:ART */</script>
+<script>/* BUILD:KIT */</script>
+<script>/* BUILD:DEMOS */</script>
 <script>/* BUILD:APP */</script>
 </body>
 </html>

@@ -31,8 +31,8 @@ def package():
     (resources / 'bitcoin-playground.html').write_text(content)
     shutil.copyfile(ROOT / 'LICENSE', resources / 'LICENSE')
     info = {'CFBundleName':'Bitcoin Playground', 'CFBundleDisplayName':'Bitcoin Playground',
-            'CFBundleIdentifier':'it.bitct.bitcoin-playground', 'CFBundleVersion':'1',
-            'CFBundleShortVersionString':'1.0.0', 'CFBundleExecutable':'bitcoin-playground',
+            'CFBundleIdentifier':'it.bitct.bitcoin-playground', 'CFBundleVersion':'2',
+            'CFBundleShortVersionString':'2.0.0', 'CFBundleExecutable':'bitcoin-playground',
             'CFBundlePackageType':'APPL', 'LSMinimumSystemVersion':'13.0',
             'NSHighResolutionCapable':True,
             'NSHumanReadableCopyright':'Copyright © 2026 Davide Patti. MIT License.'}
