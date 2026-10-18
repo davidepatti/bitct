@@ -49,15 +49,15 @@
       function drawBackup(){
         const N=s.words,missing=N-s.known,pb=PASS[s.pass].bits,lb=searchBits(N,missing,pb),secs=2**lb/s.rate;let g='';
         g+=t(30,30,`YOUR ${N}-WORD BACKUP (toy words)`,{size:12,weight:700,fill:C.muted});
-        const cols=N===12?4:6;for(let i=0;i<N;i++){const X=30+(i%cols)*(N===12?110:74),Y=48+Math.floor(i/cols)*38,known=i<s.known,w=N===12?100:66;g+=`<rect x="${X}" y="${Y}" width="${w}" height="30" rx="6" fill="${known?'#f6d6d3':'#e3f1e5'}" stroke="${known?C.red:'#29323c'}" stroke-width="1.3"/>`+t(X+8,Y+20,`${i+1}`,{size:10,fill:C.muted})+t(X+w/2+6,Y+20,known?TOY[(i*7+3)%TOY.length]:'?',{size:N===12?13:11.5,anchor:'middle',weight:known?700:500,fill:known?'#a3332d':C.ink});}
-        g+=t(30,48+Math.ceil(N/cols)*38+16,`red: words the attacker has · green: words still secret (${missing})`,{size:12,fill:C.muted});
+        const cols=N===12?6:8;for(let i=0;i<N;i++){const X=30+(i%cols)*114,Y=48+Math.floor(i/cols)*50,known=i<s.known,w=108;g+=`<rect x="${X}" y="${Y}" width="${w}" height="40" rx="7" fill="${known?'#f6d6d3':'#e3f1e5'}" stroke="${known?C.red:'#29323c'}" stroke-width="1.3"/>`+t(X+7,Y+26,`${i+1}`,{size:9,fill:C.muted})+t(X+w/2+11,Y+27,known?TOY[(i*7+3)%TOY.length]:'?',{size:12,anchor:'middle',weight:known?700:500,fill:known?'#a3332d':C.ink});}
+        const wy=48+Math.ceil(N/cols)*50+24;g+=t(30,wy,`red: words the attacker has · green: words still secret (${missing})`,{size:12,fill:C.muted});
         /* chart: time vs missing words */
         const pts=[],ptsP=[];for(let m=0;m<=N;m++){pts.push([m,Math.max(1e-6,2**searchBits(N,m,0)/s.rate)]);ptsP.push([m,Math.max(1e-6,2**searchBits(N,m,pb||60)/s.rate)]);}
-        const yr=[1e-6,1e70];g+=t(500,30,'Expected time to brute-force (seconds, log scale)',{size:12,weight:700,fill:C.muted});
-        g+=K.plot({x:540,y:48,w:380,h:280,xr:[0,N],yr,ylog:true,yticks:[1e-6,1,3.15e7,1e30,1e50,1e70],yfmt:v=>v===1?'1 s':v===3.15e7?'1 year':v<1?'1 µs':'10'+K.sup(Math.round(Math.log10(v)))+' s',xticks:N===12?[0,2,4,6,8,10,12]:[0,4,8,12,16,20,24],xfmt:String,xlabel:'missing words',
-          series:[{pts,color:C.green,width:2.6},...(pb?[{pts:ptsP,color:C.purple,width:2.2,dash:'5 4'}]:[])],hlines:[{y:3.15e7,color:C.muted,dash:'2 4'},{y:4.3e17,color:C.red,dash:'2 4',label:'age of the universe'}],dots:[{x:missing,y:Math.max(1e-6,secs),color:C.ink,label:K.duration(secs/60)}]});
-        if(pb)g+=t(540,372,`dashed: with the ${PASS[s.pass].label.toLowerCase()}`,{size:11,fill:C.purple});
-        scene.innerHTML=svg(960,400,g,'Seed phrase backup and brute-force time');layer.textContent='BIP39 backup · brute-force cost';status.textContent=`${N} words · ${SIZES[N].entropy} bits of entropy`;
+        const yr=[1e-6,1e70];g+=t(30,wy+54,'EXPECTED TIME TO BRUTE-FORCE · seconds, log scale',{size:12,weight:700,fill:C.muted});
+        g+=K.plot({x:130,y:wy+76,w:790,h:240,xr:[0,N],yr,ylog:true,yticks:[1,3.15e7,1e30,1e50,1e70],yfmt:v=>v===1?'1 s':v===3.15e7?'1 year':v<1?'1 µs':'10'+K.sup(Math.round(Math.log10(v)))+' s',xticks:N===12?[0,2,4,6,8,10,12]:[0,4,8,12,16,20,24],xfmt:String,xlabel:'missing words',
+          series:[{pts,color:C.green,width:2.6},...(pb?[{pts:ptsP,color:C.purple,width:2.2,dash:'5 4'}]:[])],hlines:[{y:3.15e7,color:C.muted,dash:'2 4'},{y:4.3e17,color:C.red,dash:'2 4',label:'age of the universe',anchor:'start'}],dots:[{x:missing,y:Math.max(1e-6,secs),color:C.ink,label:K.duration(secs/60),anchor:missing>N*0.55?'end':'start'}]});
+        if(pb)g+=t(130,wy+76+240+90,`dashed: with the ${PASS[s.pass].label.toLowerCase()}`,{size:11,fill:C.purple});
+        scene.innerHTML=svg(960,wy+76+240+(pb?110:76),g,'Seed phrase backup and brute-force time');layer.textContent='BIP39 backup · brute-force cost';status.textContent=`${N} words · ${SIZES[N].entropy} bits of entropy`;
         aside.innerHTML=K.asideBlock({title:missing===0&&!pb?'A complete phrase is the wallet.':secs<86400*30?'This backup can be cracked.':secs<3.15e9?'Hard, but within reach of a determined attacker.':'Out of reach.',
           text:missing===0?(pb?'The attacker has every word, but the passphrase still has to be guessed — and it adds a second, independent wallet.':'Whoever holds all the words can recreate every key and spend everything. No password, no recovery service.'):`${missing} unknown word${missing===1?'':'s'} × 11 bits ${missing*11>SIZES[N].entropy?'exceeds the entropy':`= ${missing*11} bits`}${pb?` plus ${pb} passphrase bits`:''}, minus the checksum: about 2^${Math.round(lb+1)} candidates.`,
           takeaway:'Protect the words like the coins themselves: every key is derived from them.',
@@ -66,19 +66,20 @@
       }
       function drawTree(){
         const seedId=s.typo?'alice-seed+typo':'alice-seed',nodes=tree(seedId),acc=access(nodes,s);let g='';
-        const X=lv=>[40,170,300,430,590,760][lv],kids={};nodes.forEach(n=>{if(n.parent)(kids[n.parent]=kids[n.parent]||[]).push(n);});
-        const leaves=nodes.filter(n=>n.level===5),Y={};leaves.forEach((n,i)=>{Y[n.path]=62+i*46+(i>=4?20:0);});
-        [4,3,2,1,0].forEach(lv=>nodes.filter(n=>n.level===lv).forEach(n=>{const ks=kids[n.path]||[];Y[n.path]=ks.length?ks.reduce((a,k)=>a+Y[k.path],0)/ks.length:250;}));
-        nodes.forEach(n=>{if(n.parent){const px=X(nodes.find(p=>p.path===n.parent).level)+120,py=Y[n.parent];g+=`<path d="M${px} ${py}C${px+20} ${py} ${X(n.level)-20} ${Y[n.path]} ${X(n.level)} ${Y[n.path]}" fill="none" stroke="${n.hardened?'#8f897c':'#bdb6a6'}" stroke-width="${n.hardened?2:1.2}" ${n.hardened?'':'stroke-dasharray="4 3"'}/>`;}});
-        nodes.forEach(n=>{const a=acc[n.path],x=X(n.level),y=Y[n.path],atk=a.attacker,fill=atk==='private'?'#f6d6d3':atk==='public'?'#fbe6c4':a.watch?'#dbe9f6':'#e3f1e5';
-          g+=`<rect x="${x}" y="${y-17}" width="120" height="34" rx="7" fill="${fill}" stroke="${atk==='private'?C.red:'#29323c'}" stroke-width="${atk==='private'?2.4:1.2}"/>`;
+        const kids={};nodes.forEach(n=>{if(n.parent)(kids[n.parent]=kids[n.parent]||[]).push(n);});
+        const NH=58,pos={};nodes.forEach(n=>{if(n.level<=3)pos[n.path]={cx:480,y:44+n.level*82,w:250};});
+        nodes.filter(n=>n.level===4).forEach((n,i)=>{pos[n.path]={cx:i?720:240,y:376,w:250};(kids[n.path]||[]).forEach((c,j)=>{pos[c.path]={cx:(i?720:240)+(j-1.5)*114,y:486,w:106};});});
+        nodes.forEach(n=>{if(n.parent){const P=pos[n.parent],Q=pos[n.path],y1=P.y+NH,y2=Q.y,my=(y1+y2)/2;g+=`<path d="M${P.cx} ${y1}C${P.cx} ${my} ${Q.cx} ${my} ${Q.cx} ${y2}" fill="none" stroke="${n.hardened?'#8f897c':'#bdb6a6'}" stroke-width="${n.hardened?2:1.3}" ${n.hardened?'':'stroke-dasharray="4 3"'}/>`;}});
+        nodes.forEach(n=>{const a=acc[n.path],{cx,y,w}=pos[n.path],x=cx-w/2,atk=a.attacker,fill=atk==='private'?'#f6d6d3':atk==='public'?'#fbe6c4':a.watch?'#dbe9f6':'#e3f1e5',leaf=n.level===5;
+          g+=`<rect x="${x}" y="${y}" width="${w}" height="${NH}" rx="8" fill="${fill}" stroke="${atk==='private'?C.red:'#29323c'}" stroke-width="${atk==='private'?2.4:1.2}"/>`;
           const label=n.path==='m'?'master m':n.path.replace("m/84'/0'/0'",'…acct').replace("m/84'/0'",'…coin').replace("m/84'",'purpose 84′').replace(/'/g,'′');
-          g+=t(x+8,y-3,n.level===5?n.path.split('/').slice(-2).join('/'):label,{size:11,weight:700})+t(x+8,y+11,`id ${n.id}`,{size:10,cls:'mono',fill:C.muted});
-          const badges=(atk==='private'?'💀':'')+(atk==='public'?'👀':'')+(a.watch?'👁':'');if(badges)g+=t(x+114,y+5,badges,{size:12,anchor:'end'});});
-        g+=`<rect x="0" y="${Y.m-26}" width="30" height="52" rx="6" fill="#e3f1e5" stroke="#29323c"/>`+t(15,Y.m+4,'🌱',{size:16,anchor:'middle'});
-        g+=t(590,30,'receive (…/0/i)  ·  change (…/1/i)',{size:12,weight:700,fill:C.muted})+t(40,30,'SEED → hardened path → account',{size:12,weight:700,fill:C.muted});
-        g+=t(40,480,'solid: hardened step (needs the private parent) · dashed: normal step (public parent suffices)',{size:11,fill:C.muted});
-        scene.innerHTML=svg(960,490,g,'Hierarchical deterministic key tree');layer.textContent='BIP32 tree · BIP84-style account';status.textContent=s.typo?'restored with a passphrase typo':'restored from the seed: same ids';
+          g+=t(x+10,y+25,leaf?n.path.split('/').slice(-2).join('/'):label,{size:11,weight:700})+t(x+10,y+48,leaf?n.id:`id ${n.id}`,{size:10,cls:'mono',fill:C.muted});
+          const badges=(atk==='private'?'💀':'')+(atk==='public'?'👀':'')+(a.watch?'👁':'');if(badges)g+=t(x+w-8,y+26,badges,{size:12,anchor:'end'});});
+        const M=pos.m;g+=`<path d="M${M.cx-M.w/2-34} ${M.y+NH/2}H${M.cx-M.w/2}" stroke="#8f897c" stroke-width="2"/><rect x="${M.cx-M.w/2-80}" y="${M.y+3}" width="46" height="52" rx="8" fill="#e3f1e5" stroke="#29323c"/>`+t(M.cx-M.w/2-57,M.y+37,'🌱',{size:16,anchor:'middle'});
+        g+=t(30,30,'SEED → hardened path → account',{size:12,weight:700,fill:C.muted});
+        g+=t(240,470,'receive  …/0/i',{size:11,weight:700,anchor:'middle',fill:C.muted,cls:'halo'})+t(720,470,'change  …/1/i',{size:11,weight:700,anchor:'middle',fill:C.muted,cls:'halo'});
+        g+=t(30,586,'solid: hardened step (needs the private parent)',{size:11,fill:C.muted})+t(30,612,'dashed: normal step (the public parent suffices)',{size:11,fill:C.muted});
+        scene.innerHTML=svg(960,628,g,'Hierarchical deterministic key tree');layer.textContent='BIP32 tree · BIP84-style account';status.textContent=s.typo?'restored with a passphrase typo':'restored from the seed: same ids';
         const total=s.leakXpub&&s.leakChild;
         aside.innerHTML=K.asideBlock({title:s.typo?'A typo creates a different, empty wallet.':total?'xpub + one child key = every key in the account.':s.leakXpub?'A stolen xpub costs privacy, not coins.':s.leakChild?'One leaked key loses one address.':'One seed, a whole tree of keys.',
           text:s.typo?'Every identifier changed. The passphrase is part of the seed derivation, so a single wrong character opens another (empty) wallet — the coins are not gone, but they are unreachable until the exact passphrase is typed.':total?'Non-hardened derivation lets anyone with the parent xpub and one child private key solve for the parent private key. From there the attacker derives and spends every receive and change key.':s.leakXpub?'The attacker can list every address and follow every payment, but cannot sign anything.':s.leakChild?'Without the xpub, a single child private key reveals only its own address.':'Restoring the same words on any device regenerates exactly the same tree. The watch-only server sees addresses (blue) but holds no private keys.',

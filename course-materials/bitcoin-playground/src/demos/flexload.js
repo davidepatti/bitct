@@ -36,7 +36,7 @@
         notes:`<ul><li><strong>Break-even price.</strong> Mining revenue per MWh = hashprice ÷ (efficiency × 0.024), with hashprice in €/PH/day and efficiency in J/TH. Above this price (plus fees and overhead) each hour of mining loses money, so a flexible miner switches off.</li><li><strong>Illustrative numbers.</strong> Price days, hashprice and efficiency are teaching assumptions, not market data; hashprice moves with bitcoin's price, network difficulty and fees. Hardware cost, staff, cooling, ramping limits and contract terms (fixed-price power, interruptibility clauses) are ignored, and the hardware is assumed to be paid for: switching off costs only the lost mining revenue.</li><li><strong>Demand response.</strong> Optionally, the grid operator asks the site to switch off during its highest-price hours and pays a fee per MWh not consumed.</li><li>Flexibility is the system benefit discussed in M 2.4: a load that can absorb surplus (low or negative prices) and step aside at peaks. Whether that load is socially worthwhile depends on the counterfactual use of the energy, which this model does not address. The IoT bridge — signed telemetry and authorized dispatch — is covered in the same unit.</li></ul>`});
       const scene=main.querySelector('#scene'),controls=main.querySelector('#controls'),aside=main.querySelector('#aside'),status=main.querySelector('#scene-status');
       K.bindControls(controls,s,specs,key=>{if(key==='preset')s.prices=PRESETS[s.preset].p.slice();draw();});
-      const PX=80,PY=36,PW=600,PH=190,yr=[-50,250],sy=v=>PY+PH-(v-yr[0])/(yr[1]-yr[0])*PH,inv=y=>yr[0]+(PY+PH-y)/PH*(yr[1]-yr[0]);
+      const PX=80,PY=48,PW=660,PH=210,yr=[-50,250],sy=v=>PY+PH-(v-yr[0])/(yr[1]-yr[0])*PH,inv=y=>yr[0]+(PY+PH-y)/PH*(yr[1]-yr[0]);
       function svgY(e){const el=scene.querySelector('svg');const pt=el.createSVGPoint();pt.x=e.clientX;pt.y=e.clientY;return pt.matrixTransform(el.getScreenCTM().inverse()).y;}
       scene.addEventListener('pointerdown',e=>{const el=e.target.closest('[data-hour]');if(!el)return;s.drag=Number(el.dataset.hour);scene.setPointerCapture(e.pointerId);move(e);});
       const move=e=>{if(s.drag===null)return;s.prices[s.drag]=Math.round(K.clamp(inv(svgY(e)),yr[0],yr[1]));s.preset='custom';K.setSeg(controls,'preset','custom');draw();};
@@ -44,21 +44,21 @@
       scene.addEventListener('keydown',e=>{const el=e.target.closest('[data-hour]');if(!el)return;const h=Number(el.dataset.hour),d=e.key==='ArrowUp'?10:e.key==='ArrowDown'?-10:0;if(!d)return;e.preventDefault();s.prices[h]=K.clamp(s.prices[h]+d,yr[0],yr[1]);s.preset='custom';K.setSeg(controls,'preset','custom');draw();scene.querySelector(`[data-hour="${h}"]`)?.focus();});
       function draw(){
         const r=day(s),bw=PW/24;let g='';
-        g+=t(PX,24,'ELECTRICITY PRICE (€/MWh) · drag the bars',{size:12,weight:700,fill:C.muted});
-        [-50,0,50,100,150,200,250].forEach(v=>{g+=`<line x1="${PX}" x2="${PX+PW}" y1="${sy(v)}" y2="${sy(v)}" stroke="${v===0?'#bdb6a6':'#ece6d8'}"/>`+t(PX-8,sy(v)+4,String(v),{size:11,anchor:'end',fill:C.muted});});
+        g+=t(PX,26,'ELECTRICITY PRICE (€/MWh) · drag the bars',{size:12,weight:700,fill:C.muted});
+        [-50,0,50,100,150,200,250].forEach(v=>{g+=`<line x1="${PX}" x2="${PX+PW}" y1="${sy(v)}" y2="${sy(v)}" stroke="${v===0?'#bdb6a6':'#ece6d8'}"/>`+(v%100===0||v===250||v===-50?t(PX-8,sy(v)+7,String(v),{size:11,anchor:'end',fill:C.muted}):'');});
         s.prices.forEach((p,h)=>{const x=PX+h*bw+2,above=p+s.overhead>=r.B,peak=r.peaks.has(h);g+=`<g data-pick="1" data-hour="${h}" tabindex="0" role="slider" aria-label="Hour ${h}: €${p} per MWh" aria-valuenow="${p}"><rect x="${x-2}" y="${PY}" width="${bw}" height="${PH}" fill="transparent"/><rect x="${x}" y="${Math.min(sy(p),sy(0))}" width="${bw-4}" height="${Math.max(1.5,Math.abs(sy(p)-sy(0)))}" rx="2" fill="${above?C.red:C.green}" opacity="${s.drag===h?1:0.78}" ${peak?`stroke="${C.ink}" stroke-width="2"`:''}/></g>`;});
-        g+=`<line x1="${PX}" x2="${PX+PW}" y1="${sy(r.B-s.overhead)}" y2="${sy(r.B-s.overhead)}" stroke="${C.ink}" stroke-width="2" stroke-dasharray="7 5"/>`+t(PX+PW+6,sy(r.B-s.overhead)+4,`off above €${fmt(r.B-s.overhead)}`,{size:12,weight:700});
+        const ly=sy(r.B-s.overhead);g+=`<line x1="${PX}" x2="${PX+PW}" y1="${ly}" y2="${ly}" stroke="${C.ink}" stroke-width="2" stroke-dasharray="7 5"/>`+t(PX+PW+10,ly-4,'switch off',{size:12,weight:700})+t(PX+PW+10,ly+22,`above €${fmt(r.B-s.overhead)}`,{size:12,weight:700});
         /* load */
-        const LY=290,LH=110;g+=t(PX,LY-12,`MINER LOAD (MW) · ${r.F.hoursOn} of 24 hours on`,{size:12,weight:700,fill:C.muted});
-        r.flex.forEach((x,h)=>{const bh=x.mwh/s.mw*LH;g+=`<rect x="${PX+h*bw+2}" y="${LY+LH-bh}" width="${bw-4}" height="${bh}" rx="2" fill="${C.orange}"/>`;if(r.peaks.has(h))g+=t(PX+h*bw+bw/2,LY+LH-6,'DR',{size:9,weight:700,anchor:'middle',fill:C.ink});});
-        g+=`<line x1="${PX}" x2="${PX+PW}" y1="${LY}" y2="${LY}" stroke="${C.ink}" stroke-dasharray="3 4"/>`+t(PX+PW+6,LY+4,'always on',{size:11,fill:C.muted})+`<line x1="${PX}" x2="${PX+PW}" y1="${LY+LH}" y2="${LY+LH}" stroke="#bdb6a6"/>`;
-        [0,6,12,18,23].forEach(h=>{g+=t(PX+h*bw+bw/2,LY+LH+16,`${String(h).padStart(2,'0')}:00`,{size:11,anchor:'middle',fill:C.muted});});
-        /* profit comparison */
-        const CX=790;g+=t(CX,24,'PROFIT FOR THE DAY',{size:12,weight:700,fill:C.muted});
-        const mx=Math.max(1,Math.abs(r.A.profit),Math.abs(r.F.profit)),zero=200,sc=140/mx;
-        [['Always on',r.A.profit,'#bfb8a8'],['Flexible',r.F.profit,C.orange]].forEach(([lab,v,col],i)=>{const x=CX+i*80,h=v*sc;g+=`<rect x="${x}" y="${v>=0?zero-h:zero}" width="56" height="${Math.max(1,Math.abs(h))}" rx="3" fill="${col}"/>`+t(x+28,v>=0?zero-h-8:zero-h+16,eur(v),{size:12,weight:700,anchor:'middle',fill:v<0?C.red:C.ink})+t(x+28,zero+(v<0?-h+34:20),lab,{size:11,anchor:'middle',fill:C.muted});});
-        g+=`<line x1="${CX-6}" x2="${CX+142}" y1="${zero}" y2="${zero}" stroke="#bdb6a6"/>`;
-        scene.innerHTML=svg(960,430,g,'Hourly electricity prices, miner load and daily profit');
+        const LY=330,LH=100;g+=t(PX,LY-14,`MINER LOAD (MW) · ${r.F.hoursOn} of 24 hours on`,{size:12,weight:700,fill:C.muted});
+        r.flex.forEach((x,h)=>{const bh=x.mwh/s.mw*LH;g+=`<rect x="${PX+h*bw+2}" y="${LY+LH-bh}" width="${bw-4}" height="${bh}" rx="2" fill="${C.orange}"/>`;if(r.peaks.has(h))g+=t(PX+h*bw+bw/2,LY+LH-8,'DR',{size:8,weight:700,anchor:'middle',fill:C.ink});});
+        g+=`<line x1="${PX}" x2="${PX+PW}" y1="${LY}" y2="${LY}" stroke="${C.ink}" stroke-dasharray="3 4"/>`+t(PX+PW+10,LY+7,'always on',{size:11,fill:C.muted})+`<line x1="${PX}" x2="${PX+PW}" y1="${LY+LH}" y2="${LY+LH}" stroke="#bdb6a6"/>`;
+        [0,6,12,18,23].forEach(h=>{g+=t(PX+h*bw+bw/2,LY+LH+26,`${String(h).padStart(2,'0')}:00`,{size:11,anchor:'middle',fill:C.muted});});
+        /* profit comparison: horizontal bars */
+        const TY=500;g+=t(PX,TY,'PROFIT FOR THE DAY',{size:12,weight:700,fill:C.muted});
+        const vals=[['Always on',r.A.profit,'#bfb8a8'],['Flexible',r.F.profit,C.orange]],neg=vals.some(v=>v[1]<0),zx=neg?470:250,mx=Math.max(1,...vals.map(v=>Math.abs(v[1]))),sc=(neg?260:500)/mx;
+        vals.forEach(([lab,v,col],i)=>{const y=TY+18+i*44,w=Math.abs(v)*sc;g+=t(PX,y+24,lab,{size:12,weight:600,fill:C.muted})+`<rect x="${v>=0?zx:zx-w}" y="${y}" width="${Math.max(1,w)}" height="32" rx="4" fill="${col}"/>`+t(v>=0?zx+w+10:zx+10,y+24,eur(v),{size:13,weight:700,fill:v<0?C.red:C.ink});});
+        g+=`<line x1="${zx}" x2="${zx}" y1="${TY+10}" y2="${TY+108}" stroke="#bdb6a6"/>`;
+        scene.innerHTML=svg(960,620,g,'Hourly electricity prices, miner load and daily profit');
         status.textContent=`${s.mw} MW site · break-even €${fmt(r.B)} / MWh before fees`;
         const gain=r.F.profit-r.A.profit;
         aside.innerHTML=K.asideBlock({title:r.F.hoursOn===24?'Power is cheap all day: run flat out.':r.F.hoursOn===0?'Power costs more than mining earns: stay off.':`Run ${r.F.hoursOn} hours, skip the expensive ${24-r.F.hoursOn}.`,

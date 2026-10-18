@@ -67,12 +67,12 @@
         show.sort((a,b)=>a.time-b.time).forEach(b=>{const main=fsim.main.has(b.id);const k=main?0:(rowsAt[b.height]=(rowsAt[b.height]||0)+1);const y=main?150:150-Math.min(k,3)*34;b._y=y;
           const par=fsim.blocks[b.parent];if(par&&par.height>=fromH&&par._y!==undefined)g+=`<path d="M${X(par)+18} ${par._y+9}L${X(b)} ${y+9}" stroke="${main?'#29323c':'#a49c8c'}" stroke-width="${main?1.6:1.2}"/>`;else if(!main&&par)g+=`<path d="M${X(b)-6} 159L${X(b)} ${y+9}" stroke="#a49c8c"/>`;
           g+=`<rect x="${X(b)}" y="${y}" width="18" height="18" rx="3" fill="${main?'#bfdaef':'#e9e5da'}" stroke="${main?'#29323c':'#8f897c'}" stroke-width="1.3" ${main?'':'stroke-dasharray="3 2"'}/>`;});
-        g+=t(20,200,'Main chain',{size:12,weight:700,fill:C.blue})+t(120,200,'Stale blocks above: valid, but abandoned',{size:12,fill:C.muted});
+        g+=t(40,204,'Blue: main chain  ·  grey, dashed, above: stale blocks (valid, but abandoned)',{size:12,fill:C.muted});
         /* stale rate vs interval for this delay */
         const pts=[],ptsSim=[];for(let lg=Math.log10(5);lg<=Math.log10(1200)+1e-9;lg+=0.05){const T=10**lg;pts.push([T,staleApprox(s.delay,T)]);}
-        g+=t(70,250,`Stale rate vs. block interval (delay ${dur(s.delay)})`,{size:13,weight:700,fill:C.muted});
-        g+=K.plot({x:80,y:262,w:820,h:170,xr:[5,1200],yr:[0.0001,1],xlog:true,ylog:true,xticks:[5,15,60,150,600,1200],yticks:[0.0001,0.001,0.01,0.1,1],xfmt:dur,yfmt:v=>pct(v),xlabel:'average block interval',series:[{pts,color:C.red,width:2.4}],dots:[{x:s.interval,y:Math.max(0.0001,approx),color:C.red,label:`approx. ${pct(approx)}`},{x:s.interval,y:Math.max(0.0001,fsim.rate),color:C.ink,label:`simulated ${pct(fsim.rate)}`,anchor:'end',dy:16}]});
-        scene.innerHTML=svg(960,480,g,'Block tree with stale branches and stale rate chart');
+        g+=t(70,244,`Stale rate vs. block interval (delay ${dur(s.delay)})`,{size:13,weight:700,fill:C.muted});
+        g+=K.plot({x:80,y:270,w:820,h:170,xr:[5,1200],yr:[0.0001,1],xlog:true,ylog:true,xticks:[5,15,60,150,600,1200],yticks:[0.0001,0.001,0.01,0.1,1],xfmt:dur,yfmt:v=>pct(v),xlabel:'average block interval',series:[{pts,color:C.red,width:2.4}],dots:(()=>{const f=Math.log(s.interval/5)/Math.log(240),mid=f>0.2&&f<0.8,an=f<=0.2?'start':'end',low=Math.min(approx,fsim.rate)<0.002,high=Math.max(approx,fsim.rate)>0.3;const py=v=>440-(Math.log10(Math.max(1e-4,v))+4)/4*170,pa=py(approx),ps=py(fsim.rate);let da=-10,ds=26;if(!mid){const top=Math.min(pa,ps),bot=Math.max(pa,ps);if(top>330){da=top-38-pa;ds=top-10-ps;}else{da=bot+26-pa;ds=bot+54-ps;}}else if(high){da=26;ds=26;}else if(low){da=-10;ds=-10;}return [{x:s.interval,y:Math.max(0.0001,approx),color:C.red,label:`approx. ${pct(approx)}`,anchor:mid?'start':an,dy:da},{x:s.interval,y:Math.max(0.0001,fsim.rate),color:C.ink,label:`simulated ${pct(fsim.rate)}`,anchor:mid?'end':an,dy:ds}];})()});
+        scene.innerHTML=svg(960,512,g,'Block tree with stale branches and stale rate chart');
         layer.textContent='Block propagation · accidental forks';status.textContent=`${fsim.stale} stale of 400 blocks · seed ${s.seed}`;
         const ratio=s.delay/s.interval;
         aside.innerHTML=K.asideBlock({title:ratio<0.02?'Rare forks: the network hears about blocks fast.':ratio<0.15?'Forks become routine.':'The network cannot keep up.',text:`A fork happens when a second miner finds a block before hearing about the first. The window is the propagation delay (${dur(s.delay)}); blocks arrive every ${dur(s.interval)} on average, so a fraction of about delay ÷ interval of the work lands on stale branches.`,
@@ -83,11 +83,10 @@
       function drawSelfish(){
         const sim=selfishSim({alpha:s.alpha,gamma:s.gamma,rng:K.rng(99)}),R=selfishRevenue(s.alpha,s.gamma),th=threshold(s.gamma);let g='';
         const curve=gm=>{const pts=[];for(let a=0;a<=0.5001;a+=0.005)pts.push([a,selfishRevenue(a,gm)]);return pts;};
-        g+=t(70,28,'Selfish pool’s share of main-chain blocks',{size:13,weight:700,fill:C.muted});
-        g+=K.plot({x:80,y:44,w:480,h:360,xr:[0,0.5],yr:[0,1],xticks:[0,0.1,0.2,0.3,0.4,0.5],yticks:[0,0.25,0.5,0.75,1],xfmt:v=>pct(v,0),yfmt:v=>pct(v,0),xlabel:'selfish pool hashrate α',
+        g+=t(70,26,'Selfish pool’s share of main-chain blocks',{size:13,weight:700,fill:C.muted})+t(70,54,'faint curves: γ = 100% (upper) and γ = 0 (lower)',{size:11,fill:'#c98d87'});
+        g+=K.plot({x:80,y:72,w:480,h:340,xr:[0,0.5],yr:[0,1],xticks:[0,0.1,0.2,0.3,0.4,0.5],yticks:[0,0.25,0.5,0.75,1],xfmt:v=>pct(v,0),yfmt:v=>pct(v,0),xlabel:'selfish pool hashrate α',
           series:[{pts:[[0,0],[0.5,0.5]],color:C.ink,width:1.6,dash:'6 5',label:'honest'},{pts:curve(0),color:'#e5b3ae',width:1.4},{pts:curve(1),color:'#e5b3ae',width:1.4},{pts:curve(s.gamma),color:C.red,width:3}],
-          bands:[{from:th,to:0.5,color:C.red,opacity:0.07}],vlines:[{x:th,color:C.red,label:`profitable above ${pct(th,1)}`,dy:4}],dots:[{x:s.alpha,y:R,color:C.red,label:pct(R,1)},{x:s.alpha,y:sim.share,color:C.ink,r:4}],
-          texts:[{x:0.36,y:selfishRevenue(0.36,1)+0.06,text:'γ = 100%',color:'#c98d87'},{x:0.42,y:Math.max(0.02,selfishRevenue(0.42,0)-0.07),text:'γ = 0',color:'#c98d87'}]});
+          bands:[{from:th,to:0.5,color:C.red,opacity:0.07}],vlines:[{x:th,color:C.red,label:`profitable above ${pct(th,1)}`,dy:4,anchor:th>0.27?'end':'start'}],dots:[{x:s.alpha,y:R,color:C.red,label:pct(R,1),anchor:(s.alpha>0.35||(s.alpha<th&&s.alpha>0.12))?'end':'start',dy:R>0.75?28:-8},{x:s.alpha,y:sim.share,color:C.ink,r:4}]});
         /* bars */
         const bx=640;g+=t(bx,28,'Simulated 20,000 blocks',{size:13,weight:700,fill:C.muted});
         [['Hashrate',s.alpha,'#bfb8a8'],['Revenue',sim.share,C.red]].forEach(([lab,v,col],i)=>{const y=60+i*58;g+=t(bx,y,lab,{size:12,weight:600})+`<rect x="${bx}" y="${y+8}" width="270" height="22" rx="3" fill="#efeadf"/><rect x="${bx}" y="${y+8}" width="${270*v}" height="22" rx="3" fill="${col}"/>`+t(bx+278*v+6>bx+230?bx+266:bx+270*v+6,y+24,pct(v,1),{size:12,weight:700,anchor:bx+278*v+6>bx+230?'end':'start',fill:bx+278*v+6>bx+230?'#fff':C.ink});});
@@ -96,7 +95,7 @@
         g+=t(bx,248,'Private lead, first 240 events',{size:12,weight:700,fill:C.muted});
         const tr=sim.trace.map((v,i)=>[i,v]),mx=Math.max(3,...sim.trace);
         g+=K.plot({x:bx+20,y:262,w:250,h:130,xr:[0,240],yr:[0,mx],xticks:[0,120,240],yticks:K.niceTicks(0,mx,3).filter(v=>v%1===0),series:[{pts:tr,color:C.red,width:1.6,step:true,area:0.15}],xlabel:'events'});
-        scene.innerHTML=svg(960,440,g,'Selfish mining revenue versus hashrate');
+        scene.innerHTML=svg(960,480,g,'Selfish mining revenue versus hashrate');
         layer.textContent='Selfish mining · Eyal & Sirer model';status.textContent=`α = ${pct(s.alpha,0)} · γ = ${pct(s.gamma,0)}`;
         const gain=R-s.alpha;
         aside.innerHTML=K.asideBlock({title:gain>0.002?'Withholding blocks pays more than its fair share.':gain<-0.002?'Below the threshold, cheating loses money.':'Right at the break-even point.',text:gain>0.002?`With ${pct(s.alpha,0)} of the hashrate the selfish pool earns ${pct(R,1)} of the blocks, because honest miners waste work on blocks that get orphaned.`:`A selfish pool with ${pct(s.alpha,0)} of the hashrate loses races too often; it would earn more by publishing every block immediately.`,

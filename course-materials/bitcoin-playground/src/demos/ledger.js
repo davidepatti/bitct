@@ -43,7 +43,7 @@
   if(typeof module!=='undefined'&&module.exports){module.exports=model;return;}
 
   const K=root.PlaygroundKit,{t,svg,colors:C,esc}=K;
-  const pos=i=>{const a=-Math.PI/2+i*2*Math.PI/5;return [310+Math.cos(a)*175,245+Math.sin(a)*170];};
+  const pos=i=>{const a=-Math.PI/2+i*2*Math.PI/5;return [262+Math.cos(a)*200,262+Math.sin(a)*190];};
   const MODES=[{value:'private',label:'1 · Private notebooks'},{value:'central',label:'2 · A central bookkeeper'},{value:'public',label:'3 · A shared, checked ledger'}];
   K.register({id:'ledger-keepers',number:'02',module:'M 1.1',moduleName:'Motivations',kind:'Ledgers and trust',color:C.purple,
     title:'Who keeps the ledger?',
@@ -63,31 +63,42 @@
       function card(x,y,w,rows,{title='',hl=new Set(),bad=false}={}){let g=`<rect x="${x}" y="${y}" width="${w}" height="${18+rows.length*15}" rx="6" fill="#fffdf7" stroke="${bad?C.red:'#cfc8b9'}" stroke-width="${bad?2:1.2}"/>`;if(title)g+=t(x+8,y+13,title,{size:10,weight:700,fill:C.muted});rows.forEach(([k,v],i)=>{const yy=y+(title?28:14)+i*15;g+=t(x+8,yy,k,{size:11,fill:C.muted})+t(x+w-8,yy,String(v),{size:11.5,weight:700,anchor:'end',fill:hl.has(k)?C.red:C.ink});});return g;}
       function draw(){
         const st=steps[s.step],prev=steps[Math.max(0,s.step-1)];let g='';
-        if(s.mode==='central'){g+=`<rect x="250" y="190" width="120" height="112" rx="10" fill="#f8d277" stroke="#29323c" stroke-width="1.8"/>`+t(310,208,'BOOKKEEPER',{size:11,weight:700,anchor:'middle'});
-          PLAYERS.forEach((p,i)=>{g+=t(270,226+i*15,p,{size:11,fill:'#6b5a2e'})+t(352,226+i*15,String(st.bank[p]),{size:12,weight:700,anchor:'end',fill:st.bank[p]!==prev.bank[p]?C.purple:C.ink});});}
+        const BX=262,BY=262,BW=160,BH=64,edge=(dx,dy)=>Math.min(BW/2/Math.max(1e-9,Math.abs(dx)),BH/2/Math.max(1e-9,Math.abs(dy)))+8;
+        if(s.mode==='central')g+=`<rect x="${BX-BW/2}" y="${BY-BH/2}" width="${BW}" height="${BH}" rx="10" fill="#f8d277" stroke="#29323c" stroke-width="1.8"/>`+t(BX,BY+7,'BOOKKEEPER',{size:11,weight:700,anchor:'middle'});
         /* messages */
-        st.msgs.forEach((m,k)=>{const fi=PLAYERS.indexOf(m.from),ti=PLAYERS.indexOf(m.to);const [x1,y1]=m.from==='Bank'?[310,246]:pos(fi),[x2,y2]=m.to==='Bank'?[310,246]:pos(ti);
-          const dx=x2-x1,dy=y2-y1,L=Math.hypot(dx,dy)||1,off=(m.lane||0)*10-(st.msgs.some(x=>x.lane)?5:0),ox=-dy/L*off,oy=dx/L*off,sx=x1+dx/L*34+ox,sy=y1+dy/L*34+oy,ex=x2-dx/L*(m.to==='Bank'?64:36)+ox,ey=y2-dy/L*(m.to==='Bank'?58:36)+oy;
-          const col=m.lane===1?C.orange:m.ok===false?C.red:m.cheat?C.red:C.purple;g+=`<path d="M${sx} ${sy}L${ex} ${ey}" stroke="${col}" stroke-width="2.4" ${m.ok===false?'stroke-dasharray="6 5"':''} marker-end="url(#k-arrow)"/>`;
-          if(m.label)g+=t((sx+ex)/2+ox,(sy+ey)/2+oy-6,m.label+(m.ok===false?' ✗':''),{size:11,weight:700,anchor:'middle',fill:col});});
-        if(st.msgs.some(m=>m.lane===1))g+=t(20,480,'Purple: Cai → Ben 5   ·   Orange: Cai → Dee 5   (announced at the same moment)',{size:12,weight:600,fill:C.muted});
+        st.msgs.forEach((m,k)=>{const fi=PLAYERS.indexOf(m.from),ti=PLAYERS.indexOf(m.to);const [x1,y1]=m.from==='Bank'?[BX,BY]:pos(fi),[x2,y2]=m.to==='Bank'?[BX,BY]:pos(ti);
+          const dx=x2-x1,dy=y2-y1,L=Math.hypot(dx,dy)||1,ux=dx/L,uy=dy/L,off=(m.lane||0)*14-(st.msgs.some(x=>x.lane)?7:0),ox=-uy*off,oy=ux*off,d1=m.from==='Bank'?edge(ux,uy):38,d2=m.to==='Bank'?edge(ux,uy):40,sx=x1+ux*d1+ox,sy=y1+uy*d1+oy,ex=x2-ux*d2+ox,ey=y2-uy*d2+oy;
+          const col=m.lane===1?C.orange:m.ok===false?C.red:m.cheat?C.red:C.purple;g+=`<path d="M${sx} ${sy}L${ex} ${ey}" stroke="${col}" stroke-width="2.6" ${m.ok===false?'stroke-dasharray="6 5"':''} marker-end="url(#k-arrow)"/>`;
+          if(m.label){const side=(m.lane===1?1:-1),bank=m.to==='Bank'||m.from==='Bank',lx=bank?BX:(sx+ex)/2-uy*18*side,ly=bank?(m.to==='Bank'?BY-BH/2-14:BY+BH/2+30):(sy+ey)/2+ux*18*side+7;g+=t(lx,ly,m.label+(m.ok===false?' ✗':''),{size:11,weight:700,anchor:'middle',fill:col,cls:'halo'});}});
+        if(st.msgs.some(m=>m.lane===1))g+=t(20,530,'Purple: Cai → Ben 5  ·  Orange: Cai → Dee 5',{size:12,weight:600,fill:C.muted})+t(20,558,'(announced at the same moment)',{size:12,weight:600,fill:C.muted});
         /* players */
         PLAYERS.forEach((p,i)=>{const [x,y]=pos(i),cheater=p==='Cai'&&s.scenario!=='honest'&&s.scenario!=='abuse';
-          g+=`<circle cx="${x}" cy="${y}" r="28" fill="${cheater?'#f6d6d3':'#e5d8fb'}" stroke="#29323c" stroke-width="2"/>`+t(x,y+5,p,{size:13,weight:700,anchor:'middle'});
-          const cx=x+(x<310?-150:x>330?36:-56),cy=y+(y<120?-30:y>300?-10:-34),cardX=Math.max(8,Math.min(530,i===0?x+36:cx)),cardY=i===0?y-40:cy;
-          if(s.mode==='private'){const hl=new Set(st.own[p]!==prev.own[p]?['my coins']:[]);g+=card(cardX,cardY,108,[['my coins',st.own[p]],['others','?']],{title:`${p.toUpperCase()}'S NOTEBOOK`,hl});}
-          else if(s.mode==='public'){const c=st.copies[p],hl=new Set(PLAYERS.filter(q=>c[q]!==st.copies.Ana[q]));g+=card(cardX,cardY,96,PLAYERS.map(q=>[q,c[q]]),{title:`${p.toUpperCase()}'S COPY`,hl,bad:!st.agree&&hl.size>0});}
+          g+=`<circle cx="${x}" cy="${y}" r="32" fill="${cheater?'#f6d6d3':'#e5d8fb'}" stroke="#29323c" stroke-width="2"/>`+t(x,y+7,p,{size:13,weight:700,anchor:'middle'});
+          if(s.mode!=='central'){const nx=x+(x<BX-20?-60:38),ny=y-46;g+=`<rect x="${nx}" y="${ny}" width="22" height="28" rx="2" fill="#fffdf7" stroke="#8f897c" stroke-width="1.3"/><path d="M${nx+5} ${ny+9}h12M${nx+5} ${ny+15}h12M${nx+5} ${ny+21}h8" stroke="#bdb6a6"/>`;}
         });
-        /* right column: totals */
-        const rx=680;g+=t(rx,40,'CHECK',{size:12,weight:700,fill:C.muted});
+        /* right column: the ledger(s) */
+        const rx=548,colW=s.mode==='public'?64:150,rowH=32,ty=74;
+        if(s.mode==='private'){g+=t(rx,32,'EACH PLAYER’S NOTEBOOK',{size:12,weight:700,fill:C.muted});
+          g+=t(rx+150,ty-4,'my coins',{size:10,weight:700,anchor:'end',fill:C.muted})+t(rx+280,ty-4,'others',{size:10,weight:700,anchor:'end',fill:C.muted});
+          PLAYERS.forEach((p,i)=>{const y=ty+28+i*rowH;g+=t(rx,y,p,{size:12,weight:700})+t(rx+150,y,String(st.own[p]),{size:12.5,weight:700,anchor:'end',fill:st.own[p]!==prev.own[p]?C.red:C.ink})+t(rx+280,y,'?',{size:12.5,anchor:'end',fill:C.muted});});}
+        else if(s.mode==='central'){g+=t(rx,32,'THE BOOKKEEPER’S LEDGER',{size:12,weight:700,fill:C.muted});
+          PLAYERS.forEach((p,i)=>{const y=ty+28+i*rowH;g+=t(rx,y,p,{size:12,weight:700})+t(rx+150,y,String(st.bank[p]),{size:12.5,weight:700,anchor:'end',fill:st.bank[p]!==prev.bank[p]?C.purple:C.ink});});}
+        else{g+=t(rx,32,'EACH PLAYER’S COPY',{size:12,weight:700,fill:C.muted});
+          const cx0=rx+76;PLAYERS.forEach((owner,j)=>{const c=st.copies[owner],diff=PLAYERS.some(q=>c[q]!==st.copies.Ana[q]);const X=cx0+j*colW;
+            g+=`<rect x="${X}" y="${ty-26}" width="${colW-6}" height="${32+5*rowH}" rx="7" fill="${!st.agree&&diff?'#fbeeec':'#fffdf7'}" stroke="${!st.agree&&diff?C.red:'#cfc8b9'}" stroke-width="${!st.agree&&diff?2:1.2}"/>`+t(X+(colW-6)/2,ty-4,owner,{size:10,weight:700,anchor:'middle',fill:C.muted});
+            PLAYERS.forEach((q,i)=>{const y=ty+28+i*rowH;g+=t(X+(colW-6)/2,y,String(c[q]),{size:12,weight:700,anchor:'middle',fill:c[q]!==st.copies.Ana[q]?C.red:C.ink});});});
+          PLAYERS.forEach((q,i)=>{g+=t(rx,ty+28+i*rowH,q,{size:11,fill:C.muted});});
+          g+=t(rx,ty+28+5*rowH+10,'columns: whose copy · rows: account',{size:10,fill:C.muted});}
         let verdict,vcol;
         if(s.mode==='private'){verdict=st.reconcile?(st.claimed>TOTAL?`${st.claimed} coins claimed, only ${TOTAL} exist`:`${st.claimed} claimed = ${TOTAL} exist`):'Total unknown until notes are compared';vcol=st.reconcile&&st.claimed>TOTAL?C.red:C.muted;}
         else if(s.mode==='central'){verdict=st.bankTotal!==TOTAL?`Ledger total ${st.bankTotal} ≠ ${TOTAL}`:st.msgs.some(m=>m.censored)?'Valid payment refused':st.msgs.some(m=>m.ok===false)?'Double spend stopped':`Ledger total ${st.bankTotal}`;vcol=st.bankTotal!==TOTAL||st.msgs.some(m=>m.censored)?C.red:st.msgs.some(m=>m.ok===false)?C.green:C.ink;}
         else{verdict=st.agree?'All copies agree':'Copies disagree';vcol=st.agree?C.green:C.red;}
-        g+=t(rx,70,verdict,{size:15,weight:700,fill:vcol});
-        g+=t(rx,110,'STEPS',{size:12,weight:700,fill:C.muted});
-        steps.forEach((x,i)=>{const y=134+i*26;g+=`<circle cx="${rx+8}" cy="${y-4}" r="8" fill="${i===s.step?C.purple:i<s.step?'#cdbdf0':'#efeadf'}"/>`+t(rx+8,y,String(i),{size:10,weight:700,anchor:'middle',fill:i===s.step?'#fff':C.ink})+t(rx+24,y,i===0?'Start':x.reconcile?'Count the coins':x.short,{size:11.5,fill:i===s.step?C.ink:C.muted,weight:i===s.step?700:500});});
-        scene.innerHTML=svg(960,500,g,'Five players and their ledgers');
+        const cy0=ty+28+5*rowH+(s.mode==='public'?64:30),vl=[''];verdict.split(' ').forEach(w=>{if((vl.at(-1)+' '+w).trim().length>30)vl.push(w);else vl[vl.length-1]=(vl.at(-1)+' '+w).trim();});const ex=(vl.length-1)*30;
+        g+=t(rx,cy0,'CHECK',{size:12,weight:700,fill:C.muted});vl.forEach((l,i)=>{g+=t(rx,cy0+34+i*30,l,{size:15,weight:700,fill:vcol});});
+        g+=t(rx,cy0+84+ex,'STEPS',{size:12,weight:700,fill:C.muted});
+        steps.forEach((x,i)=>{const y=cy0+120+ex+i*34;g+=`<circle cx="${rx+12}" cy="${y-6}" r="12" fill="${i===s.step?C.purple:i<s.step?'#cdbdf0':'#efeadf'}"/>`+t(rx+12,y,String(i),{size:10,weight:700,anchor:'middle',fill:i===s.step?'#fff':C.ink})+t(rx+34,y,i===0?'Start':x.reconcile?'Count the coins':x.short.replace(' (same moment)',' at once'),{size:11.5,fill:i===s.step?C.ink:C.muted,weight:i===s.step?700:500});});
+        const H=Math.max(580,cy0+120+ex+(steps.length-1)*34+24);
+        scene.innerHTML=svg(960,H,g,'Five players and their ledgers');
         q('lback').disabled=s.step===0;q('lnext').disabled=s.step===steps.length-1;q('stepnote').textContent=`Step ${s.step} of ${steps.length-1}`;
         layer.textContent=MODES.find(m=>m.value===s.mode).label.slice(4);status.textContent=SCENARIOS[s.scenario].label;
         const end=s.step===steps.length-1;

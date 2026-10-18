@@ -125,6 +125,6 @@
   reduced.addEventListener('change',route);
   window.addEventListener('hashchange',route);
   // Read-only state hook is useful for repeatable classroom/browser QA.
-  window.BitcoinPlayground={getState:()=>{const id=(location.hash.match(/^#([a-z-]+)/)||[])[1],demo=K.demos.find(d=>d.id===id);if(demo)return {tool:demo.id,...(demo.state?demo.state():{})};return {tool:$('next')?'transaction':'hub',...P.snapshot(step,options),playing,speed};},tools:tools.map(t=>t.id),version:'2.0.0'};
+  window.BitcoinPlayground={getState:()=>{const id=(location.hash.match(/^#([a-z-]+)/)||[])[1],demo=K.demos.find(d=>d.id===id);if(demo)return {tool:demo.id,...(demo.state?demo.state():{})};return {tool:$('next')?'transaction':'hub',...P.snapshot(step,options),playing,speed};},tools:tools.map(t=>t.id),version:'2.1.0'};
   route();
 })();

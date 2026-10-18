@@ -73,7 +73,7 @@
         g+=`<line x1="40" x2="940" y1="250" y2="250" stroke="#d6cfbf"/><line x1="420" x2="420" y1="20" y2="490" stroke="#d6cfbf"/>`;
         let up='',down='';for(let i=0;i<=200;i++){const x=x0+(i/200)**2*(4.2-x0),y=Math.sqrt(Math.max(0,x**3+7));up+=(i?'L':'M')+sxR(x).toFixed(1)+' '+syR(y).toFixed(1);down+=(i?'L':'M')+sxR(x).toFixed(1)+' '+syR(-y).toFixed(1);}
         g+=`<path d="${up}" fill="none" stroke="#bfb2dc" stroke-width="3"/><path d="${down}" fill="none" stroke="#bfb2dc" stroke-width="3"/>`;
-        g+=t(700,60,'y² = x³ + 7',{size:22,weight:700,fill:'#7a6aa6',cls:'hand'});
+        g+=t(50,470,'y² = x³ + 7',{size:22,weight:700,fill:'#7a6aa6',cls:'hand'});
         const P=realPoint(s.tP),Q=realPoint(s.tQ),r=realAdd(P,Q);let head,body,result;
         if(r.infinity){
           g+=`<line x1="${sxR(P[0])}" x2="${sxR(P[0])}" y1="20" y2="490" stroke="${C.orange}" stroke-width="2.4" stroke-dasharray="7 6"/>`;
@@ -82,65 +82,65 @@
           const [x3,y3]=r.sum,xs=[P[0],Q[0],x3],lo=Math.min(...xs)-0.6,hi=Math.max(...xs)+0.6,yl=x=>P[1]+r.lambda*(x-P[0]);
           g+=`<line x1="${sxR(lo)}" y1="${syR(yl(lo))}" x2="${sxR(hi)}" y2="${syR(yl(hi))}" stroke="${C.orange}" stroke-width="2.4"/>`;
           g+=`<line x1="${sxR(x3)}" y1="${syR(-y3)}" x2="${sxR(x3)}" y2="${syR(y3)}" stroke="${C.muted}" stroke-width="1.8" stroke-dasharray="6 6" marker-end="url(#k-arrow)"/>`;
-          g+=`<circle cx="${sxR(x3)}" cy="${syR(-y3)}" r="7" fill="#fffdf7" stroke="${C.orange}" stroke-width="2.4"/>`+t(sxR(x3)+12,syR(-y3)+(y3>0?18:-8),'third crossing',{size:13,fill:C.orange,weight:600});
-          g+=`<circle cx="${sxR(x3)}" cy="${syR(y3)}" r="10" fill="${C.purple}" stroke="#29323c" stroke-width="2"/>`+t(sxR(x3)+15,syR(y3)+(y3>0?-10:22),r.tangent?'2P':'P + Q',{size:18,weight:700,fill:C.purple});
+          g+=`<circle cx="${sxR(x3)}" cy="${syR(-y3)}" r="7" fill="#fffdf7" stroke="${C.orange}" stroke-width="2.4"/>`+(onScreen([x3,-y3])&&Math.hypot(sxR(x3)-sxR(P[0]),syR(-y3)-syR(P[1]))>90&&Math.hypot(sxR(x3)-sxR(Q[0]),syR(-y3)-syR(Q[1]))>90?t(sxR(x3)+(sxR(x3)>760?-12:12),syR(-y3)+(y3>0?26:-12),'third crossing',{size:13,fill:C.orange,weight:600,cls:'halo',anchor:sxR(x3)>760?'end':'start'}):'');
+          g+=`<circle cx="${sxR(x3)}" cy="${syR(y3)}" r="10" fill="${C.purple}" stroke="#29323c" stroke-width="2"/>`+(onScreen(r.sum)?t(sxR(x3)+(sxR(x3)>780?-15:15),syR(y3)+(y3>0?-12:30),r.tangent?'2P':'P + Q',{size:18,weight:700,fill:C.purple,cls:'halo',anchor:sxR(x3)>780?'end':'start'}):'');
           head=r.tangent?'Doubling: use the tangent line.':'Draw a line, find the third crossing, flip it.';
           body=r.tangent?'When Q equals P there is no “line through two points”, so the tangent at P is used. Its other crossing, mirrored across the x-axis, is 2P. Repeated doubling is how a wallet computes d·G quickly.':'A straight line through P and Q meets the curve at exactly one more point. Mirror it across the x-axis and you get P + Q. That simple rule makes the points a group: you can add them, and the order does not matter.';
           result=`(${x3.toFixed(2)}, ${y3.toFixed(2)})`;
-          if(!onScreen(r.sum))g+=`</g>`+t(930,40,`P + Q is off the drawing, at (${x3.toFixed(1)}, ${y3.toFixed(1)})`,{size:14,weight:700,anchor:'end',fill:C.purple})+'<g>';
+          if(!onScreen(r.sum))g+=`</g>`+t(930,40,`P + Q is off the drawing, at (${x3.toFixed(1)}, ${y3.toFixed(1)})`,{size:14,weight:700,anchor:'end',fill:C.purple,cls:'halo'})+'<g>';
         }
-        g+=`<circle cx="${sxR(P[0])}" cy="${syR(P[1])}" r="9" fill="#f3bc59" stroke="#29323c" stroke-width="2"/>`+t(sxR(P[0])-14,syR(P[1])-14,'P',{size:18,weight:700,anchor:'end'});
-        if(!(Math.abs(P[0]-Q[0])<1e-9&&Math.abs(P[1]-Q[1])<1e-9))g+=`<circle cx="${sxR(Q[0])}" cy="${syR(Q[1])}" r="9" fill="#9fd0f2" stroke="#29323c" stroke-width="2"/>`+t(sxR(Q[0])-14,syR(Q[1])+(Q[1]<0?24:-14),'Q',{size:18,weight:700,anchor:'end'});
+        g+=`<circle cx="${sxR(P[0])}" cy="${syR(P[1])}" r="9" fill="#f3bc59" stroke="#29323c" stroke-width="2"/>`+t(sxR(P[0])+(sxR(P[0])<90?14:-14),syR(P[1])+(syR(P[1])<50?34:-14),'P',{size:18,weight:700,anchor:sxR(P[0])<90?'start':'end',cls:'halo'});
+        if(!(Math.abs(P[0]-Q[0])<1e-9&&Math.abs(P[1]-Q[1])<1e-9))g+=`<circle cx="${sxR(Q[0])}" cy="${syR(Q[1])}" r="9" fill="#9fd0f2" stroke="#29323c" stroke-width="2"/>`+t(sxR(Q[0])+(sxR(Q[0])<90?14:-14),syR(Q[1])+(Q[1]<0?(syR(Q[1])>450?-14:30):(syR(Q[1])<50?34:-14)),'Q',{size:18,weight:700,anchor:sxR(Q[0])<90?'start':'end',cls:'halo'});
         layer.textContent='Point addition · geometric picture';status.textContent='Real numbers · intuition only';
         aside.innerHTML=K.asideBlock({title:head,text:body,takeaway:'Bitcoin uses the same rule, computed with whole numbers modulo a prime instead of real numbers.',stats:K.readouts([['P',`(${P[0].toFixed(2)}, ${P[1].toFixed(2)})`],['Q',`(${Q[0].toFixed(2)}, ${Q[1].toFixed(2)})`],['Result',result,'wide accent']]),tries:['Slide Q until it touches P. The chord becomes a tangent.','Press “Make Q = −P”. Where did the result go?','Move P and Q to the same branch. Is P + Q always on the other side?']});
         g+='</g>';
         return svg(960,500,g,'Chord-and-tangent addition on y squared equals x cubed plus 7');
       }
       function grid(cc,x,y,size,mark){const cell=size/cc.p;let g=`<rect x="${x}" y="${y}" width="${size}" height="${size}" fill="#fbf8ef" stroke="#e1dacb"/>`;
-        [0,Math.floor(cc.p/2),cc.p-1].forEach(v=>{g+=t(x+(v+0.5)*cell,y+size+16,String(v),{size:11,anchor:'middle',fill:C.muted})+t(x-6,y+size-(v+0.5)*cell+4,String(v),{size:11,anchor:'end',fill:C.muted});});
-        g+=t(x+size/2,y+size+31,'x  (mod p)',{size:12,anchor:'middle',fill:C.muted,weight:600});
+        [0,Math.floor(cc.p/2),cc.p-1].forEach(v=>{g+=t(x+(v+0.5)*cell,y+size+27,String(v),{size:11,anchor:'middle',fill:C.muted})+t(x-8,y+size-(v+0.5)*cell+7,String(v),{size:11,anchor:'end',fill:C.muted});});
+        g+=t(x+size/2,y+size+58,'x  (mod p)',{size:12,anchor:'middle',fill:C.muted,weight:600});
         const pos=P=>[x+(P[0]+0.5)*cell,y+size-(P[1]+0.5)*cell];
         cc.points.forEach(P=>{const [X,Y]=pos(P);g+=`<circle cx="${X}" cy="${Y}" r="${Math.max(2.2,Math.min(5,cell*0.3))}" fill="#d2c5ef"/>`;});
         return {g,pos,cell};}
       function drawClock(){
         const k=s.d%c.n,P=k===0?null:mult[k],res=mul(s.d,c.G,c.p),gr=grid(c,70,24,430);let g=gr.g;
         if(s.path&&s.d>1){let d='';const upto=Math.min(s.d,c.n-1);for(let i=1;i<=upto;i++){const [X,Y]=gr.pos(mult[i]);d+=(i===1?'M':'L')+X.toFixed(1)+' '+Y.toFixed(1);}g+=`<path d="${d}" fill="none" stroke="${C.purple}" stroke-width="1.3" opacity=".45" stroke-linejoin="round"/>`;}
-        const [gx,gy]=gr.pos(c.G);g+=`<circle cx="${gx}" cy="${gy}" r="8" fill="#f3bc59" stroke="#29323c" stroke-width="2"/>`+t(gx+11,gy-9,'G',{size:15,weight:700});
-        if(P){const [X,Y]=gr.pos(P);g+=`<circle cx="${X}" cy="${Y}" r="11" fill="${C.purple}" stroke="#29323c" stroke-width="2"/>`+t(X+(X>400?-14:14),Y-13,`${s.d}·G`,{size:15,weight:700,fill:C.purple,anchor:X>400?'end':'start'});}
+        const [gx,gy]=gr.pos(c.G),isG=k===1;g+=`<circle cx="${gx}" cy="${gy}" r="8" fill="#f3bc59" stroke="#29323c" stroke-width="2"/>`+(isG?'':t(gx+12,gy<80?gy+30:gy-10,'G',{size:15,weight:700,cls:'halo'}));
+        if(P){const [X,Y]=gr.pos(P);g+=`<circle cx="${X}" cy="${Y}" r="11" fill="${C.purple}" stroke="#29323c" stroke-width="2"/>`+t(X+(X>285?-16:16),(Y<80||Math.hypot(X-gx,Y-gy)<70)?Y+36:Y-14,isG?`${s.d}·G = G`:`${s.d}·G`,{size:15,weight:700,fill:C.purple,anchor:X>285?'end':'start',cls:'halo'});}
         else g+=t(285,24+215,'∞  (d is a multiple of n)',{size:20,weight:700,anchor:'middle',fill:C.purple});
         /* clock face: multiples in order */
         const cx=745,cy=245,R=170;g+=`<circle cx="${cx}" cy="${cy}" r="${R}" fill="#fffdf7" stroke="#d8d0c0" stroke-width="2"/>`;
         for(let i=0;i<c.n;i++){const a=-Math.PI/2+i/c.n*2*Math.PI,r1=i%5===0?R-14:R-8;g+=`<line x1="${cx+Math.cos(a)*r1}" y1="${cy+Math.sin(a)*r1}" x2="${cx+Math.cos(a)*R}" y2="${cy+Math.sin(a)*R}" stroke="${i===k?C.purple:'#bdb4a3'}" stroke-width="${i===k?3:1.4}"/>`;if(c.n<=13||i%Math.ceil(c.n/12)===0)g+=t(cx+Math.cos(a)*(R+18),cy+Math.sin(a)*(R+18)+4,i===0?'∞':String(i),{size:11,anchor:'middle',fill:C.muted});}
         const a=-Math.PI/2+k/c.n*2*Math.PI;g+=`<line x1="${cx}" y1="${cy}" x2="${cx+Math.cos(a)*(R-26)}" y2="${cy+Math.sin(a)*(R-26)}" stroke="${C.purple}" stroke-width="5" stroke-linecap="round"/><circle cx="${cx}" cy="${cy}" r="8" fill="#29323c"/>`;
-        g+=t(cx,cy+R+44,`Counting in steps of G: ${c.n} positions, then it repeats`,{size:13,anchor:'middle',fill:C.muted,weight:600});
-        g+=t(285,515,'The same points, plotted by their coordinates',{size:13,anchor:'middle',fill:C.muted,weight:600});
+        g+=t(cx,cy+R+72,'Counting in steps of G:',{size:13,anchor:'middle',fill:C.muted,weight:600})+t(cx,cy+R+102,`${c.n} positions, then it repeats`,{size:13,anchor:'middle',fill:C.muted,weight:600});
+        g+=t(285,555,'The same points, plotted by their coordinates',{size:13,anchor:'middle',fill:C.muted,weight:600});
         layer.textContent='Scalar multiplication · toy field';status.textContent=`y² = x³ + 7 mod ${c.p} · n = ${c.n}`;
         aside.innerHTML=K.asideBlock({title:'In order on the clock. Scattered on the grid.',text:`Adding G to itself again and again moves one tick at a time around the clock: an orderly sequence. In coordinates the same hops jump all over the field. Knowing where ${s.d}·G landed tells you almost nothing about how many hops it took.`,
           takeaway:'The public key P = d·G is easy to compute and safe to publish. Recovering d from P is the discrete-logarithm problem.',
           stats:K.readouts([['Private key d',fmt(s.d)],['Public key P = d·G',P?`(${P[0]}, ${P[1]})`:'∞','accent'],['Group order n',fmt(c.n)],['Double-and-add cost',`${res.doubles} doublings + ${res.adds} additions`,'wide']]),
           tries:['Move d one step at a time. Can you predict where the next point appears?',`Set d = ${c.n}. Then try d = ${c.n+1}.`,'Switch to p = 13: the pattern is visible. At p = 67 it already looks random.']});
-        return svg(960,520,g,'Toy elliptic curve points and the clock of multiples of G');
+        return svg(960,575,g,'Toy elliptic curve points and the clock of multiples of G');
       }
       function drawOneway(){
         if(!s.target)newTarget();
         const gr=grid(c,70,24,430);let g=gr.g;const tp=s.target.point,[tx,ty]=gr.pos(tp);
-        g+=`<circle cx="${tx}" cy="${ty}" r="13" fill="none" stroke="${C.red}" stroke-width="2.5" stroke-dasharray="4 3"/>`+t(tx+(tx>400?-18:18),ty-14,'P (published)',{size:13,weight:700,fill:C.red,anchor:tx>400?'end':'start'});
+        g+=`<circle cx="${tx}" cy="${ty}" r="13" fill="none" stroke="${C.red}" stroke-width="2.5" stroke-dasharray="4 3"/>`+t(tx+(tx>285?-18:18),ty<80?ty+34:ty-16,'P (published)',{size:13,weight:700,fill:C.red,anchor:tx>285?'end':'start',cls:'halo'});
         if(s.searchK>0){const Q=mult[s.searchK],[X,Y]=gr.pos(Q);g+=`<circle cx="${X}" cy="${Y}" r="9" fill="${s.found?C.green:C.purple}" stroke="#29323c" stroke-width="2"/>`;}
-        const [gx,gy]=gr.pos(c.G);g+=`<circle cx="${gx}" cy="${gy}" r="7" fill="#f3bc59" stroke="#29323c" stroke-width="2"/>`+t(gx+10,gy-9,'G',{size:14,weight:700});
-        g+=t(285,515,s.found?`Found it: d = ${s.searchK}`:s.searchK?`Trying d = ${s.searchK} …`:'Can you find d with P = d·G?',{size:15,anchor:'middle',weight:700,fill:s.found?C.green:C.ink});
+        const [gx,gy]=gr.pos(c.G);g+=`<circle cx="${gx}" cy="${gy}" r="7" fill="#f3bc59" stroke="#29323c" stroke-width="2"/>`+t(gx+12,gy<80?gy+30:gy-10,'G',{size:14,weight:700,cls:'halo'});
+        g+=t(285,555,s.found?`Found it: d = ${s.searchK}`:s.searchK?`Trying d = ${s.searchK} …`:'Can you find d with P = d·G?',{size:15,anchor:'middle',weight:700,fill:s.found?C.green:C.ink});
         /* scale-up chart */
-        const b=s.bits,fwd=1.5*b,rho=2**(b/2),brute=2**(b-1),rate=1e12,yr=[1,1e80],x=600,y=60,w=300,h=360;
+        const b=s.bits,fwd=1.5*b,rho=2**(b/2),brute=2**(b-1),rate=1e12,yr=[1,1e80],x=600,y=110,w=320,h=320;
         const ly=v=>y+h-Math.log10(Math.max(1,v))/80*h;
-        [[fwd,'Wallet: compute d·G',C.green],[rho,'Best attack ≈ √n',C.orange],[brute,'Try every key',C.red]].forEach(([v,lab,col],i)=>{const X=x+i*105,Y=ly(v);g+=`<rect x="${X}" y="${Y}" width="72" height="${y+h-Y}" rx="3" fill="${col}" opacity=".85"/>`+t(X+36,Y-8,sci(v,1),{size:12,anchor:'middle',weight:700})+t(X+36,y+h+18,lab.split(':')[0],{size:11,anchor:'middle',fill:C.muted,weight:600})+(lab.includes(':')?t(X+36,y+h+32,lab.split(': ')[1],{size:11,anchor:'middle',fill:C.muted}):'');});
-        [0,20,40,60,80].forEach(e=>{g+=`<line x1="${x-8}" x2="${x+300}" y1="${ly(10**e)}" y2="${ly(10**e)}" stroke="#ece6d8"/>`+t(x-12,ly(10**e)+4,e?'10'+K.sup(e):'1',{size:10,anchor:'end',fill:C.muted});});
-        g+=t(x+150,y-24,`Group operations needed · ${b}-bit key (log scale)`,{size:13,anchor:'middle',weight:700,fill:C.muted});
+        [[fwd,['Wallet','(d·G)'],C.green],[rho,['Best','attack √n'],C.orange],[brute,['Try every','key'],C.red]].forEach(([v,lab,col],i)=>{const X=x+10+i*120,Y=ly(v);g+=`<rect x="${X}" y="${Y}" width="80" height="${y+h-Y}" rx="3" fill="${col}" opacity=".85"/>`+t(X+40,Y-10,sci(v,1),{size:12,anchor:'middle',weight:700,cls:'halo'})+t(X+40,y+h+28,lab[0],{size:11,anchor:'middle',fill:C.muted,weight:600})+t(X+40,y+h+54,lab[1],{size:11,anchor:'middle',fill:C.muted});});
+        [0,20,40,60,80].forEach(e=>{g+=`<line x1="${x-8}" x2="${x+w}" y1="${ly(10**e)}" y2="${ly(10**e)}" stroke="#ece6d8"/>`+t(x-12,ly(10**e)+6,e?'10'+K.sup(e):'1',{size:10,anchor:'end',fill:C.muted});});
+        g+=t(x-50,30,'GROUP OPERATIONS NEEDED',{size:12,weight:700,fill:C.muted})+t(x-50,58,`${b}-bit key · log scale`,{size:12,fill:C.muted});
         const years=rho/rate/3.15576e7;
         layer.textContent='Discrete logarithm · brute force vs. scale';status.textContent=`toy search at p = 67 · n = ${c.n}`;
         aside.innerHTML=K.asideBlock({title:'Forward is a few hundred steps. Backward is astronomical.',text:`On the toy curve a computer finds d instantly: there are only ${c.n} candidates. Every extra key bit doubles the candidates but adds only one doubling (and on average half an addition) for the wallet.`,
           takeaway:'Security comes from the gap between the two curves of effort, not from hiding the algorithm.',
           stats:K.readouts([['Key size',`${b} bits`],['Wallet operations',`≈ ${fmt(fwd)}`,'good'],['Best generic attack',`≈ ${sci(rho,1)} steps`,'bad'],['Best attack at 10¹² steps/s',years<1?K.duration(rho/rate/60):`${sci(years,1)} years`,'bad']]),
           tries:['Run the brute-force search on the toy curve. Count the tries.','Raise the key size to 64, 128, 256 bits. Watch the bars separate.','Compare 2¹²⁸ steps with the age of the universe (≈ 1.4 × 10¹⁰ years).']});
-        return svg(960,520,g,'Brute-force search for a toy private key and a log-scale comparison of effort');
+        return svg(960,575,g,'Brute-force search for a toy private key and a log-scale comparison of effort');
       }
       function draw(){
         let out=s.view==='real'?drawReal():s.view==='clock'?drawClock():drawOneway();

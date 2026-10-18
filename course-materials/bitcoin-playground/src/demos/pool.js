@@ -46,18 +46,18 @@
         const hs=hist(solo,xr,bins),hp=hist(pool,xr,bins),top=Math.max(...hs,...hp);
         const lossSolo=solo.filter(v=>v<bill).length/N,lossPool=pool.filter(v=>v<bill).length/N;
         let g='';
-        const panel=(y,h,label,col,loss)=>{let out=t(80,y-10,label,{size:13,weight:700,fill:col})+t(560,y-10,`${pct(loss,0)} fail to cover the bill`,{size:12,anchor:'end',weight:700,fill:loss>0.2?C.red:C.muted});
-          const bw=480/bins,X=80;h.forEach((c,i)=>{const bh=c/top*120;out+=`<rect x="${X+i*bw+1}" y="${y+120-bh}" width="${bw-2}" height="${bh}" fill="${col}" opacity="${(i+0.5)*(xr[1]/bins)<bill?0.45:0.85}"/>`;});
-          const sx=v=>X+v/xr[1]*480;out+=`<line x1="${X}" x2="${X+480}" y1="${y+120}" y2="${y+120}" stroke="#bdb6a6"/>`;out+=`<line x1="${sx(bill)}" x2="${sx(bill)}" y1="${y-2}" y2="${y+124}" stroke="${C.red}" stroke-width="2" stroke-dasharray="5 4"/><line x1="${sx(E)}" x2="${sx(E)}" y1="${y-2}" y2="${y+124}" stroke="${C.ink}" stroke-width="2"/>`;
-          K.niceTicks(0,xr[1],5).forEach(v=>{out+=t(sx(v),y+138,btc(v),{size:11,anchor:'middle',fill:C.muted});});return out;};
-        g+=panel(40,hs,'Solo: income over the period (BTC)',C.orange,lossSolo).replace('<g','<g');
-        g+=panel(230,hp,'In a pool: income over the period (BTC)',C.green,lossPool);
-        g+=t(80,410,'Each histogram: 400 simulated miners with identical hardware. Faded bars earned less than the bill.',{size:12,fill:C.muted});
+        const panel=(y,h,label,col,loss)=>{let out=t(40,y-42,label,{size:13,weight:700,fill:col})+t(40,y-14,`${pct(loss,0)} fail to cover the bill`,{size:12,anchor:'start',weight:700,fill:loss>0.2?C.red:C.muted});
+          const bw=520/bins,X=40;h.forEach((c,i)=>{const bh=c/top*120;out+=`<rect x="${X+i*bw+1}" y="${y+120-bh}" width="${bw-2}" height="${bh}" fill="${col}" opacity="${(i+0.5)*(xr[1]/bins)<bill?0.45:0.85}"/>`;});
+          const sx=v=>X+v/xr[1]*520;out+=`<line x1="${X}" x2="${X+520}" y1="${y+120}" y2="${y+120}" stroke="#bdb6a6"/>`;out+=`<line x1="${sx(bill)}" x2="${sx(bill)}" y1="${y-2}" y2="${y+124}" stroke="${C.red}" stroke-width="2" stroke-dasharray="5 4"/><line x1="${sx(E)}" x2="${sx(E)}" y1="${y-2}" y2="${y+124}" stroke="${C.ink}" stroke-width="2"/>`;
+          K.niceTicks(0,xr[1],5).forEach(v=>{out+=t(sx(v),y+148,btc(v),{size:11,anchor:'middle',fill:C.muted});});return out;};
+        g+=panel(84,hs,'Solo: income over the period (BTC)',C.orange,lossSolo).replace('<g','<g');
+        g+=panel(334,hp,'In a pool: income over the period (BTC)',C.green,lossPool);
+        g+=t(40,532,'Each histogram: 400 simulated miners with identical hardware.',{size:12,fill:C.muted})+t(40,560,'Faded bars earned less than the electricity bill.',{size:12,fill:C.muted});
         /* sample path */
         const pth=path(K.rng(s.seed+1),s);const pr=[0,Math.max(E*1.6,pth.solo.at(-1)[1],pth.pool.at(-1)[1])*1.05];
-        g+=t(630,30,'One miner, day by day',{size:13,weight:700,fill:C.muted});
-        g+=K.plot({x:660,y:44,w:270,h:330,xr:[0,s.days],yr:pr,xlabel:'days',ylabel:'cumulative BTC',xfmt:v=>fmt(v),yfmt:btc,series:[{pts:[[0,0],[s.days,E]],color:C.ink,width:1.5,dash:'5 5'},{pts:[[0,0],[s.days,bill]],color:C.red,width:1.5,dash:'4 4'},{pts:pth.pool,color:C.green,width:2.4},{pts:pth.solo,color:C.orange,width:2.6}]});
-        scene.innerHTML=svg(960,430,g,'Income distributions for solo and pooled mining');
+        g+=t(620,32,'One miner, day by day',{size:13,weight:700,fill:C.muted});
+        g+=K.plot({x:710,y:60,w:226,h:360,xr:[0,s.days],yr:pr,xlabel:'days',ylabel:'cumulative BTC',xfmt:v=>fmt(v),yfmt:btc,series:[{pts:[[0,0],[s.days,E]],color:C.ink,width:1.5,dash:'5 5'},{pts:[[0,0],[s.days,bill]],color:C.red,width:1.5,dash:'4 4'},{pts:pth.pool,color:C.green,width:2.4},{pts:pth.solo,color:C.orange,width:2.6}]});
+        scene.innerHTML=svg(960,580,g,'Income distributions for solo and pooled mining');
         status.textContent=`expected ${btc(E)} BTC per period · seed ${s.seed}`;
         const lam=s.share*BLOCKS_PER_DAY*s.days,firstDays=1/(s.share*BLOCKS_PER_DAY);
         const title=lam<1?'Solo, you probably find nothing at all.':lam<10?'Solo income is a lottery.':'With enough hashrate, solo variance shrinks.';

@@ -69,25 +69,28 @@
       scene.addEventListener('keydown',e=>{const el=e.target.closest('[data-key-card]');if(el&&(e.key==='Enter'||e.key===' ')){e.preventDefault();cycle(Number(el.dataset.keyCard));}});
       function draw(){
         const opts={years:s.years,disaster:s.disaster},R=risk(s.keys,s.m,opts),n=s.keys.length;let g='';
-        /* vault and keys */
-        const cx=240,cy=235;g+=`<rect x="${cx-55}" y="${cy-46}" width="110" height="92" rx="14" fill="#e3f1e5" stroke="#29323c" stroke-width="2"/>`+t(cx,cy+4,`${s.m} of ${n}`,{size:28,weight:700,anchor:'middle'})+t(cx,cy+26,'signatures to spend',{size:11,anchor:'middle',fill:C.muted});
-        s.keys.forEach((k,i)=>{const a=-Math.PI/2+(i/n)*2*Math.PI+(n===2?Math.PI/2:0),x=cx+Math.cos(a)*160,y=cy+Math.sin(a)*185,st=STORAGE[k];
-          g+=`<path d="M${cx+Math.cos(a)*60} ${cy+Math.sin(a)*50}L${x-Math.cos(a)*62} ${y-Math.sin(a)*36}" stroke="#a49c8c" stroke-width="1.5" stroke-dasharray="4 4"/>`;
-          g+=`<g data-pick="1" data-key-card="${i}" tabindex="0" role="button" aria-label="Key ${i+1}: ${esc(st.label)} at ${st.where}. Activate to change storage."><rect x="${x-74}" y="${y-36}" width="148" height="72" rx="10" fill="#fffdf7" stroke="#29323c" stroke-width="1.5"/>`;
-          g+=t(x-62,y-12,`${st.icon} ${st.label}`,{size:12.5,weight:700})+t(x-62,y+6,`kept: ${st.where}`,{size:11,fill:C.muted})+t(x-62,y+24,`lose ${pct(st.loss,1)} · theft ${pct(st.theft,1)} /yr`,{size:10.5,fill:C.muted})+`</g>`;});
-        g+=t(cx,482,'Click a key to change where and how it is stored.',{size:12,anchor:'middle',fill:C.muted,weight:600});
+        /* key cards (left) and vault */
+        const cardH=88,step=98,ky0=40,listH=(n-1)*step+cardH,vx=470,vy=ky0+listH/2;
+        g+=`<rect x="${vx-70}" y="${vy-60}" width="140" height="120" rx="14" fill="#e3f1e5" stroke="#29323c" stroke-width="2"/>`+t(vx,vy+2,`${s.m} of ${n}`,{size:28,weight:700,anchor:'middle'})+t(vx,vy+30,'signatures',{size:11,anchor:'middle',fill:C.muted})+t(vx,vy+50,'to spend',{size:11,anchor:'middle',fill:C.muted});
+        s.keys.forEach((k,i)=>{const y=ky0+i*step,st=STORAGE[k];
+          g+=`<path d="M340 ${y+cardH/2}L${vx-72} ${vy+(i-(n-1)/2)*14}" stroke="#a49c8c" stroke-width="1.5" stroke-dasharray="4 4"/>`;
+          g+=`<g data-pick="1" data-key-card="${i}" tabindex="0" role="button" aria-label="Key ${i+1}: ${esc(st.label)} at ${st.where}. Activate to change storage."><rect x="20" y="${y}" width="320" height="${cardH}" rx="10" fill="#fffdf7" stroke="#29323c" stroke-width="1.5"/>`;
+          g+=t(36,y+30,`${st.icon} ${st.label}`,{size:12.5,weight:700})+t(36,y+56,`kept: ${st.where}`,{size:11,fill:C.muted})+t(36,y+78,`lose ${pct(st.loss,1)} · theft ${pct(st.theft,1)} /yr`,{size:10.5,fill:C.muted})+`</g>`;});
+        g+=t(20,ky0+listH+40,'Click a key to change where and how it is stored.',{size:12,fill:C.muted,weight:600});
         /* worlds grid */
-        const sim=simulate(s.keys,s.m,opts,K.rng(s.seed)),gx=505,gy=44;
-        g+=t(gx,20,'100 possible futures',{size:13,weight:700,fill:C.muted})+t(gx,36,`after ${s.years} year${s.years===1?'':'s'}`,{size:12,fill:C.muted});
-        sim.forEach((o,i)=>{const x=gx+(i%10)*17,y=gy+Math.floor(i/10)*17;g+=`<circle cx="${x+7}" cy="${y+7}" r="6.5" fill="${o==='safe'?C.green:o==='lost'?'#a49c8c':C.red}"/>`;});
-        const cnt=o=>sim.filter(x=>x===o).length;[[cnt('safe'),'safe',C.green],[cnt('lost'),'locked out','#8f897c'],[cnt('stolen'),'stolen',C.red]].forEach(([c,l,col],j)=>{g+=t(gx,232+j*22,`${c} ${l}`,{size:13,weight:700,fill:col});});
+        const sim=simulate(s.keys,s.m,opts,K.rng(s.seed)),gx=590,gy=74;
+        g+=t(gx,28,'100 possible futures',{size:13,weight:700,fill:C.muted})+t(gx,54,`after ${s.years} year${s.years===1?'':'s'}`,{size:12,fill:C.muted});
+        sim.forEach((o,i)=>{const x=gx+(i%10)*24,y=gy+Math.floor(i/10)*24;g+=`<circle cx="${x+10}" cy="${y+10}" r="9.5" fill="${o==='safe'?C.green:o==='lost'?'#a49c8c':C.red}"/>`;});
+        const cnt=o=>sim.filter(x=>x===o).length;[[cnt('safe'),'safe',C.green],[cnt('lost'),'lost','#8f897c'],[cnt('stolen'),'stolen',C.red]].forEach(([c,l,col],j)=>{g+=t(gx+256,gy+40+j*40,`${c} ${l}`,{size:13,weight:700,fill:col});});
         /* trade-off chart */
         const combos=[];for(let nn=1;nn<=n;nn++)for(let mm=1;mm<=nn;mm++){const r=risk(s.keys.slice(0,nn),mm,opts);combos.push({nn,mm,r});}
-        const lo=1e-5;g+=t(720,20,'Same keys, other policies',{size:13,weight:700,fill:C.muted});
-        g+=K.plot({x:750,y:44,w:185,h:330,xr:[lo,1],yr:[lo,1],xlog:true,ylog:true,xticks:[1e-5,1e-3,1e-1,1],yticks:[1e-5,1e-3,1e-1,1],xfmt:v=>v===1?'100%':v===1e-1?'10%':v===1e-3?'0.1%':'0.001%',yfmt:v=>v===1?'100%':v===1e-1?'10%':v===1e-3?'0.1%':'0.001%',xlabel:'chance of being locked out',ylabel:'chance of theft',
-          dots:combos.map(c=>{const cur=c.nn===n&&c.mm===s.m;return {x:Math.max(lo,c.r.lockout),y:Math.max(lo,c.r.theft),color:cur?C.green:'#cfc8b9',r:cur?7:4.5,label:cur||c.nn===n?`${c.mm}-of-${c.nn}`:'',textColor:cur?C.green:C.muted};})});
-        g+=t(720,440,'Bottom-left is best.',{size:11,fill:C.muted});
-        scene.innerHTML=svg(960,490,g,'Multisignature vault, simulated futures and risk trade-off');
+        const lo=1e-5,ty0=gy+240;
+        const fmtP=v=>v===1?'100%':v===1e-1?'10%':v===1e-3?'0.1%':'0.001%';
+        g+=t(gx,ty0+50,'Same keys, other policies',{size:13,weight:700,fill:C.muted})+t(gx,ty0+76,'bottom-left is best',{size:11,fill:C.muted});
+        g+=K.plot({x:706,y:ty0+96,w:224,h:190,xr:[lo,1],yr:[lo,1],xlog:true,ylog:true,xticks:[1e-5,1e-3,1e-1],yticks:[1e-5,1e-3,1e-1,1],xfmt:fmtP,yfmt:fmtP,xlabel:'chance of lock-out',ylabel:'chance of theft',
+          dots:combos.map(c=>{const cur=c.nn===n&&c.mm===s.m;return {x:Math.max(lo,c.r.lockout),y:Math.max(lo,c.r.theft),color:cur?C.green:'#cfc8b9',r:cur?7:4.5,label:cur||c.nn===n?`${c.mm}-of-${c.nn}`:'',textColor:cur?C.green:C.muted,anchor:c.r.lockout>0.01?'end':'start'};})});
+        const H=Math.max(ky0+listH+60,ty0+96+190+76);
+        scene.innerHTML=svg(960,H,g,'Multisignature vault, simulated futures and risk trade-off');
         status.textContent=`${s.m}-of-${n} · ${s.years}-year horizon`;
         const total=R.fail,title=n===1?'One key: one way to lose, one way to be robbed.':s.m===n?'All keys required: theft is hard, loss is easy.':s.m===1?'Any key spends: loss is hard, theft is easy.':'A threshold balances loss against theft.';
         const text=n===1?'Everything depends on a single secret. Lose it and the coins are gone; leak it and they are someone else’s.':s.m===n?`A thief needs all ${n} keys, but losing any single one locks you out.`:s.m===1?`You only need one of ${n} keys, so any surviving copy saves you — and any leaked copy lets a thief spend.`:`You can lose up to ${n-s.m} key${n-s.m>1?'s':''} and still spend, while a thief must obtain ${s.m}. Spreading keys across places protects against a single fire.`;

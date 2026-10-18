@@ -55,29 +55,29 @@
         let g='';
         g+=t(24,30,'ALICE’S WALLET · 10 COINS (UTXOs)',{size:12,weight:700,fill:C.muted});
         const maxV=Math.max(...WALLET);
-        WALLET.forEach((v,i)=>{const y=46+i*44,used=r.inputs.includes(i),eff=v-cost,neg=eff<0,w=40+Math.sqrt(v/maxV)*130;
+        WALLET.forEach((v,i)=>{const y=48+i*60,used=r.inputs.includes(i),eff=v-cost,neg=eff<0,w=110+Math.sqrt(v/maxV)*110;
           g+=`<g data-pick="1" data-coin="${i}" tabindex="0" role="button" aria-pressed="${used}" aria-label="Coin of ${group(v)} sats${used?', selected':''}">`;
-          g+=`<rect x="20" y="${y}" width="300" height="38" rx="8" fill="${used?'#e4f0fa':'transparent'}" stroke="${used?C.blue:'transparent'}" stroke-width="1.5"/>`;
-          g+=`<rect x="30" y="${y+8}" width="${w}" height="22" rx="11" fill="${neg?'#f6d6d3':used?'#9cc6e8':'#f1ece0'}" stroke="${neg?C.red:'#29323c'}" stroke-width="1.4"/>`;
-          g+=t(42,y+24,group(v),{size:13,weight:700});
-          g+=t(312,y+16,neg?'costs more than it holds':`spend cost ${group(cost)}`,{size:11,anchor:'end',fill:neg?C.red:C.muted,weight:neg?700:500});
-          g+=t(312,y+31,`effective ${eff<0?'−':''}${group(Math.abs(eff))}`,{size:11,anchor:'end',fill:neg?C.red:C.muted});
+          g+=`<rect x="18" y="${y}" width="456" height="56" rx="9" fill="${used?'#e4f0fa':'transparent'}" stroke="${used?C.blue:'transparent'}" stroke-width="1.5"/>`;
+          g+=`<rect x="28" y="${y+10}" width="${w}" height="36" rx="18" fill="${neg?'#f6d6d3':used?'#9cc6e8':'#f1ece0'}" stroke="${neg?C.red:'#29323c'}" stroke-width="1.4"/>`;
+          g+=t(44,y+35,group(v),{size:13,weight:700});
+          g+=t(464,y+24,neg?'costs more than it holds':`spend cost ${group(cost)}`,{size:11,anchor:'end',fill:neg?C.red:C.muted,weight:neg?700:500});
+          g+=t(464,y+48,`effective ${eff<0?'−':''}${group(Math.abs(eff))}`,{size:11,anchor:'end',fill:neg?C.red:C.muted});
           g+=`</g>`;
         });
         /* conservation stack */
-        const total=Math.max(r.sum,s.payment+r.fee,1),H=360,top=70,sc=H/total,X1=420,X2=600;
-        g+=t(X1+30,36,'INPUTS',{size:12,weight:700,anchor:'middle',fill:C.muted})+t(X2+30,36,'OUTPUTS',{size:12,weight:700,anchor:'middle',fill:C.muted});
-        let y=top;r.inputs.slice().sort((a,b)=>WALLET[b]-WALLET[a]).forEach(i=>{const h=WALLET[i]*sc;g+=`<rect x="${X1}" y="${y}" width="60" height="${Math.max(1,h)}" fill="#9cc6e8" stroke="#29323c" stroke-width="1"/>`;if(h>16)g+=t(X1+30,y+h/2+4,group(WALLET[i]),{size:11,anchor:'middle',weight:600});y+=h;});
-        if(!r.ok){const h=(r.missing||0)*sc;g+=`<rect x="${X1}" y="${y}" width="60" height="${h}" fill="none" stroke="${C.red}" stroke-width="2" stroke-dasharray="5 4"/>`+t(X1-10,y+Math.min(h,40)/2+4,`missing ${group(r.missing)}`,{size:12,anchor:'end',fill:C.red,weight:700});}
-        g+=`<path d="M${X1+70} ${top+Math.min(H,r.sum*sc)/2}H${X2-12}" stroke="#29323c" stroke-width="2" marker-end="url(#k-arrow)"/>`;
-        const outs=[[s.payment,C.blue,'Bob',`${group(s.payment)} sats`],[r.change,C.green,'Change',r.change?`${group(r.change)} sats`:r.ok&&r.dropped?'none (would be dust)':'none'],[r.fee,C.orange,'Fee',`${group(r.fee)} sats`]];
-        y=top;let ly=top;outs.forEach(([v,col,name,lab],k)=>{const h=v*sc;if(v>0)g+=`<rect x="${X2}" y="${y}" width="60" height="${Math.max(2.5,h)}" fill="${col}" stroke="#29323c" stroke-width="1"/>`;const cy=Math.max(ly,y+Math.max(2.5,h)/2);g+=t(X2+74,cy-2,name,{size:14,weight:700,fill:col})+t(X2+74,cy+15,lab,{size:12,fill:C.muted});ly=cy+44;y+=Math.max(v>0?2.5:0,h);});
-        if(r.ok)g+=t(X2+74,ly+6,`${fmt(r.fee/r.size,1)} sat/vB × ${r.size} vB`,{size:12,fill:C.orange,weight:600});
+        const total=Math.max(r.sum,s.payment+r.fee,1),H=470,top=70,sc=H/total,X1=510,X2=680,BW=90;
+        g+=t(X1+BW/2,36,'INPUTS',{size:12,weight:700,anchor:'middle',fill:C.muted})+t(X2+BW/2,36,'OUTPUTS',{size:12,weight:700,anchor:'middle',fill:C.muted});
+        let y=top;r.inputs.slice().sort((a,b)=>WALLET[b]-WALLET[a]).forEach(i=>{const h=WALLET[i]*sc;g+=`<rect x="${X1}" y="${y}" width="${BW}" height="${Math.max(1,h)}" fill="#9cc6e8" stroke="#29323c" stroke-width="1"/>`;if(h>28&&K.tw(group(WALLET[i]),11)<BW+4)g+=t(X1+BW/2,y+h/2+7,group(WALLET[i]),{size:11,anchor:'middle',weight:600});y+=h;});
+        if(!r.ok){const h=(r.missing||0)*sc;g+=`<rect x="${X1}" y="${y}" width="${BW}" height="${h}" fill="none" stroke="${C.red}" stroke-width="2" stroke-dasharray="5 4"/>`+t(X1+BW/2,y+h+28,`missing ${group(r.missing)}`,{size:12,anchor:'middle',fill:C.red,weight:700});}
+        g+=`<path d="M${X1+BW+8} ${top+Math.min(H,r.sum*sc)/2}H${X2-10}" stroke="#29323c" stroke-width="2" marker-end="url(#k-arrow)"/>`;
+        const outs=[[s.payment,C.blue,'Bob',`${group(s.payment)} sats`],[r.change,C.green,'Change',r.change?`${group(r.change)} sats`:r.ok&&r.dropped?'none (dust)':'none'],[r.fee,C.orange,'Fee',`${group(r.fee)} sats`]];
+        y=top;let ly=top;const LX=X2+BW+12;outs.forEach(([v,col,name,lab],k)=>{const h=v*sc;if(v>0)g+=`<rect x="${X2}" y="${y}" width="${BW}" height="${Math.max(2.5,h)}" fill="${col}" stroke="#29323c" stroke-width="1"/>`;const cy=Math.max(ly+10,y+Math.max(2.5,h)/2);g+=t(LX,cy-4,name,{size:14,weight:700,fill:col})+t(LX,cy+24,lab,{size:12,fill:C.muted});ly=cy+56;y+=Math.max(v>0?2.5:0,h);});
+        if(r.ok)g+=t(LX,ly+4,`${fmt(r.fee/r.size,1)} sat/vB`,{size:12,fill:C.orange,weight:600})+t(LX,ly+30,`× ${r.size} vB`,{size:12,fill:C.orange,weight:600});
         /* size bar */
-        const by=470,bw=520,bx=420,tot=r.size||1;g+=t(bx,by-10,`TRANSACTION SIZE · ${r.size} vB`,{size:12,weight:700,fill:C.muted});
-        const parts=[[T.overhead,'#cfc8b9','overhead'],[r.inputs.length*T.input,'#9cc6e8',`${r.inputs.length} input${r.inputs.length===1?'':'s'} × ${T.input}`],[r.outputs*T.output,'#b7d9bd',`${r.outputs} output${r.outputs===1?'':'s'} × ${T.output}`]];
-        let bx2=bx;parts.forEach(([v,col,lab])=>{const w=v/tot*bw;g+=`<rect x="${bx2}" y="${by}" width="${w}" height="18" fill="${col}" stroke="#fffdf7"/>`;if(w>70)g+=t(bx2+5,by+13,lab,{size:11,weight:600});bx2+=w;});
-        scene.innerHTML=svg(960,500,g,'Coin selection and the resulting transaction');
+        const by=704,bw=920,bx=20,tot=r.size||1;g+=t(bx,by-14,`TRANSACTION SIZE · ${r.size} vB`,{size:12,weight:700,fill:C.muted});
+        const parts=[[T.overhead,'#cfc8b9','overhead'],[r.inputs.length*T.input,'#9cc6e8',`${r.inputs.length} input${r.inputs.length===1?'':'s'} × ${T.input} vB`],[r.outputs*T.output,'#b7d9bd',`${r.outputs} output${r.outputs===1?'':'s'} × ${T.output} vB`]];
+        let bx2=bx;parts.forEach(([v,col,lab])=>{const w=v/tot*bw;g+=`<rect x="${bx2}" y="${by}" width="${w}" height="30" fill="${col}" stroke="#fffdf7"/>`;if(w>K.tw(lab,11)+12)g+=t(bx2+8,by+22,lab,{size:11,weight:600});bx2+=w;});
+        scene.innerHTML=svg(960,750,g,'Coin selection and the resulting transaction');
         status.textContent=r.ok?`${T.label} · ${r.inputs.length} in → ${r.outputs} out`:'Not enough funds selected';
         const uneconomic=WALLET.filter(v=>effective(v,s.rate,s.type)<0).length;
         const title=!r.ok?'Not enough coins selected.':uneconomic>=3?'At this fee rate, small coins are dead weight.':r.inputs.length>=4?'Many inputs make a big, expensive transaction.':r.dropped>0?'The leftover was too small to keep.':'Inputs = payment + change + fee.';

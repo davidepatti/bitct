@@ -51,14 +51,14 @@
         const daily=[];let i=0;for(let d=0;d<days;d+=1){let n=0,sum=0;while(i<sim.blocks.length&&sim.blocks[i].t<(d+1)*1440){sum+=sim.blocks[i].dt;n++;i++;}if(n)daily.push([d+0.5,sum/n]);}
         let g='';
         const vl=sim.epochs.map(e=>({x:e.end/1440,color:'#cfc8b9',width:1,dash:'3 4'}));
-        g+=K.plot({x:80,y:30,w:840,h:190,xr,yr:[0,Math.max(20,Math.ceil(Math.max(...daily.map(d=>d[1]))/5)*5)],xlabel:'',ylabel:'minutes per block',series:[{pts:daily,color:C.orange,width:2}],hlines:[{y:10,color:C.ink,label:'10-minute target',dash:'6 5'}],vlines:[...vl,{x:20,color:C.red,label:'shock',dy:-2}],xfmt:v=>`day ${v}`});
+        g+=K.plot({x:90,y:104,w:830,h:180,xr,yr:[0,Math.max(20,Math.ceil(Math.max(...daily.map(d=>d[1]))/5)*5)],xlabel:'',ylabel:'minutes per block',series:[{pts:daily,color:C.orange,width:2}],hlines:[{y:10,color:C.ink,label:'10-minute target',dash:'6 5'}],vlines:[...vl,{x:20,color:C.red,label:'shock',dy:-2}],xfmt:v=>`day ${v}`});
         const maxY=Math.max(...sim.blocks.map(b=>b.H),...sim.epochs.map(e=>e.next))*1.1;
         const hpts=[],dpts=[];for(let d=0;d<=days;d+=0.5)hpts.push([d,H(d)]);sim.epochs.forEach(e=>{dpts.push([e.start/1440,e.difficulty]);dpts.push([e.end/1440,e.difficulty]);});
-        g+=K.plot({x:80,y:280,w:840,h:150,xr,yr:[0,Math.max(2,maxY)],ylabel:'relative',xlabel:'simulated days',yfmt:v=>fmt(v,v%1?1:0),series:[{pts:hpts,color:C.purple,width:2.4},{pts:dpts,color:C.blue,width:2.6}],vlines:vl,xfmt:v=>`${v}`});
-        g+=t(86,272,'Hashrate',{size:12,weight:700,fill:C.purple})+t(160,272,'Difficulty (changes only at retargets)',{size:12,weight:700,fill:C.blue});
-        sim.epochs.forEach((e,k)=>{const x=80+((e.start+e.end)/2/1440)/xr[1]*840;g+=t(x,24,`${fmt(e.days,1)} d`,{size:10.5,anchor:'middle',fill:Math.abs(e.days-14)>1.5?C.red:C.muted,weight:600});});
-        g+=t(80,12,'Length of each 2,016-block period (target 14 days):',{size:11,fill:C.muted,weight:700});
-        scene.innerHTML=svg(960,500,g,'Block interval, hashrate and difficulty over simulated days');
+        g+=K.plot({x:90,y:372,w:830,h:150,xr,yr:[0,Math.max(2,maxY)],ylabel:'relative',xlabel:'simulated days',yfmt:v=>fmt(v,v%1?1:0),series:[{pts:hpts,color:C.purple,width:2.4},{pts:dpts,color:C.blue,width:2.6}],vlines:vl,xfmt:v=>`${v}`});
+        g+=t(96,354,'Hashrate',{size:12,weight:700,fill:C.purple})+t(96+K.tw('Hashrate',12)+28,354,'Difficulty (changes only at retargets)',{size:12,weight:700,fill:C.blue});
+        {let row=0,prevEnd=-1e9;sim.epochs.forEach((e,k)=>{const x=90+((e.start+e.end)/2/1440)/xr[1]*830,lab=`${fmt(e.days,1)} d`,hw=K.tw(lab,10.5)/2;row=(x-hw<prevEnd+6&&row===0)?1:0;if(row===0)prevEnd=x+hw;g+=t(x,row?86:62,`${fmt(e.days,1)} d`,{size:10.5,anchor:'middle',fill:Math.abs(e.days-14)>1.5?C.red:C.muted,weight:600});});}
+        g+=t(90,28,'Length of each 2,016-block period (target 14 days):',{size:11,fill:C.muted,weight:700});
+        scene.innerHTML=svg(960,590,g,'Block interval, hashrate and difficulty over simulated days');
         layer.textContent='Difficulty adjustment · every 2,016 blocks';status.textContent=`${sim.epochs.length} retarget periods · seed ${s.seed}`;
         const shockEp=sim.epochs.find(e=>e.end/1440>20)||sim.epochs[0],after=sim.epochs[sim.epochs.indexOf(shockEp)+1],last=sim.epochs.at(-1);
         const slowest=sim.epochs.reduce((a,e)=>e.days>a.days?e:a),fastest=sim.epochs.reduce((a,e)=>e.days<a.days?e:a);
@@ -72,10 +72,10 @@
         const btcs=v=>String(+(v/COIN).toFixed(8)),hNow=Math.max(0,Math.round(heightOf(s.year))),era=Math.floor(hNow/HALVING),sub=subsidy(hNow),sup=supplyAt(hNow);
         let g='';const xr=[2009,2145];
         const pts=[],spts=[];for(let y=2009;y<=2145;y+=0.25){const h=Math.round(heightOf(y));pts.push([y,supplyAt(h)/COIN/1e6]);spts.push([y,subsidy(h)/COIN]);}
-        g+=K.plot({x:80,y:28,w:840,h:200,xr,yr:[0,21],xticks:[2009,2020,2040,2060,2080,2100,2120,2140],yticks:[0,5,10,15,21],ylabel:'million BTC',series:[{pts,color:C.orange,width:2.8,area:0.12}],hlines:[{y:21,color:C.ink,label:'21 million cap',dash:'6 5'}],vlines:[{x:s.year,color:C.purple,width:2,dash:'0',label:String(Math.round(s.year)),anchor:s.year>2120?'end':'start'}],dots:[{x:s.year,y:sup/COIN/1e6,color:C.purple}],xfmt:v=>String(v)});
-        g+=K.plot({x:80,y:290,w:840,h:150,xr,yr:[0,50],xticks:[2009,2020,2040,2060,2080,2100,2120,2140],yticks:[0,12.5,25,50],ylabel:'BTC per block',xlabel:'approximate year',series:[{pts:spts,color:C.blue,width:2.6,step:true}],vlines:[{x:s.year,color:C.purple,width:2,dash:'0'}],dots:[{x:s.year,y:sub/COIN,color:C.purple}],xfmt:v=>String(v),yfmt:v=>fmt(v,v%1?1:0)});
-        g+=t(86,22,'Total supply',{size:12,weight:700,fill:C.orange})+t(86,284,'Block subsidy (halves every 210,000 blocks)',{size:12,weight:700,fill:C.blue});
-        scene.innerHTML=svg(960,500,g,'Bitcoin supply and block subsidy over time');
+        g+=K.plot({x:100,y:44,w:820,h:200,xr,yr:[0,21],xticks:[2009,2020,2040,2060,2080,2100,2120,2140],yticks:[0,5,10,15,21],ylabel:'million BTC',series:[{pts,color:C.orange,width:2.8,area:0.12}],hlines:[{y:21,color:C.ink,label:'21 million cap',dash:'6 5'}],vlines:[{x:s.year,color:C.purple,width:2,dash:'0',label:String(Math.round(s.year)),anchor:s.year>2120?'end':'start'}],dots:[{x:s.year,y:sup/COIN/1e6,color:C.purple}],xfmt:v=>String(v)});
+        g+=K.plot({x:100,y:334,w:820,h:150,xr,yr:[0,50],xticks:[2009,2020,2040,2060,2080,2100,2120,2140],yticks:[0,12.5,25,50],ylabel:'BTC per block',xlabel:'approximate year',series:[{pts:spts,color:C.blue,width:2.6,step:true}],vlines:[{x:s.year,color:C.purple,width:2,dash:'0'}],dots:[{x:s.year,y:sub/COIN,color:C.purple}],xfmt:v=>String(v),yfmt:v=>fmt(v,v%1?1:0)});
+        g+=t(106,28,'Total supply',{size:12,weight:700,fill:C.orange})+t(106,318,'Block subsidy (halves every 210,000 blocks)',{size:12,weight:700,fill:C.blue});
+        scene.innerHTML=svg(960,550,g,'Bitcoin supply and block subsidy over time');
         layer.textContent='Issuance schedule · consensus rule';status.textContent=`height ≈ ${fmt(hNow)} · era ${era}`;
         const nextH=(era+1)*HALVING;
         aside.innerHTML=K.asideBlock({title:sub>0?`${btcs(sub)} BTC per block in ${Math.round(s.year)}.`:'No more new coins.',text:sub>0?`This is halving era ${era}. Each step halves the reward, so the supply curve flattens quickly: about ${pct(sup/MAX_SUPPLY,1)} of all bitcoin exist by this year.`:'After the last halving the subsidy rounds down to zero satoshis. Miners are then paid only by transaction fees.',

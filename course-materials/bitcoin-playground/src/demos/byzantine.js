@@ -55,29 +55,32 @@
       scene.addEventListener('keydown',e=>{const el=e.target.closest('[data-general]');if(el&&(e.key==='Enter'||e.key===' ')){e.preventDefault();toggle(Number(el.dataset.general));}});
       function draw(){
         const res=run({n:s.n,rounds:s.rounds,traitors:[...s.traitors],strategy:s.strategy,order:s.order}),f=s.traitors.size,gd=guaranteed(s.n,s.rounds,f);
-        const cx=235,cy=255,Rr=170,P=i=>{const a=-Math.PI/2+i*2*Math.PI/s.n;return [cx+Math.cos(a)*Rr,cy+Math.sin(a)*Rr*0.9];};let g='';
-        g+=`<path d="M${cx-40} ${cy+30}V${cy-14}L${cx-28} ${cy-26}L${cx-16} ${cy-14}V${cy-30}H${cx+16}V${cy-14}L${cx+28} ${cy-26}L${cx+40} ${cy-14}V${cy+30}Z" fill="#e9e5da" stroke="#8f897c" stroke-width="1.5"/>`+t(cx,cy+52,'the city',{size:11,anchor:'middle',fill:C.muted});
+        const cx=235,cy=250,Rr=170,P=i=>{const a=-Math.PI/2+i*2*Math.PI/s.n;return [cx+Math.cos(a)*Rr,cy+Math.sin(a)*Rr*0.9];};let g='';
         const [x0,y0]=P(0);
-        for(let i=1;i<s.n;i++){const [x,y]=P(i),v=res.received.get(i),dx=x-x0,dy=y-y0,L=Math.hypot(dx,dy);g+=`<path d="M${x0+dx/L*32} ${y0+dy/L*32}L${x-dx/L*34} ${y-dy/L*34}" stroke="${col(v)}" stroke-width="2" ${s.traitors.has(0)&&v!==s.order?'stroke-dasharray="6 4"':''} marker-end="url(#k-arrow)" opacity=".8"/>`+t(x0+dx*0.55+(dy>0?10:-10)*Math.sign(dx||1),y0+dy*0.55,short(v),{size:12,weight:700,fill:col(v),anchor:'middle'});}
+        for(let i=1;i<s.n;i++){const [x,y]=P(i),v=res.received.get(i),dx=x-x0,dy=y-y0,L=Math.hypot(dx,dy);g+=`<path d="M${x0+dx/L*32} ${y0+dy/L*32}L${x-dx/L*34} ${y-dy/L*34}" stroke="${col(v)}" stroke-width="2" ${s.traitors.has(0)&&v!==s.order?'stroke-dasharray="6 4"':''} marker-end="url(#k-arrow)" opacity=".8"/>`+(()=>{const d=Math.min(L*0.75,L-72),mx=x0+dx/L*d,my=y0+dy/L*d;let nx=-dy/L,ny=dx/L;if(nx*(cx-mx)+ny*(cy-my)<0){nx=-nx;ny=-ny;}return t(mx+nx*20,my+ny*20+7,short(v),{size:12,weight:700,fill:col(v),anchor:'middle',cls:'halo'});})();}
+        g+=`<path d="M${cx-40} ${cy+30}V${cy-14}L${cx-28} ${cy-26}L${cx-16} ${cy-14}V${cy-30}H${cx+16}V${cy-14}L${cx+28} ${cy-26}L${cx+40} ${cy-14}V${cy+30}Z" fill="#e9e5da" stroke="#8f897c" stroke-width="1.5"/>`+t(cx,cy+52,'the city',{size:11,anchor:'middle',fill:C.muted,cls:'halo'});
         for(let i=0;i<s.n;i++){const [x,y]=P(i),tr=s.traitors.has(i),dec=i?res.decided.get(i):s.order;
           g+=`<g data-pick="1" data-general="${i}" tabindex="0" role="button" aria-label="General ${i}${i===0?' (commander)':''}${tr?', traitor':''}"><circle cx="${x}" cy="${y}" r="28" fill="${tr?'#f6d6d3':i===0?'#e9e5da':'#fffdf7'}" stroke="${tr?C.red:'#29323c'}" stroke-width="${tr?3:2}"/>`;
           if(i===0)g+=`<path d="M${x-12} ${y-20}l4 -10 4 6 4 -8 4 8 4 -6 4 10z" fill="#f3bc59" stroke="#29323c" stroke-width="1.2"/>`;
           g+=t(x,y+5,i===0?'C':`L${i}`,{size:14,weight:700,anchor:'middle',fill:tr?C.red:C.ink});
-          if(i>0&&!tr)g+=`<rect x="${x-34}" y="${y+33}" width="68" height="20" rx="10" fill="${col(dec)}"/>`+t(x,y+47,dec,{size:11,weight:700,anchor:'middle',fill:'#fff'});
-          if(tr)g+=t(x,y+48,'traitor',{size:11,weight:700,anchor:'middle',fill:C.red});
+          if(i>0&&!tr)g+=`<rect x="${x-46}" y="${y+33}" width="92" height="28" rx="14" fill="${col(dec)}"/>`+t(x,y+53,dec,{size:11,weight:700,anchor:'middle',fill:'#fff'});
+          if(tr)g+=t(x,i===0?y-42:y+56,'traitor',{size:11,weight:700,anchor:'middle',fill:C.red,cls:'halo'});
           g+='</g>';}
         /* evidence table */
         const tx=500,lts=Array.from({length:s.n-1},(_,i)=>i+1);g+=t(tx,30,'WHAT EACH LOYAL LIEUTENANT HEARD',{size:12,weight:700,fill:C.muted});
-        if(s.rounds===0)g+=t(tx,56,'No relay rounds: each lieutenant obeys the order it received.',{size:12,fill:C.muted});
-        else{const cw=Math.min(52,380/(s.n+1));g+=t(tx,58,'from C',{size:11,weight:700,fill:C.muted});lts.forEach((i,k)=>{g+=t(tx+cw*(k+1)+20,58,`via L${i}`,{size:11,weight:700,fill:C.muted,anchor:'middle'});});g+=t(tx+cw*(lts.length+1)+30,58,'majority',{size:11,weight:700,fill:C.muted,anchor:'middle'});
-          res.loyal.forEach((j,r)=>{const y=82+r*28;g+=t(tx-8,y,`L${j}`,{size:12,weight:700,anchor:'end'});const cell=(x,v)=>`<rect x="${x-16}" y="${y-14}" width="32" height="20" rx="4" fill="${col(v)}" opacity=".85"/>`+t(x,y+1,short(v),{size:11,weight:700,anchor:'middle',fill:'#fff'});
-            g+=cell(tx+16,res.received.get(j));lts.forEach((i,k)=>{if(i===j)g+=t(tx+cw*(k+1)+20,y,'—',{size:12,anchor:'middle',fill:C.muted});else g+=cell(tx+cw*(k+1)+20,res.relayed.get(i).get(j));});
-            g+=`<rect x="${tx+cw*(lts.length+1)+10}" y="${y-15}" width="40" height="22" rx="11" fill="${col(res.decided.get(j))}" stroke="#29323c"/>`+t(tx+cw*(lts.length+1)+30,y+1,short(res.decided.get(j)),{size:12,weight:700,anchor:'middle',fill:'#fff'});});}
-        const by=Math.max(250,100+res.loyal.length*28+30);
-        g+=t(tx,by,res.ok?'✓ Loyal generals agree'+(s.traitors.has(0)?'':' and follow the commander'):!res.agree?'✗ Loyal generals disagree: the army splits':'✗ Loyal generals agree, but ignore a loyal commander',{size:15,weight:700,fill:res.ok?C.green:C.red});
-        g+=t(tx,by+24,`${fmt(res.messages)} messages · ${f} traitor${f===1?'':'s'} · guarantee needs n > 3f and m ≥ f`,{size:12,fill:C.muted});
-        if(s.check)g+=t(tx,by+48,s.check.fail?`Checked ${s.check.total} placements × strategies × orders: ${s.check.fail} fail.`:`Checked ${s.check.total} placements × strategies × orders: all succeed.`,{size:12.5,weight:700,fill:s.check.fail?C.red:C.green});
-        scene.innerHTML=svg(960,500,g,'Generals, traitors and their decisions');
+        if(s.rounds===0){g+=t(tx,70,'No relay rounds: each lieutenant',{size:12,fill:C.muted});g+=t(tx,98,'obeys the order it received.',{size:12,fill:C.muted});}
+        else{const cw=50,x0c=tx+70,colX=k=>x0c+cw*k,vx=colX(lts.length+1)+12;
+          g+=t(tx,66,'from →',{size:10,weight:700,fill:C.muted});
+          g+=t(colX(0),96,'C',{size:11,weight:700,fill:C.muted,anchor:'middle'});lts.forEach((i,k)=>{g+=t(colX(k+1),96,`L${i}`,{size:11,weight:700,fill:C.muted,anchor:'middle'});});g+=t(vx,96,'vote',{size:11,weight:700,fill:C.muted,anchor:'middle'});
+          res.loyal.forEach((j,r)=>{const y=136+r*38;g+=t(tx,y+7,`L${j}`,{size:12,weight:700});const cell=(x,v)=>`<rect x="${x-19}" y="${y-14}" width="38" height="28" rx="5" fill="${col(v)}" opacity=".85"/>`+t(x,y+7,short(v),{size:11,weight:700,anchor:'middle',fill:'#fff'});
+            g+=cell(colX(0),res.received.get(j));lts.forEach((i,k)=>{if(i===j)g+=t(colX(k+1),y+7,'—',{size:12,anchor:'middle',fill:C.muted});else g+=cell(colX(k+1),res.relayed.get(i).get(j));});
+            g+=`<rect x="${vx-24}" y="${y-15}" width="48" height="30" rx="15" fill="${col(res.decided.get(j))}" stroke="#29323c"/>`+t(vx,y+7,short(res.decided.get(j)),{size:12,weight:700,anchor:'middle',fill:'#fff'});});}
+        const by=540;
+        g+=`<line x1="30" x2="930" y1="${by-34}" y2="${by-34}" stroke="#d8d2c4"/>`;
+        g+=t(40,by,res.ok?'✓ Loyal generals agree'+(s.traitors.has(0)?'':' and follow the commander'):!res.agree?'✗ Loyal generals disagree: the army splits':'✗ Loyal generals agree, but ignore a loyal commander',{size:15,weight:700,fill:res.ok?C.green:C.red});
+        g+=t(40,by+34,`${fmt(res.messages)} messages · ${f} traitor${f===1?'':'s'} · guarantee needs n > 3f and m ≥ f`,{size:12,fill:C.muted});
+        if(s.check)g+=t(40,by+66,s.check.fail?`Checked ${s.check.total} placements × strategies × orders: ${s.check.fail} fail.`:`Checked ${s.check.total} placements × strategies × orders: all succeed.`,{size:12.5,weight:700,fill:s.check.fail?C.red:C.green});
+        scene.innerHTML=svg(960,630,g,'Generals, traitors and their decisions');
         status.textContent=`n = ${s.n} · m = ${s.rounds} · f = ${f}`;
         aside.innerHTML=K.asideBlock({title:res.ok?(gd?'Enough loyal generals: agreement is guaranteed.':'It worked here — but nothing guarantees it.'):'The traitors split the army.',
           text:res.ok?(gd?`With ${s.n} generals, ${f} traitor${f===1?'':'s'} and ${s.rounds} relay round${s.rounds===1?'':'s'}, every loyal general ends with the same decision, whatever the traitors say.`:`This placement and strategy happened to work, but the condition n > 3f, m ≥ f is not met. Press “Check every placement”.`):`Loyal generals saw different versions and decided differently. ${s.rounds<f?'Add relay rounds so they can compare notes.':s.n<=3*f?`Relaying cannot help: ${s.n} generals cannot outvote ${f} traitor${f===1?'':'s'} (needs more than ${3*f}).`:''}`,

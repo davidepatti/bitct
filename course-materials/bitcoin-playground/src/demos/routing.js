@@ -84,24 +84,24 @@
           if(s.reveal){const f=ch.bal/ch.cap,[mx,my]=at(f);g+=`<line x1="${x1}" y1="${y1}" x2="${mx}" y2="${my}" stroke="#9dd3cd" stroke-width="9" stroke-linecap="round"/><line x1="${mx}" y1="${my}" x2="${x2}" y2="${y2}" stroke="#f3d38f" stroke-width="9" stroke-linecap="round"/>`;}
           const k=know[i],[kx1,ky1]=at(k.lo/ch.cap),[kx2,ky2]=at(k.hi/ch.cap);g+=`<line x1="${kx1}" y1="${ky1}" x2="${kx2}" y2="${ky2}" stroke="#b79be6" stroke-width="3" stroke-linecap="round"/>`;
           [[kx1,ky1],[kx2,ky2]].forEach(([x,y])=>{g+=`<line x1="${x+nx*7}" y1="${y+ny*7}" x2="${x-nx*7}" y2="${y-ny*7}" stroke="#8256d8" stroke-width="2"/>`;});
-          const [lx,ly]=at(0.5);g+=t(lx+nx*16,ly+ny*16+4,ksat(ch.cap),{size:11,anchor:'middle',fill:C.muted,weight:600});
+          const [lx,ly]=at(0.5);g+=t(lx+nx*20,ly+ny*20+7,ksat(ch.cap),{size:11,anchor:'middle',fill:C.muted,weight:600,cls:'halo'});
           if(r&&r.failed){const [fx,fy]=at(r.from===ch.a?0.3:0.7);g+=t(fx,fy+7,'✗',{size:22,weight:700,anchor:'middle',fill:C.red});}
         });
         if(cur&&shownHops>0){const h=cur.q.route[Math.min(shownHops,cur.q.route.length)-1],P=byId[h.to];g+=`<circle cx="${P.x}" cy="${P.y}" r="30" fill="none" stroke="${C.teal}" stroke-width="3"/>`;}
-        NODES.forEach(n=>{const end=n.id==='A'||n.id==='B';g+=`<circle cx="${n.x}" cy="${n.y}" r="24" fill="${end?'#f8d277':'#fffdf7'}" stroke="#29323c" stroke-width="2"/>`+t(n.x,n.y+5,n.name[0],{size:16,weight:700,anchor:'middle'})+t(n.x,n.y<150?n.y-32:n.y+42,n.name,{size:12,anchor:'middle',fill:C.muted,weight:600});});
+        NODES.forEach(n=>{const end=n.id==='A'||n.id==='B';g+=`<circle cx="${n.x}" cy="${n.y}" r="24" fill="${end?'#f8d277':'#fffdf7'}" stroke="#29323c" stroke-width="2"/>`+t(n.x,n.y+5,n.name[0],{size:16,weight:700,anchor:'middle'})+t(n.x,n.y<150?n.y-34:n.y+48,n.name,{size:12,anchor:'middle',fill:C.muted,weight:600,cls:'halo'});});
         /* success probability curve for the currently preferred route */
         const best=amt=>{const qq=choose(net,know,amt,s.pref);return qq?qq.p:0;};
         const pts=[];for(let lg=Math.log10(5000);lg<=Math.log10(500000)+1e-9;lg+=0.04){const a=10**lg;pts.push([a,best(Math.round(a))]);}
         const qNow=choose(net,know,Math.ceil(s.amount/s.parts),s.pref);
-        g+=t(680,30,'Alice’s estimate of success (one route)',{size:12,weight:700,fill:C.muted});
-        g+=K.plot({x:720,y:44,w:210,h:170,xr:[5000,500000],yr:[0,1],xlog:true,xticks:[5000,50000,500000],yticks:[0,0.5,1],xfmt:ksat,yfmt:v=>pct(v,0),xlabel:'amount (sats)',series:[{pts,color:C.teal,width:2.4}],vlines:[{x:s.amount,color:C.ink,width:1.4,dash:'4 3'}],dots:[{x:Math.ceil(s.amount/s.parts),y:qNow?qNow.p:0,color:C.teal,label:qNow?pct(qNow.p,0):'0%',anchor:'end'}]});
+        g+=t(680,26,'Estimated success',{size:12,weight:700,fill:C.muted})+t(680,52,'(best single route)',{size:11,fill:C.muted});
+        g+=K.plot({x:745,y:72,w:190,h:150,xr:[5000,500000],yr:[0,1],xlog:true,xticks:[5000,50000,500000],yticks:[0,0.5,1],xfmt:ksat,yfmt:v=>pct(v,0),xlabel:'amount (sats)',series:[{pts,color:C.teal,width:2.4}],vlines:[{x:s.amount,color:C.ink,width:1.4,dash:'4 3'}],dots:[(()=>{const dx=Math.ceil(s.amount/s.parts),dy=qNow?qNow.p:0,f=Math.log(dx/5000)/Math.log(100);return {x:dx,y:dy,color:C.teal,label:qNow?pct(qNow.p,0):'0%',anchor:f<0.45?'start':'end',dy:dy>0.75?26:-10};})()]});
         /* attempt log */
-        g+=t(680,290,'Attempts',{size:12,weight:700,fill:C.muted});
+        g+=t(680,312,'Attempts',{size:12,weight:700,fill:C.muted});
         const items=last?last.log.slice(0,anim?anim.i+1:last.log.length):[];
-        items.slice(-8).forEach((e,j,arr)=>{const y=310+j*22,idx=items.length-arr.length+j,running=anim&&idx===anim.i;const label=e.q.route.map(h=>h.from).concat('B').join('→');
-          g+=t(680,y,`${idx+1}.`,{size:12,fill:C.muted})+t(700,y,label,{size:12,weight:700,cls:'mono'})+t(930,y,running?'…':e.failAt<0?`✓ fee ${e.q.fees}`:`✗ at ${byId[e.q.route[e.failAt].from].name}`,{size:12,anchor:'end',weight:700,fill:running?C.muted:e.failAt<0?C.green:C.red});});
-        if(!items.length)g+=t(680,312,'Press “Pay Bob”.',{size:12,fill:C.muted});
-        scene.innerHTML=svg(960,490,g,'Lightning channel graph with hidden balances and payment attempts');
+        items.slice(-6).forEach((e,j,arr)=>{const y=346+j*31,idx=items.length-arr.length+j,running=anim&&idx===anim.i;const label=e.q.route.map(h=>h.from).concat('B').join('→');
+          g+=t(680,y,`${idx+1}.`,{size:11,fill:C.muted})+t(708,y,label,{size:11,weight:700,cls:'mono'})+t(955,y,running?'…':e.failAt<0?`✓ fee ${e.q.fees}`:`✗ at ${byId[e.q.route[e.failAt].from].name}`,{size:11,anchor:'end',weight:700,fill:running?C.muted:e.failAt<0?C.green:C.red});});
+        if(!items.length)g+=t(680,346,'Press “Pay Bob”.',{size:12,fill:C.muted});
+        scene.innerHTML=svg(960,540,g,'Lightning channel graph with hidden balances and payment attempts');
         const learned=know.filter((k,i)=>!(net[i].a==='A'||net[i].b==='A')&&(k.lo>0||k.hi<net[i].cap)).length;
         status.textContent=`${net.length} channels · Alice has narrowed ${learned} of ${net.length-2}`;
         q('pay').disabled=!!anim;

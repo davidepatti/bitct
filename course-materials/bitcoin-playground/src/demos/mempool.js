@@ -81,37 +81,37 @@
       function myPkgRate(){const p=pool.find(x=>x.id==='me'),c=pool.find(x=>x.id==='child');if(!p)return 0;return c&&(p.fee+c.fee)/(p.size+c.size)>p.fee/p.size?(p.fee+c.fee)/(p.size+c.size):p.fee/p.size;}
       function draw(){
         const proj=project(pool,8);let g='';
-        const X=150,W=230,Y=40,blockH=50,gap=8;
-        g+=t(X+W/2,24,'MEMPOOL · projected blocks',{size:12,weight:700,anchor:'middle',fill:C.muted});
+        const X=150,W=220,Y=48,blockH=56,gap=10;
+        g+=t(X+W/2,28,'MEMPOOL · projected blocks',{size:12,weight:700,anchor:'middle',fill:C.muted});
         let myBlock=-1;
         proj.blocks.forEach((b,i)=>{const y=Y+i*(blockH+gap);let x=X;
           g+=`<rect x="${X}" y="${y}" width="${W}" height="${blockH}" rx="4" fill="#f3efe4" stroke="#d6cfbf"/>`;
           b.units.forEach(u=>u.txs.forEach(tx=>{const w=tx.size/CAP*W;g+=`<rect x="${x.toFixed(2)}" y="${y}" width="${(w+0.3).toFixed(2)}" height="${blockH}" fill="${tx.mine?C.purple:heat(u.rate)}"/>`;if(tx.mine){g+=`<rect x="${x-1}" y="${y-3}" width="${Math.max(5,w+2)}" height="${blockH+6}" fill="${C.purple}" stroke="#29323c" stroke-width="1.5"/>`;myBlock=i;}x+=w;}));
           g+=`<rect x="${X}" y="${y}" width="${W}" height="${blockH}" rx="4" fill="none" stroke="#29323c" stroke-width="1.3"/>`;
-          g+=t(X-12,y+22,i===0?'Next block':`+${i+1}`,{size:13,weight:700,anchor:'end'})+t(X-12,y+38,`${Math.round(b.size/CAP*100)}% full`,{size:11,anchor:'end',fill:C.muted});
-          g+=t(X+W+12,y+22,b.size>=CAP*0.9?`≥ ${fmt(b.minRate,b.minRate<10?1:0)} sat/vB`:'any fee',{size:13,weight:700})+t(X+W+12,y+38,`up to ${fmt(b.maxRate,0)}`,{size:11,fill:C.muted});
+          g+=t(X-12,y+24,i===0?'Next block':`+${i+1}`,{size:13,weight:700,anchor:'end'})+t(X-12,y+48,`${Math.round(b.size/CAP*100)}% full`,{size:11,anchor:'end',fill:C.muted});
+          g+=t(X+W+12,y+24,b.size>=CAP*0.9?`≥ ${fmt(b.minRate,b.minRate<10?1:0)} sat/vB`:'any fee',{size:13,weight:700})+t(X+W+12,y+48,`up to ${fmt(b.maxRate,0)}`,{size:11,fill:C.muted});
         });
         const restSize=proj.rest.reduce((a,u)=>a+u.size,0);
-        if(restSize){const y=Y+proj.blocks.length*(blockH+gap);g+=t(X+W/2,y+14,`+ ${fmt(restSize/CAP,1)} more blocks waiting`,{size:12,anchor:'middle',fill:C.muted,weight:600});if(proj.rest.some(u=>u.txs.some(tx=>tx.mine)))myBlock=99;}
-        if(myBlock>=0&&myBlock<99){const y=Y+myBlock*(blockH+gap)+blockH/2;g+=`<path d="M${X+W+120} ${y}H${X+W+100}" stroke="${C.purple}" stroke-width="2.5" marker-end="url(#k-arrow)"/>`+t(X+W+126,y+5,'you',{size:14,weight:700,fill:C.purple});}
+        if(restSize){const y=Y+proj.blocks.length*(blockH+gap);g+=t(X+W/2,y+18,`+ ${fmt(restSize/CAP,1)} more blocks waiting`,{size:12,anchor:'middle',fill:C.muted,weight:600});if(proj.rest.some(u=>u.txs.some(tx=>tx.mine)))myBlock=99;}
+        if(myBlock>=0&&myBlock<99){const y=Y+myBlock*(blockH+gap)+blockH/2;g+=`<path d="M${X+W+184} ${y}H${X+W+156}" stroke="${C.purple}" stroke-width="2.5" marker-end="url(#k-arrow)"/>`+t(X+W+190,y+8,'you',{size:14,weight:700,fill:C.purple});}
         /* chain of recent blocks */
-        const cx=560;g+=t(cx,24,'RECENTLY MINED',{size:12,weight:700,fill:C.muted});
-        chain.slice(-5).forEach((b,i,arr)=>{const x=cx+i*76,y=40;g+=`<rect x="${x}" y="${y}" width="60" height="60" rx="6" fill="#f8d277" stroke="${b.mine?C.purple:'#29323c'}" stroke-width="${b.mine?3.5:1.6}"/>`+t(x+30,y+22,`#${b.height}`,{size:13,weight:700,anchor:'middle'})+t(x+30,y+38,`${b.count} tx`,{size:11,anchor:'middle'})+t(x+30,y+52,`≥${fmt(b.minRate,b.minRate<10?1:0)}`,{size:11,anchor:'middle',fill:'#6b5a2e'});if(i<arr.length-1)g+=`<path d="M${x+60} ${y+30}H${x+76}" stroke="#29323c" stroke-width="1.6"/>`;});
-        if(!chain.length)g+=t(cx,70,'No blocks yet. Press play or “Next block”.',{size:13,fill:C.muted});
+        const cx=624;g+=t(cx,28,'RECENTLY MINED',{size:12,weight:700,fill:C.muted});
+        chain.slice(-4).forEach((b,i,arr)=>{const x=cx+i*82,y=46;g+=`<rect x="${x}" y="${y}" width="72" height="88" rx="7" fill="#f8d277" stroke="${b.mine?C.purple:'#29323c'}" stroke-width="${b.mine?3.5:1.6}"/>`+t(x+36,y+27,`#${b.height}`,{size:13,weight:700,anchor:'middle'})+t(x+36,y+53,`${b.count} tx`,{size:11,anchor:'middle'})+t(x+36,y+77,`≥${fmt(b.minRate,b.minRate<10?1:0)}`,{size:11,anchor:'middle',fill:'#6b5a2e'});if(i<arr.length-1)g+=`<path d="M${x+72} ${y+44}H${x+82}" stroke="#29323c" stroke-width="1.6"/>`;});
+        if(!chain.length)g+=t(cx,80,'No blocks yet. Press play',{size:13,fill:C.muted})+t(cx,108,'or “Next block”.',{size:13,fill:C.muted});
         const since=clock-(chain.length?chain.at(-1).at:0);
-        g+=t(cx,128,`Time since last block: ${fmt(since,1)} min`,{size:13,weight:600})+t(cx,146,'Block times are random: 10 minutes is only the average.',{size:12,fill:C.muted});
+        g+=t(cx,172,`Since last block: ${fmt(since,1)} min`,{size:13,weight:600})+t(cx,202,'Block times are random:',{size:12,fill:C.muted})+t(cx,228,'10 minutes is only the average.',{size:12,fill:C.muted});
         /* next-block fee rate history */
         const pts=history.map(([x,y])=>[x,Math.max(1,y)]);const xr=[Math.max(0,clock-90),Math.max(30,clock)];
-        g+=t(cx,190,'Fee rate needed for the next block (sat/vB)',{size:12,weight:700,fill:C.muted});
-        g+=K.plot({x:cx+40,y:205,w:330,h:150,xr,yr:[1,300],ylog:true,yticks:[1,3,10,30,100,300],xticks:K.niceTicks(...xr,4),xfmt:v=>`${fmt(v)}′`,xlabel:'simulated minutes',series:[{pts:pts.filter(p=>p[0]>=xr[0]),color:C.blue,step:true}],hlines:mine.state==='waiting'?[{y:Math.max(1,myPkgRate()),color:C.purple,label:'your rate',anchor:'start'}]:[]});
+        g+=t(cx,276,'FEE RATE FOR THE NEXT BLOCK',{size:12,weight:700,fill:C.muted})+t(cx,302,'sat/vB · log scale',{size:11,fill:C.muted});
+        g+=K.plot({x:cx+46,y:322,w:270,h:160,xr,yr:[1,300],ylog:true,yticks:[1,3,10,30,100,300],xticks:K.niceTicks(...xr,4),xfmt:v=>`${fmt(v)}′`,xlabel:'simulated minutes',series:[{pts:pts.filter(p=>p[0]>=xr[0]),color:C.blue,step:true}],hlines:mine.state==='waiting'?[{y:Math.max(1,myPkgRate()),color:C.purple,label:'your rate',anchor:'start'}]:[]});
         /* my payment card */
         const myTx=pool.find(x=>x.id==='me'),child=pool.find(x=>x.id==='child');
         let line1='Not broadcast yet',line2='Choose a fee rate, then broadcast.';
         if(mine.state==='waiting'){const pkg=child?(myTx.fee+child.fee)/(myTx.size+child.size):myTx.fee/myTx.size;line1=myBlock===99?'Waiting · beyond the projected blocks':`Waiting · projected in block ${myBlock===0?'next':'+'+(myBlock+1)}`;line2=`${fmt(myTx.fee/myTx.size,1)} sat/vB${child?` · package ${fmt(pkg,1)} sat/vB with child`:''} · ${fmt(clock-mine.since,0)} min so far`;}
         if(mine.state==='confirmed'){line1=`Confirmed in block #${mine.height}`;line2=`waited ${fmt(mine.wait,0)} simulated minutes${mine.how?` · rescued with ${mine.how}`:''}`;}
         if(mine.state==='evicted'){line1='Dropped from this mempool';line2='Fee too low for a full mempool. Broadcast again with more.';}
-        g+=`<rect x="${cx}" y="420" width="370" height="64" rx="10" fill="${mine.state==='confirmed'?'#e3f1e5':mine.state==='evicted'?'#f7e1de':'#efe8fb'}" stroke="${C.purple}" stroke-width="1.5"/>`+t(cx+16,445,line1,{size:15,weight:700,fill:mine.state==='confirmed'?'#2f7342':mine.state==='evicted'?C.red:C.purple})+t(cx+16,468,line2,{size:12,fill:C.ink});
-        scene.innerHTML=svg(960,500,g,'Mempool projected blocks, recent blocks and fee history');
+        g+=`<rect x="20" y="616" width="920" height="92" rx="10" fill="${mine.state==='confirmed'?'#e3f1e5':mine.state==='evicted'?'#f7e1de':'#efe8fb'}" stroke="${C.purple}" stroke-width="1.5"/>`+t(40,652,line1,{size:15,weight:700,fill:mine.state==='confirmed'?'#2f7342':mine.state==='evicted'?C.red:C.purple})+t(40,688,line2,{size:12,fill:C.ink});
+        scene.innerHTML=svg(960,724,g,'Mempool projected blocks, recent blocks and fee history');
         status.textContent=`t = ${fmt(clock,1)} min · ${pool.length} tx waiting · ${chain.length} blocks`;
         q('play').innerHTML=s.playing?'Ⅱ &nbsp; Pause':'▶ &nbsp; Play';
         q('rbf').disabled=!(mine.state==='waiting'&&Math.ceil(s.myRate*141)>myTx.fee);q('cpfp').disabled=!(mine.state==='waiting'&&!child);q('broadcast').textContent=mine.state==='waiting'?'Broadcast again':'Broadcast my payment';

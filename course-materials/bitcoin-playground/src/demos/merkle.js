@@ -49,29 +49,34 @@
         const D=DATA[s.data],texts=D.items.slice(0,s.n),now=texts.map((x,i)=>s.tampered.has(i)?D.tamper(x):x);
         const orig=levels(texts.map(leaf)),lv=levels(now.map(leaf)),depth=lv.length;
         const pathNodes=new Set(),sibs=new Map();if(s.mode==='prove'){let i=s.selected;proof(lv,s.selected).forEach((p,k)=>sibs.set(`${p.level}:${p.index}`,k+1));for(let d=0;d<depth;d++){pathNodes.add(`${d}:${i}`);i=Math.floor(i/2);}}
-        const W=920,X0=20,top=118,bottom=400,rowH=depth>1?(bottom-top)/(depth-1):0,nodeW=Math.min(92,(W/lv[0].length)-8);
+        const W=920,X0=20,top=158,bottom=468,rowH=depth>1?(bottom-top)/(depth-1):0,compact=lv[0].length>8;
         const pos=(d,i)=>{const count=lv[d].length;const w=W/count;return [X0+w*i+w/2,bottom-d*rowH];};
+        const boxW=d=>Math.min(d===depth-1?150:130,W/lv[d].length-10),chars=w=>Math.max(4,Math.min(8,Math.floor((w-10)/(K.fs(11)*0.62))));
         let g='';
         /* header */
         const tamperedRoot=P.hex(lv.at(-1)[0].hash)!==P.hex(orig.at(-1)[0].hash);
-        g+=`<rect x="300" y="8" width="360" height="56" rx="8" fill="#fffdf7" stroke="#29323c" stroke-width="1.6"/>`+t(316,28,'BLOCK HEADER · committed by proof of work',{size:11,weight:700,fill:C.muted})+t(316,50,`Merkle root ${P.hex(orig.at(-1)[0].hash).slice(0,16)}…`,{size:13,cls:'mono'});
-        g+=`<path d="M480 64V${top-22}" stroke="${tamperedRoot?C.red:'#29323c'}" stroke-width="2" ${tamperedRoot?'stroke-dasharray="6 5"':''}/>`;
-        if(tamperedRoot)g+=t(492,90,'✗ root no longer matches the header',{size:13,weight:700,fill:C.red});
+        g+=`<rect x="200" y="6" width="560" height="74" rx="8" fill="#fffdf7" stroke="#29323c" stroke-width="1.6"/>`+t(218,34,'BLOCK HEADER · committed by proof of work',{size:11,weight:700,fill:C.muted})+t(218,66,`Merkle root ${P.hex(orig.at(-1)[0].hash).slice(0,16)}…`,{size:12,cls:'mono'});
+        g+=`<path d="M480 80V${top-20}" stroke="${tamperedRoot?C.red:'#29323c'}" stroke-width="2" ${tamperedRoot?'stroke-dasharray="6 5"':''}/>`;
+        if(tamperedRoot)g+=t(494,116,'✗ root no longer matches the header',{size:12,weight:700,fill:C.red});
         /* edges */
-        for(let d=0;d<depth-1;d++)lv[d].forEach((n,i)=>{const [x,y]=pos(d,i),[px,py]=pos(d+1,Math.floor(i/2));const hot=pathNodes.has(`${d}:${i}`);const changed=P.hex(n.hash)!==P.hex((orig[d][i]||{}).hash||new Uint8Array());g+=`<path d="M${x} ${y-15}L${px} ${py+15}" stroke="${hot?C.purple:changed?C.red:'#b9b1a1'}" stroke-width="${hot||changed?2.2:1.2}"/>`;});
+        for(let d=0;d<depth-1;d++)lv[d].forEach((n,i)=>{const [x,y]=pos(d,i),[px,py]=pos(d+1,Math.floor(i/2));const hot=pathNodes.has(`${d}:${i}`);const changed=P.hex(n.hash)!==P.hex((orig[d][i]||{}).hash||new Uint8Array());g+=`<path d="M${x} ${y-18}L${px} ${py+18}" stroke="${hot?C.purple:changed?C.red:'#b9b1a1'}" stroke-width="${hot||changed?2.2:1.2}"/>`;});
         /* nodes */
         lv.forEach((row,d)=>row.forEach((n,i)=>{const [x,y]=pos(d,i),hx=P.hex(n.hash),changed=hx!==P.hex((orig[d][i]||{}).hash||new Uint8Array()),key=`${d}:${i}`,sib=sibs.get(key),onPath=pathNodes.has(key),isLeaf=d===0,isRoot=d===depth-1;
           const fill=onPath&&isLeaf?'#e5d8fb':`hsl(${K.hue(hx)} 62% ${changed?90:86}%)`,stroke=sib?C.orange:onPath?C.purple:changed?C.red:'#29323c',sw=sib||onPath||changed?2.6:1.3;
-          const w=isRoot?120:nodeW,h=30;
+          const w=boxW(d),h=36;
           g+=`<g ${isLeaf&&!n.dup?`data-pick="1" data-leaf="${i}" tabindex="0" role="button" aria-label="${esc(now[i])}${s.tampered.has(i)?', tampered':''}"`:''}><rect x="${x-w/2}" y="${y-h/2}" width="${w}" height="${h}" rx="5" fill="${fill}" stroke="${stroke}" stroke-width="${sw}" ${n.dup?'stroke-dasharray="4 3" opacity=".6"':''}/>`;
-          g+=t(x,y+4,hx.slice(0,nodeW<60&&!isRoot?4:8),{size:nodeW<60&&!isRoot?10:12,anchor:'middle',cls:'mono',fill:changed?'#a3332d':C.ink});
-          if(sib)g+=`<circle cx="${x+w/2-2}" cy="${y-h/2+2}" r="9" fill="${C.orange}"/>`+t(x+w/2-2,y-h/2+6,String(sib),{size:11,weight:700,anchor:'middle',fill:'#fff'});
-          if(isRoot)g+=t(x-w/2-8,y+4,'root',{size:12,weight:700,anchor:'end',fill:C.muted});
-          if(isLeaf&&!n.dup){const lab=D.short(now[i]);const lines=lv[0].length>8?[lab.split(' ').slice(0,1).join(' '),lab.split(' ').slice(1).join(' ')]:[lab];lines.forEach((l,k)=>{g+=t(x,y+h/2+15+k*13,l,{size:lv[0].length>8?10:11.5,anchor:'middle',fill:s.tampered.has(i)?C.red:C.muted,weight:s.tampered.has(i)?700:500});});}
-          if(n.dup)g+=t(x,y+h/2+14,'copy',{size:10,anchor:'middle',fill:C.muted});
+          g+=t(x,y+7,hx.slice(0,chars(w)),{size:11,anchor:'middle',cls:'mono',fill:changed?'#a3332d':C.ink});
+          if(sib)g+=`<circle cx="${x+w/2-2}" cy="${y-h/2-2}" r="13" fill="${C.orange}"/>`+t(x+w/2-2,y-h/2+5,String(sib),{size:10,weight:700,anchor:'middle',fill:'#fff'});
+          if(isRoot)g+=t(x-w/2-10,y+7,'root',{size:12,weight:700,anchor:'end',fill:C.muted});
+          if(isLeaf&&!n.dup){const hl=s.tampered.has(i)||(s.mode==='prove'&&i===s.selected);
+            if(compact)g+=t(x,y+h/2+26,`tx${i+1}`,{size:10,anchor:'middle',fill:s.tampered.has(i)?C.red:hl?C.purple:C.muted,weight:hl?700:500});
+            else{const lab=D.short(now[i]),parts=lab.includes('→')?[lab.split('→')[0].trim(),'→ '+lab.split('→')[1].trim()]:[lab.split(' ')[0],lab.split(' ').slice(1).join(' ')];parts.forEach((l,k)=>{g+=t(x,y+h/2+26+k*24,l,{size:10,anchor:'middle',fill:s.tampered.has(i)?C.red:C.muted,weight:s.tampered.has(i)?700:500});});}}
+          if(n.dup)g+=t(x,y+h/2+26,'copy',{size:10,anchor:'middle',fill:C.muted});
           g+='</g>';}));
-        g+=t(20,494,s.mode==='tamper'?'Click a leaf to change its data.':'Click a leaf to build its inclusion proof.',{size:13,weight:600,fill:C.muted});
-        scene.innerHTML=svg(960,500,g,'Merkle tree of the selected leaves');
+        const focus=s.mode==='prove'?[s.selected]:[...s.tampered].sort((a,b)=>a-b);
+        const cap=compact&&focus.length?focus.slice(0,2).map(i=>`tx${i+1}: ${now[i]}`).join('   ·   ')+(focus.length>2?'  …':''):(s.mode==='tamper'?'Click a leaf to change its data.':'Click a leaf to build its inclusion proof.');
+        g+=t(20,574,cap,{size:12,weight:600,fill:compact&&focus.length?(s.mode==='prove'?C.purple:C.red):C.muted});
+        scene.innerHTML=svg(960,590,g,'Merkle tree of the selected leaves');
         const k=proofSize(s.n),kb=proofSize(s.big);
         status.textContent=`${s.n} leaves · ${depth} levels · root ${P.hex(lv.at(-1)[0].hash).slice(0,8)}…`;
         controls.querySelector('#hint').textContent=s.tampered.size?`${s.tampered.size} leaf${s.tampered.size>1?'s':''} tampered`:'';

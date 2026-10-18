@@ -96,6 +96,8 @@ node --test tests/protocol.test.cjs tests/demos.test.cjs
 
 Add a future experiment as `src/demos/<name>.js`: export its pure model for Node tests, then call `PlaygroundKit.register` with a stable lowercase ID, number, module, title, description, color, `preview()` card art and a `mount(main)` function that returns a cleanup function. List the file explicitly in `DEMOS` in `scripts/build.py`, which sets hub order, and add model tests. Do not add nonfunctional placeholders to the hub.
 
+Text is sized for classroom projection. Draw every scene label with `PlaygroundKit.t()`: it enlarges the nominal size through `fs()` (small labels about 2×, headings about 1.2×), so lay out with the enlarged size in mind. Use `tw()` to estimate a label's width before placing it, add `cls:'halo'` to labels that sit on lines or curves, and let the scene grow taller (the viewBox height is free) rather than shrinking text. Each experiment page shows the drawing with the controls beside it and the explanation underneath.
+
 To rebuild the Mac edition with **already installed** Apple command-line developer tools:
 
 ```sh

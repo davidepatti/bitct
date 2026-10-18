@@ -46,15 +46,17 @@
         if(q('bday'))q('bday').onclick=()=>{stop();s.bday={pending:true};draw();setTimeout(()=>{s.bday=birthday(`msg-${s.bk}-`,s.bk);draw();},20);};
       }
       function grid(x,y,bytes,ref,cell=12){const b=bits(bytes),r=ref?bits(ref):null;let g='';for(let i=0;i<256;i++){const X=x+(i%16)*cell,Y=y+Math.floor(i/16)*cell,ch=r&&b[i]!==r[i];g+=`<rect x="${X}" y="${Y}" width="${cell-1.5}" height="${cell-1.5}" rx="1.5" fill="${ch?C.orange:b[i]==='1'?C.purple:'#e9e5da'}"/>`;}return g;}
-      function hexLine(x,y,h,ref,size=12.5){const a=P.hex(h),r=ref?P.hex(ref):a;let g='';for(let row=0;row<2;row++){g+=`<text x="${x}" y="${y+row*18}" style="font-size:${size}px" class="mono">`;for(let i=row*32;i<row*32+32;i++)g+=`<tspan fill="${a[i]!==r[i]?C.orange:C.ink}">${a[i]}</tspan>`;g+='</text>';}return g;}
+      function hexLine(x,y,h,ref,size=12.5){const a=P.hex(h),r=ref?P.hex(ref):a;let g='';for(let row=0;row<2;row++){g+=`<text x="${x}" y="${y+row*K.fs(size)*1.35}" style="font-size:${K.fs(size)}px" class="mono">`;for(let i=row*32;i<row*32+32;i++)g+=`<tspan fill="${a[i]!==r[i]?C.orange:C.ink}">${a[i]}</tspan>`;g+='</text>';}return g;}
       function drawAvalanche(){
         const h0=sha(s.prev),h1=sha(s.text),d=diffBits(h0,h1);let g='';
-        g+=t(30,30,'BEFORE',{size:12,weight:700,fill:C.muted})+t(30,50,`“${s.prev.slice(0,44)}${s.prev.length>44?'…':''}”`,{size:13,cls:'mono'})+grid(30,64,h0,null,13);
-        g+=t(290,30,'AFTER',{size:12,weight:700,fill:C.muted})+t(290,50,`“${s.text.slice(0,44)}${s.text.length>44?'…':''}”`,{size:13,cls:'mono'})+grid(290,64,h1,h0,13);
-        g+=hexLine(30,300,h1,h0,13)+t(30,348,`${d} of 256 bits changed (orange)`,{size:16,weight:700,fill:C.orange});
-        if(s.hist){const vals=s.hist.slice(96,161);g+=t(560,30,'BITS CHANGED · 300 one-character edits',{size:12,weight:700,fill:C.muted});g+=K.bars({x:600,y:50,w:330,h:240,values:vals,colors:C.orange,labels:vals.map((v,i)=>(i+96)%16===0?String(i+96):''),gap:0.1});g+=`<line x1="${600+(128-96+0.5)/65*330}" x2="${600+(128-96+0.5)/65*330}" y1="44" y2="292" stroke="${C.ink}" stroke-dasharray="4 4"/>`+t(600+(128-96+0.5)/65*330+6,58,'128',{size:11,weight:700});}
-        else g+=t(560,140,'Press “Try 300 one-character changes”',{size:13,fill:C.muted})+t(560,160,'to see the spread of flipped bits.',{size:13,fill:C.muted});
-        scene.innerHTML=svg(960,370,g,'SHA-256 output bits before and after a small change');layer.textContent='SHA-256 · avalanche effect';status.textContent=`${s.text.length} characters in → 256 bits out`;
+        const q=x=>`“${x.slice(0,40)}${x.length>40?'…':''}”`;
+        g+=t(30,36,'BEFORE',{size:12,weight:700,fill:C.muted})+t(130,36,q(s.prev),{size:13,cls:'mono'});
+        g+=t(30,72,'AFTER',{size:12,weight:700,fill:C.muted})+t(130,72,q(s.text),{size:13,cls:'mono'});
+        g+=t(30,112,'before',{size:11,fill:C.muted})+grid(30,124,h0,null,14)+t(290,112,'after (changed bits in orange)',{size:11,fill:C.muted})+grid(290,124,h1,h0,14);
+        g+=hexLine(30,390,h1,h0,13)+t(30,466,`${d} of 256 bits changed (orange)`,{size:16,weight:700,fill:C.orange});
+        if(s.hist){const vals=s.hist.slice(96,161);g+=t(580,112,'BITS CHANGED',{size:12,weight:700,fill:C.muted})+t(580,138,'300 one-character edits',{size:11,fill:C.muted});g+=K.bars({x:600,y:156,w:330,h:220,values:vals,colors:C.orange,labels:vals.map((v,i)=>(i+96)%16===0?String(i+96):''),gap:0.1});const lx=600+(128-96+0.5)/65*330;g+=`<line x1="${lx}" x2="${lx}" y1="150" y2="378" stroke="${C.ink}" stroke-dasharray="4 4"/>`+t(lx+6,172,'128',{size:11,weight:700,cls:'halo'});}
+        else ['Press “Try 300 one-character','changes” to see the spread','of flipped bits.'].forEach((l,i)=>{g+=t(580,200+i*30,l,{size:13,fill:C.muted});});
+        scene.innerHTML=svg(960,490,g,'SHA-256 output bits before and after a small change');layer.textContent='SHA-256 · avalanche effect';status.textContent=`${s.text.length} characters in → 256 bits out`;
         aside.innerHTML=K.asideBlock({title:`A tiny edit flipped ${d} bits.`,text:'The two inputs differ by one character, yet the outputs look unrelated. You cannot steer the output by nudging the input, and similar inputs do not give similar hashes.',
           takeaway:'A hash is a fingerprint: same input, same output; any change, a completely different output.',
           stats:K.readouts([['Bits changed',`${d} / 256`,'accent'],['Expected',`≈ 128 ± 8`],['Output size','256 bits'],['Input size',`${enc(s.text).length} bytes`]]),
@@ -63,16 +65,16 @@
       function drawPuzzle(){
         let g='';const k=s.k,exp=2**k;
         if(s.mine){const h=s.mine.found?s.mine.hash:s.mine.last;if(h){const b=bits(h);g+=t(30,36,s.mine.found?`FOUND · nonce ${fmt(s.mine.nonce)}`:`SEARCHING · nonce ${fmt(s.mine.tries)}`,{size:13,weight:700,fill:s.mine.found?C.green:C.muted});
-          for(let i=0;i<64;i++){const X=30+(i%32)*17,Y=56+Math.floor(i/32)*22;g+=`<rect x="${X}" y="${Y}" width="15" height="19" rx="2" fill="${i<k?(b[i]==='0'?C.green:C.red):b[i]==='1'?'#cdbdf0':'#efeadf'}"/>`+t(X+7.5,Y+14,b[i],{size:11,anchor:'middle',cls:'mono',fill:i<k?'#fff':C.ink});}
-          g+=t(30,130,`first 64 of 256 bits of SHA-256d(“${s.text.slice(0,24)}${s.text.length>24?'…':''}|${fmt(s.mine.found?s.mine.nonce:s.mine.tries)}”) — the first ${k} must be 0`,{size:11.5,fill:C.muted});
-          const frac=Math.min(1,(s.mine.found?s.mine.tries:s.mine.tries)/(exp*3));g+=`<rect x="30" y="160" width="540" height="22" rx="4" fill="#efeadf"/><rect x="30" y="160" width="${540*frac}" height="22" rx="4" fill="${s.mine.found?C.green:C.purple}"/><line x1="${30+540/3}" x2="${30+540/3}" y1="154" y2="188" stroke="${C.ink}" stroke-width="2"/>`+t(30+540/3,206,`expected 2^${k} = ${fmt(exp)}`,{size:12,anchor:'middle',weight:700})+t(570,206,'3×',{size:11,anchor:'end',fill:C.muted});
-          if(s.mine.found)g+=t(30,240,`${fmt(s.mine.tries)} tries in ${fmt(s.mine.ms/1000,2)} s — ${s.mine.tries<exp?'lucky':'unlucky'}: ${fmt(s.mine.tries/exp,2)}× the expectation`,{size:15,weight:700});}}
+          for(let i=0;i<64;i++){const X=30+(i%32)*28,Y=58+Math.floor(i/32)*38;g+=`<rect x="${X}" y="${Y}" width="25" height="32" rx="3" fill="${i<k?(b[i]==='0'?C.green:C.red):b[i]==='1'?'#cdbdf0':'#efeadf'}"/>`+t(X+12.5,Y+23,b[i],{size:11,anchor:'middle',cls:'mono',fill:i<k?'#fff':C.ink});}
+          g+=t(30,164,`first 64 of 256 bits of SHA-256d(“${s.text.slice(0,24)}${s.text.length>24?'…':''}|${fmt(s.mine.found?s.mine.nonce:s.mine.tries)}”)`,{size:11.5,fill:C.muted})+t(30,192,`the first ${k} must be 0 (green)`,{size:11.5,fill:C.muted});
+          const frac=Math.min(1,(s.mine.found?s.mine.tries:s.mine.tries)/(exp*3));g+=`<rect x="30" y="214" width="540" height="24" rx="4" fill="#efeadf"/><rect x="30" y="214" width="${540*frac}" height="24" rx="4" fill="${s.mine.found?C.green:C.purple}"/><line x1="${30+540/3}" x2="${30+540/3}" y1="208" y2="244" stroke="${C.ink}" stroke-width="2"/>`+t(30+540/3,270,`expected 2^${k} = ${fmt(exp)}`,{size:12,anchor:'middle',weight:700})+t(570,270,'3×',{size:11,anchor:'end',fill:C.muted});
+          if(s.mine.found)g+=t(30,316,`${fmt(s.mine.tries)} tries in ${fmt(s.mine.ms/1000,2)} s — ${s.mine.tries<exp?'lucky':'unlucky'}: ${fmt(s.mine.tries/exp,2)}× the expectation`,{size:15,weight:700});}}
         else g+=t(30,60,'Press “Search for a nonce”: the page tries nonce 0, 1, 2, …',{size:14,fill:C.muted});
         if(s.batch){const runs=s.batch.runs,mx=Math.max(exp*4,...runs),bins=16,h=new Array(bins).fill(0);runs.forEach(r=>h[Math.min(bins-1,Math.floor(r/mx*bins))]++);
-          g+=t(620,36,`TRIES NEEDED · ${runs.length}/40 searches at ${s.batch.k} bits`,{size:12,weight:700,fill:C.muted});g+=K.bars({x:640,y:56,w:290,h:200,values:h,colors:C.purple,labels:h.map((_,i)=>i%4===0?K.sci(i*mx/bins,0).replace('.0',''):''),gap:0.12});
-          const mean=runs.length?runs.reduce((a,b)=>a+b,0)/runs.length:0;g+=t(640,300,`average ${fmt(mean)} · expected ${fmt(2**s.batch.k)}`,{size:13,weight:700})+t(640,320,'Most searches are short; a few are very long.',{size:12,fill:C.muted});}
+          const by0=s.mine?370:120;g+=t(30,by0,`TRIES NEEDED · ${runs.length}/40 searches at ${s.batch.k} bits`,{size:12,weight:700,fill:C.muted});g+=K.bars({x:110,y:by0+20,w:500,h:180,values:h,colors:C.purple,labels:h.map((_,i)=>i%4===0?K.sci(i*mx/bins,0).replace('.0',''):''),gap:0.12});
+          const mean=runs.length?runs.reduce((a,b)=>a+b,0)/runs.length:0;g+=t(650,by0+60,`average ${fmt(mean)}`,{size:13,weight:700})+t(650,by0+92,`expected ${fmt(2**s.batch.k)}`,{size:13,weight:700})+t(650,by0+134,'Most searches are short;',{size:12,fill:C.muted})+t(650,by0+162,'a few are very long.',{size:12,fill:C.muted});}
         const rate=s.mine&&s.mine.found&&s.mine.ms>0?s.mine.tries/(s.mine.ms/1000):5e4;
-        scene.innerHTML=svg(960,340,g,'Leading-zero hash puzzle search');layer.textContent='Proof-of-work style puzzle · double SHA-256';status.textContent=`k = ${k} bits · expected ${fmt(exp)} tries`;
+        scene.innerHTML=svg(960,s.batch?(s.mine?625:375):(s.mine?340:120),g,'Leading-zero hash puzzle search');layer.textContent='Proof-of-work style puzzle · double SHA-256';status.textContent=`k = ${k} bits · expected ${fmt(exp)} tries`;
         controls.querySelector('#pnote').textContent=s.mine&&s.mine.found?`${fmt(s.mine.tries)} tries`:'';
         aside.innerHTML=K.asideBlock({title:'No shortcut: just try, try, try.',text:`Each try has a 1 in ${fmt(exp)} chance. Previous failures do not bring success closer — the search is memoryless, which is what makes mining a fair lottery proportional to hashrate.`,
           takeaway:'Proof of work is easy to verify (one hash) and costly to produce (about 2ᵏ hashes).',
@@ -82,13 +84,13 @@
       function drawBirthday(){
         const k=s.bk,b=s.bday;let g='';
         g+=t(30,36,`SHA-256 TRUNCATED TO ${k} BITS · ${fmt(2**k)} possible values`,{size:12,weight:700,fill:C.muted});
-        if(b&&!b.pending){g+=t(30,80,`“msg-${k}-${b.i}”`,{size:16,cls:'mono'})+t(30,108,`“msg-${k}-${b.j}”`,{size:16,cls:'mono'})+t(330,94,'both start with',{size:13,fill:C.muted})+t(450,94,b.key.replace(/(.{8})/g,'$1 ').trim(),{size:14,cls:'mono',weight:700,fill:C.orange});
-          g+=t(30,150,`Collision after ${fmt(b.tries)} hashes`,{size:18,weight:700,fill:C.green});}
-        else g+=t(30,80,b&&b.pending?'Searching …':'Press “Find a collision”: hash msg-0, msg-1, … until two share the first k bits.',{size:14,fill:C.muted});
+        if(b&&!b.pending){g+=t(30,82,`“msg-${k}-${b.i}”`,{size:16,cls:'mono'})+t(30,118,`“msg-${k}-${b.j}”`,{size:16,cls:'mono'})+t(30,160,'both start with',{size:13,fill:C.muted})+t(220,160,b.key.replace(/(.{8})/g,'$1 ').trim(),{size:14,cls:'mono',weight:700,fill:C.orange});
+          g+=t(30,212,`Collision after ${fmt(b.tries)} hashes`,{size:18,weight:700,fill:C.green});}
+        else if(b&&b.pending)g+=t(30,82,'Searching …',{size:14,fill:C.muted});else g+=t(30,82,'Press “Find a collision”: hash msg-0, msg-1, …',{size:14,fill:C.muted})+t(30,114,'until two messages share the first k bits.',{size:14,fill:C.muted});
         const pts1=[],pts2=[];for(let x=8;x<=256;x+=2){pts1.push([x,birthdayExpected(x)]);pts2.push([x,2**x]);}
-        g+=K.plot({x:110,y:190,w:780,h:170,xr:[8,256],yr:[1,1e80],ylog:true,yticks:[1,1e20,1e40,1e60,1e80],yfmt:v=>v===1?'1':'10'+K.sup(Math.round(Math.log10(v))),xticks:[8,64,128,160,256],xfmt:String,xlabel:'hash length (bits)',ylabel:'tries',series:[{pts:pts2,color:C.red,width:2,dash:'5 4'},{pts:pts1,color:C.purple,width:2.6}],dots:[{x:k,y:birthdayExpected(k),color:'#f3bc59',label:'you'},{x:256,y:birthdayExpected(256),color:C.purple,label:'SHA-256 ≈ 2¹²⁸',anchor:'end'}]});
-        g+=t(110,410,'solid: find any collision (≈ 2^(k/2)) · dashed: match a given hash (2^k)',{size:11,fill:C.muted});
-        scene.innerHTML=svg(960,420,g,'Birthday collision search on truncated hashes');layer.textContent='Collision resistance · birthday bound';status.textContent=`expected ≈ ${fmt(birthdayExpected(k))} tries`;
+        g+=K.plot({x:110,y:262,w:780,h:170,xr:[8,256],yr:[1,1e80],ylog:true,yticks:[1,1e20,1e40,1e60,1e80],yfmt:v=>v===1?'1':'10'+K.sup(Math.round(Math.log10(v))),xticks:[8,64,128,160,256],xfmt:String,xlabel:'hash length (bits)',ylabel:'tries',series:[{pts:pts2,color:C.red,width:2,dash:'5 4'},{pts:pts1,color:C.purple,width:2.6}],dots:[{x:k,y:birthdayExpected(k),color:'#f3bc59',label:'you'},{x:256,y:birthdayExpected(256),color:C.purple,label:'SHA-256 ≈ 2¹²⁸',anchor:'end'}]});
+        g+=t(110,528,'solid: find any collision (≈ 2^(k/2)) · dashed: match a given hash (2^k)',{size:11,fill:C.muted});
+        scene.innerHTML=svg(960,548,g,'Birthday collision search on truncated hashes');layer.textContent='Collision resistance · birthday bound';status.textContent=`expected ≈ ${fmt(birthdayExpected(k))} tries`;
         controls.querySelector('#bnote').textContent=b&&!b.pending?`expected ≈ ${fmt(birthdayExpected(k))}`:'';
         aside.innerHTML=K.asideBlock({title:'Collisions come much sooner than you think.',text:`Like 23 people sharing a birthday with 50% chance, a ${k}-bit hash collides after about ${fmt(birthdayExpected(k))} tries — not ${fmt(2**k)}. Every new hash can match any earlier one.`,
           takeaway:'A 256-bit hash offers about 128 bits of collision resistance: still far out of reach.',

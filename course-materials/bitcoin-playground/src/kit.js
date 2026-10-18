@@ -47,8 +47,8 @@
   function page(demo,{tabs='',layer='',status='',controls='',legend='',aside='',notes=''}){
     return `<div class="tool-heading"><div><p class="eyebrow" style="margin-bottom:8px">TOOL ${demo.number} · ${esc(demo.module.toUpperCase())} · ${esc(demo.moduleName.toUpperCase())}</p><h1>${esc(demo.title)}</h1></div><div class="heading-actions"><button class="quiet" id="fullscreen" aria-pressed="false">⛶ &nbsp; Focus</button><button class="quiet" id="hub">← Playground</button></div></div>
       ${tabs?`<nav class="demo-tabs" aria-label="Views">${tabs}</nav>`:''}
-      <div class="workbench demo-bench"><div class="canvas-wrap"><div class="canvas-meta"><p class="eyebrow" id="layer">${layer}</p><span class="scene-position" id="scene-status">${status}</span></div><div class="scene demo-scene" id="scene"></div><div class="demo-controls" id="controls">${controls}</div>${legend?`<div class="scene-legend" id="legend">${legend}</div>`:''}</div>
-      <aside class="narration demo-aside" id="aside" aria-live="polite">${aside}</aside></div>
+      <div class="workbench demo-bench"><div class="canvas-wrap"><div class="canvas-meta"><p class="eyebrow" id="layer">${layer}</p><span class="scene-position" id="scene-status">${status}</span></div><div class="scene demo-scene" id="scene"></div>${legend?`<div class="scene-legend" id="legend">${legend}</div>`:''}</div>
+      <div class="demo-side"><div class="demo-controls" id="controls">${controls}</div></div><aside class="narration demo-aside" id="aside" aria-live="polite">${aside}</aside></div>
       ${notes?`<details class="teaching-detail"><summary>Look closer · model, assumptions and limits</summary>${notes}</details>`:''}
       <footer class="tool-footer"><span>Teaching simulation · toy model · no keys, coins or network connections</span><span>Bitcoin Playground / ${root.PlaygroundKit.version}</span></footer>`;
   }
@@ -61,13 +61,17 @@
   const legendItem=(color,label,shape='square')=>`<span class="legend-item"><i class="legend-dot ${shape}" style="background:${color}"></i>${label}</span>`;
   function readouts(items){return `<dl class="readouts">${items.map(([k,v,cls=''])=>`<div class="${cls}"><dt>${k}</dt><dd>${v}</dd></div>`).join('')}</dl>`;}
   function asideBlock({eyebrow='WHAT TO NOTICE',title,text,takeaway,stats,tries}){
-    return `<p class="eyebrow">${eyebrow}</p><h2>${title}</h2>${text?`<p>${text}</p>`:''}${takeaway?`<div class="takeaway">${takeaway}</div>`:''}${stats?`<div class="demo-stats">${stats}</div>`:''}${tries?`<div class="try-this"><p class="eyebrow">TRY THIS</p><ol>${tries.map(t=>`<li>${t}</li>`).join('')}</ol></div>`:''}`;
+    return `<div class="aside-main"><p class="eyebrow">${eyebrow}</p><h2>${title}</h2>${text?`<p>${text}</p>`:''}${takeaway?`<div class="takeaway">${takeaway}</div>`:''}</div><div class="aside-data">${stats?`<div class="demo-stats">${stats}</div>`:''}${tries?`<div class="try-this"><p class="eyebrow">TRY THIS</p><ol>${tries.map(t=>`<li>${t}</li>`).join('')}</ol></div>`:''}</div>`;
   }
 
   /* SVG helpers */
   const svg=(w,h,content,title)=>`<svg class="scene-svg demo-svg" viewBox="0 0 ${w} ${h}" role="img" aria-label="${esc(title)}" xmlns="http://www.w3.org/2000/svg"><defs><marker id="k-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M1 1 9 5 1 9" fill="none" stroke="context-stroke" stroke-width="1.8" stroke-linejoin="round"/></marker></defs>${content}</svg>`;
   /* Inline style (not presentation attributes) so the transaction tool's .scene-svg text rules cannot override demo text. */
-  const t=(x,y,s,{size=15,weight=500,anchor='start',fill=ink,cls='',extra=''}={})=>`<text x="${x}" y="${y}" style="font-size:${size}px;font-weight:${weight};fill:${fill}" text-anchor="${anchor}" class="${cls}" ${extra}>${esc(s)}</text>`;
+  /* Readability curve: small labels roughly double, large titles grow ~1.2×. All demo text goes through fs(). */
+  const fs=size=>Math.round(size*Math.max(1.2,2.3-size/20)*10)/10;
+  const t=(x,y,s,{size=15,weight=500,anchor='start',fill=ink,cls='',extra=''}={})=>`<text x="${x}" y="${y}" style="font-size:${fs(size)}px;font-weight:${weight};fill:${fill}" text-anchor="${anchor}" class="${cls}" ${extra}>${esc(s)}</text>`;
+  /* Rough rendered width of a label, for layout decisions. */
+  const tw=(s,size=15,mono=false)=>String(s).length*fs(size)*(mono?0.62:0.56);
   function niceTicks(min,max,count=5){const span=max-min||1,step0=span/count,mag=10**Math.floor(Math.log10(step0)),norm=step0/mag,step=(norm<1.5?1:norm<3?2:norm<7?5:10)*mag,out=[];for(let v=Math.ceil(min/step-1e-9)*step;v<=max+step*1e-9;v+=step)out.push(+v.toFixed(12));return out;}
   function logTicks(min,max){const out=[];for(let e=Math.floor(Math.log10(min));e<=Math.ceil(Math.log10(max));e++){const v=10**e;if(v>=min*0.999&&v<=max*1.001)out.push(v);}return out;}
   /* plot returns an SVG group for a simple x/y chart. */
@@ -78,31 +82,34 @@
     const xt=xticks||(xlog?logTicks(...xr):niceTicks(...xr)),yt=yticks||(ylog?logTicks(...yr):niceTicks(...yr,4));
     let g=`<g class="plot">`;
     bands.forEach(b=>{g+=`<rect x="${sx(b.from)}" y="${y}" width="${Math.max(0,sx(b.to)-sx(b.from))}" height="${h}" fill="${b.color}" opacity="${b.opacity||0.12}"/>`;});
-    yt.forEach(v=>{g+=`<line x1="${x}" x2="${x+w}" y1="${sy(v)}" y2="${sy(v)}" stroke="${grid}" stroke-width="1"/>`+t(x-8,sy(v)+4,yfmt(v),{size:11,anchor:'end',fill:muted});});
-    xt.forEach(v=>{g+=`<line x1="${sx(v)}" x2="${sx(v)}" y1="${y+h}" y2="${y+h+5}" stroke="${line}"/>`+t(sx(v),y+h+19,xfmt(v),{size:11,anchor:'middle',fill:muted});});
+    const tick=o.tick||11,yw=Math.max(...yt.map(v=>tw(yfmt(v),tick)));
+    yt.forEach(v=>{g+=`<line x1="${x}" x2="${x+w}" y1="${sy(v)}" y2="${sy(v)}" stroke="${grid}" stroke-width="1"/>`+t(x-8,sy(v)+fs(tick)*0.35,yfmt(v),{size:tick,anchor:'end',fill:muted});});
+    xt.forEach(v=>{g+=`<line x1="${sx(v)}" x2="${sx(v)}" y1="${y+h}" y2="${y+h+5}" stroke="${line}"/>`+t(sx(v),y+h+8+fs(tick),xfmt(v),{size:tick,anchor:'middle',fill:muted});});
     g+=`<line x1="${x}" x2="${x+w}" y1="${y+h}" y2="${y+h}" stroke="#bdb6a6" stroke-width="1.3"/><line x1="${x}" x2="${x}" y1="${y}" y2="${y+h}" stroke="#bdb6a6" stroke-width="1.3"/>`;
-    if(xlabel)g+=t(x+w/2,y+h+38,xlabel,{size:12,anchor:'middle',fill:muted,weight:600});
-    if(ylabel)g+=t(x-48,y+h/2,ylabel,{size:12,anchor:'middle',fill:muted,weight:600,extra:`transform="rotate(-90 ${x-48} ${y+h/2})"`});
-    hlines.forEach(l=>{g+=`<line x1="${x}" x2="${x+w}" y1="${sy(l.y)}" y2="${sy(l.y)}" stroke="${l.color||muted}" stroke-width="${l.width||1.5}" stroke-dasharray="${l.dash||'5 5'}"/>`;if(l.label)g+=t(l.anchor==='start'?x+6:x+w-4,sy(l.y)-6,l.label,{size:11,anchor:l.anchor||'end',fill:l.color||muted,weight:600});});
-    vlines.forEach(l=>{g+=`<line x1="${sx(l.x)}" x2="${sx(l.x)}" y1="${y}" y2="${y+h}" stroke="${l.color||muted}" stroke-width="${l.width||1.5}" stroke-dasharray="${l.dash||'5 5'}"/>`;if(l.label)g+=t(sx(l.x)+(l.anchor==='end'?-6:6),y+14+(l.dy||0),l.label,{size:11,anchor:l.anchor||'start',fill:l.color||muted,weight:600});});
+    if(xlabel)g+=t(x+w/2,y+h+16+fs(tick)+fs(12),xlabel,{size:12,anchor:'middle',fill:muted,weight:600});
+    const yl=x-14-yw-fs(12)*0.4;if(ylabel)g+=t(yl,y+h/2,ylabel,{size:12,anchor:'middle',fill:muted,weight:600,extra:`transform="rotate(-90 ${yl} ${y+h/2})"`});
+    let lab='';
+    hlines.forEach(l=>{g+=`<line x1="${x}" x2="${x+w}" y1="${sy(l.y)}" y2="${sy(l.y)}" stroke="${l.color||muted}" stroke-width="${l.width||1.5}" stroke-dasharray="${l.dash||'5 5'}"/>`;if(l.label)lab+=t(l.anchor==='start'?x+6:x+w-4,sy(l.y)-6,l.label,{size:11,anchor:l.anchor||'end',fill:l.color||muted,weight:600,cls:'halo'});});
+    vlines.forEach(l=>{g+=`<line x1="${sx(l.x)}" x2="${sx(l.x)}" y1="${y}" y2="${y+h}" stroke="${l.color||muted}" stroke-width="${l.width||1.5}" stroke-dasharray="${l.dash||'5 5'}"/>`;if(l.label)lab+=t(sx(l.x)+(l.anchor==='end'?-6:6),y+14+(l.dy||0),l.label,{size:11,anchor:l.anchor||'start',fill:l.color||muted,weight:600,cls:'halo'});});
     series.forEach(s=>{
       const pts=s.pts.filter(p=>Number.isFinite(p[0])&&Number.isFinite(p[1])&&(!ylog||p[1]>0)&&(!xlog||p[0]>0));if(!pts.length)return;
       let d='';pts.forEach((p,i)=>{const X=sx(p[0]),Y=sy(p[1]);if(i===0)d+=`M${X.toFixed(1)} ${Y.toFixed(1)}`;else if(s.step)d+=`H${X.toFixed(1)}V${Y.toFixed(1)}`;else d+=`L${X.toFixed(1)} ${Y.toFixed(1)}`;});
       if(s.area)g+=`<path d="${d}L${sx(pts.at(-1)[0]).toFixed(1)} ${y+h}L${sx(pts[0][0]).toFixed(1)} ${y+h}Z" fill="${s.color}" opacity="${s.area}"/>`;
       g+=`<path d="${d}" fill="none" stroke="${s.color}" stroke-width="${s.width||2.4}" stroke-linejoin="round" stroke-linecap="round" ${s.dash?`stroke-dasharray="${s.dash}"`:''} opacity="${s.opacity||1}"/>`;
-      if(s.label){const p=pts.at(-1);g+=t(sx(p[0])+6,sy(p[1])+4,s.label,{size:12,fill:s.color,weight:700});}
+      if(s.label){const p=pts.at(-1);lab+=t(sx(p[0])+6,sy(p[1])+4,s.label,{size:12,fill:s.color,weight:700,cls:'halo'});}
     });
-    dots.forEach(d=>{g+=`<circle cx="${sx(d.x)}" cy="${sy(d.y)}" r="${d.r||5}" fill="${d.color||ink}" stroke="${d.stroke||'#fffdf7'}" stroke-width="2"/>`;if(d.label)g+=t(sx(d.x)+(d.anchor==='end'?-9:9),sy(d.y)+(d.dy||-8),d.label,{size:12,fill:d.textColor||d.color||ink,weight:700,anchor:d.anchor||'start'});});
-    texts.forEach(s=>{g+=t(sx(s.x),sy(s.y),s.text,{size:s.size||12,fill:s.color||muted,anchor:s.anchor||'start',weight:s.weight||600});});
-    return g+'</g>';
+    dots.forEach(d=>{g+=`<circle cx="${sx(d.x)}" cy="${sy(d.y)}" r="${d.r||5}" fill="${d.color||ink}" stroke="${d.stroke||'#fffdf7'}" stroke-width="2"/>`;if(d.label)lab+=t(sx(d.x)+(d.anchor==='end'?-9:9),sy(d.y)+(d.dy||-8),d.label,{size:12,fill:d.textColor||d.color||ink,weight:700,anchor:d.anchor||'start',cls:'halo'});});
+    texts.forEach(s=>{lab+=t(sx(s.x),sy(s.y),s.text,{size:s.size||12,fill:s.color||muted,anchor:s.anchor||'start',weight:s.weight||600,cls:'halo'});});
+    return g+lab+'</g>';
   }
   function bars(o){
     const {x=0,y=0,w=400,h=200,values,max,colors:cs,labels=[],gap=0.18,vfmt,yfmt=v=>fmt(v),ylabel=''}=o;
     const m=max||Math.max(1e-12,...values),bw=w/values.length;let g='';
-    niceTicks(0,m,4).forEach(v=>{const Y=y+h-v/m*h;g+=`<line x1="${x}" x2="${x+w}" y1="${Y}" y2="${Y}" stroke="${grid}"/>`+t(x-8,Y+4,yfmt(v),{size:11,anchor:'end',fill:muted});});
-    values.forEach((v,i)=>{const bh=Math.max(0,v/m*h),X=x+i*bw+bw*gap/2;g+=`<rect x="${X}" y="${y+h-bh}" width="${bw*(1-gap)}" height="${bh}" rx="2" fill="${Array.isArray(cs)?cs[i]:cs}"/>`;if(labels[i]!==undefined&&labels[i]!=='')g+=t(X+bw*(1-gap)/2,y+h+16,labels[i],{size:11,anchor:'middle',fill:muted});if(vfmt&&v>0)g+=t(X+bw*(1-gap)/2,y+h-bh-6,vfmt(v),{size:11,anchor:'middle',weight:700});});
+    const yt=niceTicks(0,m,4),yw=Math.max(...yt.map(v=>tw(yfmt(v),11)));
+    yt.forEach(v=>{const Y=y+h-v/m*h;g+=`<line x1="${x}" x2="${x+w}" y1="${Y}" y2="${Y}" stroke="${grid}"/>`+t(x-8,Y+fs(11)*0.35,yfmt(v),{size:11,anchor:'end',fill:muted});});
+    values.forEach((v,i)=>{const bh=Math.max(0,v/m*h),X=x+i*bw+bw*gap/2;g+=`<rect x="${X}" y="${y+h-bh}" width="${bw*(1-gap)}" height="${bh}" rx="2" fill="${Array.isArray(cs)?cs[i]:cs}"/>`;if(labels[i]!==undefined&&labels[i]!=='')g+=t(X+bw*(1-gap)/2,y+h+8+fs(11),labels[i],{size:11,anchor:'middle',fill:muted});if(vfmt&&v>0)g+=t(X+bw*(1-gap)/2,y+h-bh-6,vfmt(v),{size:11,anchor:'middle',weight:700});});
     g+=`<line x1="${x}" x2="${x+w}" y1="${y+h}" y2="${y+h}" stroke="#bdb6a6" stroke-width="1.3"/>`;
-    if(ylabel)g+=t(x-46,y+h/2,ylabel,{size:12,anchor:'middle',fill:muted,weight:600,extra:`transform="rotate(-90 ${x-46} ${y+h/2})"`});
+    const yl=x-14-yw-fs(12)*0.4;if(ylabel)g+=t(yl,y+h/2,ylabel,{size:12,anchor:'middle',fill:muted,weight:600,extra:`transform="rotate(-90 ${yl} ${y+h/2})"`});
     return g;
   }
 
@@ -115,5 +122,5 @@
   const demos=[];
   function register(demo){demos.push(demo);demos.sort((a,b)=>Number(a.number)-Number(b.number));}
 
-  root.PlaygroundKit={version:'2.0',sup,colors,esc,clamp,rng,expo,poisson,gauss,newSeed,fmt,group,pct,sci,duration,slider,segmented,bindControls,setSlider,setSeg,page,bindShell,tabs,legendItem,readouts,asideBlock,svg,t,plot,bars,niceTicks,loop,reduced,hue,register,demos};
+  root.PlaygroundKit={version:'2.1',fs,tw,sup,colors,esc,clamp,rng,expo,poisson,gauss,newSeed,fmt,group,pct,sci,duration,slider,segmented,bindControls,setSlider,setSeg,page,bindShell,tabs,legendItem,readouts,asideBlock,svg,t,plot,bars,niceTicks,loop,reduced,hue,register,demos};
 })(typeof window!=='undefined'?window:globalThis);

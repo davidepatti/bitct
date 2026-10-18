@@ -64,7 +64,7 @@
   K.register({id:'script-machine',number:'09',module:'M 2.1',moduleName:'Transactions',kind:'Script',color:C.blue,
     title:'Script stack machine',
     description:'Step through the unlocking and locking scripts of real output types on an animated stack. Swap in a wrong key, a wrong secret or an early locktime and see exactly where the spend fails.',
-    preview(){let g='';['OP_DUP','OP_HASH160','<h>','OP_EQUALVERIFY'].forEach((x,i)=>{g+=`<rect x="${14+i*72}" y="20" width="66" height="22" rx="4" fill="${i===1?'#3177c8':'#f7daa0'}" stroke="#29323c" stroke-width="1"/><text x="${47+i*72}" y="35" font-size="9" text-anchor="middle" font-family="Menlo,monospace" fill="${i===1?'#fff':'#29323c'}">${x}</text>`;});[['PK Alice','#bfdaef'],['PK Alice','#bfdaef'],['sig Alice','#e5d8fb']].forEach(([l,c],i)=>{g+=`<rect x="110" y="${66+i*28}" width="100" height="24" rx="4" fill="${c}" stroke="#29323c" stroke-width="1.2"/><text x="160" y="${82+i*28}" font-size="11" text-anchor="middle" font-family="Arial" fill="#29323c">${l}</text>`;});return `<svg viewBox="0 0 320 168">${g}</svg>`;},
+    preview(){let g='';[['OP_DUP',70],['OP_HASH160',96],['<h>',44],['OP_EQUAL…',86]].reduce((X,[x,w],i)=>{g+=`<rect x="${X}" y="18" width="${w}" height="26" rx="4" fill="${i===1?'#3177c8':'#f7daa0'}" stroke="#29323c" stroke-width="1"/><text x="${X+w/2}" y="36" font-size="12" text-anchor="middle" font-family="Menlo,monospace" fill="${i===1?'#fff':'#29323c'}">${x.replace('<','&lt;').replace('>','&gt;')}</text>`;return X+w+6;},10);[['PK Alice','#bfdaef'],['PK Alice','#bfdaef'],['sig Alice','#e5d8fb']].forEach(([l,c],i)=>{g+=`<rect x="100" y="${62+i*32}" width="120" height="28" rx="4" fill="${c}" stroke="#29323c" stroke-width="1.2"/><text x="160" y="${81+i*32}" font-size="14" text-anchor="middle" font-family="Arial" fill="#29323c">${l}</text>`;});return `<svg viewBox="0 0 320 168">${g}</svg>`;},
     mount(main,{reduced}){
       const s={tpl:'p2pkh',kase:'ok',pos:0};let tr=run(s.tpl,s.kase),stopAnim=null;
       main.innerHTML=K.page(this,{layer:'Script evaluation · stack machine',
@@ -82,26 +82,26 @@
         const fr=s.pos?tr.frames[s.pos-1]:null,cur=s.pos<tr.frames.length?tr.tokens[tr.frames[s.pos]?tr.frames[s.pos].i:s.pos]:null,done=s.pos>=tr.frames.length;let g='';
         /* token strip */
         g+=t(24,28,'UNLOCKING SCRIPT  +  LOCKING SCRIPT',{size:12,weight:700,fill:C.muted});
-        let x=24,y=44;tr.tokens.forEach((tk,i)=>{const label=tk.op==='PUSH'?show(tk.v):tk.op,w=Math.max(52,label.length*8.2+18);if(x+w>936){x=24;y+=40;}
+        let x=24,y=44;tr.tokens.forEach((tk,i)=>{const label=tk.op==='PUSH'?show(tk.v):tk.op,w=Math.max(60,K.tw(label,11.5,true)+24);if(x+w>936){x=24;y+=50;}
           const f=tr.frames.find(F=>F.i===i),executed=f&&tr.frames.indexOf(f)<s.pos,isCur=fr&&fr.i===i,skipped=f&&f.skipped&&executed,failed=fr&&fr.error&&fr.i===i,notReached=!f;
-          const base=tk.part==='unlock'?'#dbe9f6':'#f7ebcc';g+=`<rect x="${x}" y="${y}" width="${w}" height="30" rx="6" fill="${failed?'#f6d6d3':isCur?(tk.part==='unlock'?C.blue:C.orange):base}" stroke="${failed?C.red:'#29323c'}" stroke-width="${isCur||failed?2:1}" opacity="${notReached?0.4:skipped?0.45:1}" ${skipped?'stroke-dasharray="4 3"':''}/>`;
-          g+=t(x+w/2,y+20,label,{size:11.5,anchor:'middle',cls:'mono',weight:isCur?700:500,fill:isCur&&!failed?'#fff':C.ink});
-          if(executed&&!isCur&&!skipped)g+=`<circle cx="${x+w-5}" cy="${y+5}" r="3.5" fill="${C.green}"/>`;x+=w+8;});
-        const sy=Math.max(150,y+70);
+          const base=tk.part==='unlock'?'#dbe9f6':'#f7ebcc';g+=`<rect x="${x}" y="${y}" width="${w}" height="40" rx="7" fill="${failed?'#f6d6d3':isCur?(tk.part==='unlock'?C.blue:C.orange):base}" stroke="${failed?C.red:'#29323c'}" stroke-width="${isCur||failed?2:1}" opacity="${notReached?0.4:skipped?0.45:1}" ${skipped?'stroke-dasharray="4 3"':''}/>`;
+          g+=t(x+w/2,y+27,label,{size:11.5,anchor:'middle',cls:'mono',weight:isCur?700:500,fill:isCur&&!failed?'#fff':C.ink});
+          if(executed&&!isCur&&!skipped)g+=`<circle cx="${x+w-6}" cy="${y+6}" r="4.5" fill="${C.green}"/>`;x+=w+8;});
+        const sy=Math.max(150,y+90);
         /* stack */
-        const stack=fr?fr.stack:[],bx=300,by=sy+250;g+=t(bx-110,sy,'STACK (top ↑)',{size:12,weight:700,fill:C.muted});
-        g+=`<path d="M${bx-110} ${sy+12}V${by}H${bx+110}V${sy+12}" fill="none" stroke="#bdb6a6" stroke-width="2"/>`;
-        stack.forEach((it,k)=>{const Y=by-6-(k+1)*36;if(Y<sy+8)return;g+=`<rect x="${bx-100}" y="${Y}" width="200" height="30" rx="6" fill="${itemColor(it)}" stroke="#29323c" stroke-width="${k===stack.length-1?2:1}"/>`+t(bx,Y+20,show(it),{size:13,anchor:'middle',cls:'mono',weight:k===stack.length-1?700:500});});
+        const stack=fr?fr.stack:[],bx=200,by=sy+392;g+=t(bx-155,sy,'STACK (top ↑)',{size:12,weight:700,fill:C.muted});
+        g+=`<path d="M${bx-155} ${sy+14}V${by}H${bx+155}V${sy+14}" fill="none" stroke="#bdb6a6" stroke-width="2"/>`;
+        stack.forEach((it,k)=>{const Y=by-6-(k+1)*44;if(Y<sy+10)return;g+=`<rect x="${bx-145}" y="${Y}" width="290" height="38" rx="7" fill="${itemColor(it)}" stroke="#29323c" stroke-width="${k===stack.length-1?2:1}"/>`+t(bx,Y+26,show(it),{size:13,anchor:'middle',cls:'mono',weight:k===stack.length-1?700:500});});
         if(!stack.length)g+=t(bx,by-20,'empty',{size:13,anchor:'middle',fill:C.muted});
         /* explanation */
-        const ex=520;const lastTok=fr?tr.tokens[fr.i]:null;
+        const ex=400;const lastTok=fr?tr.tokens[fr.i]:null;
         g+=t(ex,sy,s.pos===0?'READY':done?'RESULT':`STEP ${s.pos} OF ${tr.frames.length}`,{size:12,weight:700,fill:C.muted});
-        if(lastTok)g+=t(ex,sy+30,lastTok.op==='PUSH'?`push ${show(lastTok.v)}`:lastTok.op,{size:18,weight:700,cls:'mono',fill:fr.error?C.red:C.ink});
+        if(lastTok)g+=t(ex,sy+40,lastTok.op==='PUSH'?`push ${show(lastTok.v)}`:lastTok.op,{size:18,weight:700,cls:'mono',fill:fr.error?C.red:C.ink});
         const wrap=(str,max=46)=>{const out=[];let line='';str.split(' ').forEach(w=>{if((line+' '+w).trim().length>max){out.push(line);line=w;}else line=(line+' '+w).trim();});if(line)out.push(line);return out;};
-        wrap(fr?fr.note:'Press “Step” to execute the first instruction.').forEach((l,k)=>{g+=t(ex,sy+58+k*20,l,{size:14,fill:fr&&fr.error?C.red:C.ink});});
-        if(done){g+=`<rect x="${ex}" y="${sy+150}" width="400" height="58" rx="10" fill="${tr.ok?'#e3f1e5':'#f7e1de'}" stroke="${tr.ok?C.green:C.red}" stroke-width="2"/>`+t(ex+16,sy+176,tr.ok?'✓ Valid spend':'✗ Invalid spend',{size:18,weight:700,fill:tr.ok?'#2f7342':C.red})+t(ex+16,sy+198,tr.ok?'The script finished with true on top.':`Reason: ${tr.reason}.`,{size:13});}
-        if(tr.locktime)g+=t(ex,by,`This transaction’s nLockTime: ${tr.locktime.toLocaleString('en-US')}`,{size:12,fill:C.muted});
-        scene.innerHTML=svg(960,Math.max(440,by+20),g,'Script tokens, stack and current instruction');
+        const lines=wrap(fr?fr.note:'Press “Step” to execute the first instruction.');lines.forEach((l,k)=>{g+=t(ex,sy+80+k*30,l,{size:14,fill:fr&&fr.error?C.red:C.ink});});
+        if(done){const dy=sy+80+lines.length*30+10;g+=`<rect x="${ex}" y="${dy}" width="520" height="88" rx="10" fill="${tr.ok?'#e3f1e5':'#f7e1de'}" stroke="${tr.ok?C.green:C.red}" stroke-width="2"/>`+t(ex+18,dy+36,tr.ok?'✓ Valid spend':'✗ Invalid spend',{size:18,weight:700,fill:tr.ok?'#2f7342':C.red})+t(ex+18,dy+70,tr.ok?'The script finished with true on top.':`Reason: ${tr.reason}.`,{size:13});}
+        if(tr.locktime)g+=t(ex,by-4,`This transaction’s nLockTime: ${tr.locktime.toLocaleString('en-US')}`,{size:12,fill:C.muted});
+        scene.innerHTML=svg(960,by+24,g,'Script tokens, stack and current instruction');
         status.textContent=`${TEMPLATES[s.tpl].label} · ${TEMPLATES[s.tpl].cases[s.kase].label}`;
         q('back').disabled=s.pos===0;q('step').disabled=done;q('snote').textContent=`${s.pos} / ${tr.frames.length}`;
         aside.innerHTML=K.asideBlock({title:done?(tr.ok?'The spend is valid.':'The spend is rejected.'):'A script is a tiny program every node runs.',

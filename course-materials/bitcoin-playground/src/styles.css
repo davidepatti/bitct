@@ -38,3 +38,127 @@ dialog{border:1px solid #c9c1b1;border-radius:17px;padding:35px;max-width:560px;
 @media(max-width:1120px){.demo-bench{grid-template-columns:minmax(0,1fr) 270px}.readouts dd{font-size:17px}}
 @media(max-width:850px){.demo-bench{grid-template-columns:1fr}.demo-aside{display:block}.demo-scene{min-height:0}.demo-controls{grid-template-columns:1fr 1fr}}
 @media(max-width:520px){.demo-controls{grid-template-columns:1fr;padding:14px}.demo-grid{grid-template-columns:1fr}.demo-tabs{overflow-x:auto}.demo-tab{white-space:nowrap;margin-right:8px}.module-label{flex-wrap:wrap}}
+/* Readability (2026-10-17): larger interface text for classroom projection */
+button{font-size:16px}
+.eyebrow{font-size:14px;letter-spacing:1.4px}
+.tool-heading h1{font-size:38px}
+.tool-heading .eyebrow{font-size:14px}
+.heading-actions button{font-size:16px}
+.canvas-meta{height:auto;min-height:52px;padding:10px 22px}
+.canvas-meta .eyebrow{font-size:14px;letter-spacing:1px}
+.scene-position{font-size:15px}
+.scene-legend{font-size:16px;gap:12px 22px;padding:14px 22px}
+.legend-swatch,.legend-dot{width:14px;height:14px}
+.legend-dot.line{width:20px;height:4px}
+.teaching-detail{font-size:18px;max-width:1200px}
+.teaching-detail summary{font-size:17px}
+.teaching-detail p,.teaching-detail ul{font-size:18px;line-height:1.6;max-width:1150px}
+.tool-footer{font-size:14px}
+/* experiments */
+.demo-tabs{gap:10px}
+.demo-tab{font-size:18px;padding:8px 4px 16px;margin-right:22px}
+.demo-bench{grid-template-columns:minmax(0,1fr) 400px;gap:24px}
+.scene.demo-scene{height:auto;min-height:0;padding:10px 12px;display:block}
+.scene.demo-scene>.scene-svg{width:100%;height:auto}
+.demo-side{display:flex;flex-direction:column;gap:22px;min-width:0}
+.demo-controls{border:1.4px solid #cfc8b9;border-radius:15px;background:#fffdf7;padding:18px 20px 20px;grid-template-columns:1fr;gap:18px}
+.ctl{gap:8px}
+.ctl-top{font-size:17px;flex-wrap:wrap;row-gap:2px}
+.ctl-label{font-size:17px}
+.ctl output{font-size:20px}
+.ctl-hint{font-size:15px;line-height:1.35}
+.ctl input[type=range]{height:30px}
+.ctl input[type=range]::-webkit-slider-thumb{width:24px;height:24px;margin-top:-10px}
+.ctl input[type=range]::-moz-range-thumb{width:20px;height:20px}
+.ctl input[type=range]::-webkit-slider-runnable-track{height:5px}
+.seg{gap:6px}
+.seg button{font-size:16px;padding:9px 12px}
+.demo-actions{gap:10px}
+.demo-actions button{font-size:16px;padding:10px 14px}
+.demo-actions .note{font-size:16px}
+.demo-aside{padding:0 2px}
+.demo-aside .eyebrow{font-size:14px}
+.demo-aside h2{font-size:30px;line-height:1.2}
+.demo-aside>p{font-size:19px;line-height:1.55}
+.demo-aside .takeaway{font-size:18px}
+.readouts{gap:16px 20px}
+.readouts dt{font-size:15px}
+.readouts dd{font-size:26px;overflow-wrap:anywhere}
+.try-this .eyebrow{font-size:14px}
+.try-this ol{font-size:18px;line-height:1.5}
+/* transaction walkthrough */
+.step-tab{font-size:15px}
+.step-index{width:30px;height:30px;font-size:14px}
+.narration .eyebrow{font-size:14px}
+.narration h2{font-size:32px}
+.narration>p{font-size:19px;line-height:1.6}
+.takeaway{font-size:18px}
+.tx-status .eyebrow{font-size:13px}
+.status-value{font-size:22px}
+.tx-status dl{font-size:16px}
+.transport-main button{font-size:17px}
+.transport-options{font-size:16px}
+.transport-options select{font-size:16px}
+.scene-experiment{gap:14px}
+.scene-experiment button{font-size:16px;padding:10px 15px}
+.experiment-label{font-size:16px}
+.workbench:not(.demo-bench){grid-template-columns:minmax(0,1fr) 360px}
+/* hub */
+.collection-label span{font-size:16px}
+.hub-intro p:last-child{font-size:21px}
+.tool-card-copy .toy-number{font-size:15px}
+.tool-card-copy h2{font-size:38px;max-width:320px}
+.tool-card-copy p{font-size:19px}
+.tool-card-copy .primary{font-size:17px}
+.module-label{font-size:19px}
+.module-chip{font-size:15px;padding:5px 11px}
+.demo-grid{grid-template-columns:repeat(auto-fill,minmax(340px,1fr))}
+.demo-card-copy .toy-number{font-size:14px}
+.demo-card-copy h3{font-size:26px}
+.demo-card-copy p{font-size:18px}
+.demo-card-copy button{font-size:17px;padding:11px 17px}
+.hub-bottom,.hub-bottom p{font-size:16px}
+dialog p{font-size:18px}
+.shortcuts{font-size:16px;grid-template-columns:130px 1fr}
+.fine-print{font-size:15px}
+@media(max-width:1280px){.demo-bench{grid-template-columns:minmax(0,1fr) 360px}.step-tab{font-size:13px}}
+@media(max-width:1120px){.demo-bench{grid-template-columns:1fr}.demo-side{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:22px;align-items:start}.workbench:not(.demo-bench){grid-template-columns:minmax(0,1fr) 300px}.narration h2{font-size:28px}.narration>p{font-size:17px}}
+@media(max-width:850px){.demo-side{grid-template-columns:1fr}.workbench:not(.demo-bench){grid-template-columns:1fr}.step-tab{font-size:11px}}
+@media(max-width:520px){.tool-heading h1{font-size:28px}.demo-aside h2{font-size:25px}.demo-aside>p{font-size:17px}.readouts dd{font-size:22px}.demo-tab{font-size:16px}.scene-legend{font-size:14px}.demo-grid{grid-template-columns:1fr}.tool-card-copy h2{font-size:30px}.step-tab{font-size:9px}}
+
+/* Experiment grid: drawing + controls side by side, narrative under the drawing */
+.demo-bench{grid-template-columns:minmax(0,1fr) 400px;grid-template-areas:"scene side" "aside side";align-items:start}
+.demo-bench>.canvas-wrap{grid-area:scene}.demo-bench>.demo-side{grid-area:side;position:sticky;top:12px}.demo-bench>.demo-aside{grid-area:aside}
+.demo-aside{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:0 34px;padding:6px 4px 0}
+.demo-aside .aside-main>p{color:#616a64;font-size:19px;line-height:1.55;margin-bottom:18px}
+.demo-aside .aside-data .demo-stats{border-top:0;margin-top:4px;padding-top:0}
+.demo-aside .aside-data .try-this{margin-top:18px}
+@media(max-width:1280px){.demo-bench{grid-template-columns:minmax(0,1fr) 360px}}
+@media(max-width:1120px){.demo-bench{grid-template-columns:1fr;grid-template-areas:"scene" "side" "aside"}.demo-bench>.demo-side{position:static}.demo-side{display:block}}
+@media(max-width:700px){.demo-aside{grid-template-columns:1fr}.demo-aside .aside-data .demo-stats{border-top:1px solid var(--line);margin-top:18px;padding-top:16px}}
+.demo-aside .aside-main>.eyebrow{color:var(--accent)}
+.demo-svg text.halo{paint-order:stroke;stroke:#fffdf7;stroke-width:6px;stroke-linejoin:round}
+/* Transaction walkthrough drawing: full-width auto height and ~1.6× text (2026-10-17) */
+@media(min-width:851px){.workbench:not(.demo-bench) .scene{height:auto;min-height:0}.workbench:not(.demo-bench) .scene>.scene-svg{height:auto;max-height:none}}
+.scene-svg .label{font-size:27px}
+.scene-svg .small-label{font-size:25px}
+.scene-svg .hand-label{font-size:30px}
+.scene-svg .scene-caption{font-size:25px}
+.scene-svg .big-number{font-size:36px}
+.scene-svg .medium-number{font-size:32px}
+.scene-svg .mono{font-size:24px}
+.scene-svg .stage-number{font-size:20px}
+.scene-svg .note-letter{font-size:30px}
+.scene-svg .tray-label{font-size:19px}
+.scene-svg .gate-label{font-size:21px}
+.scene-svg .tiny-check{font-size:19px}
+.scene-svg .check-mark{font-size:30px}
+.step-tab{font-size:17px}
+.step-index{width:34px;height:34px;font-size:16px}
+.scene-svg text.halo{paint-order:stroke;stroke:#fffdf7;stroke-width:7px;stroke-linejoin:round}
+@media(max-width:1280px){.step-tab{font-size:15px}.step-index{width:30px;height:30px;font-size:14px}}
+@media(max-width:1120px){.step-tab{font-size:13px}.step-index{width:26px;height:26px;font-size:13px}}
+@media(max-width:850px){.step-tab{font-size:11px}.step-index{width:24px;height:24px;font-size:12px}}
+@media(max-width:520px){.step-tab{font-size:9px}.step-index{width:22px;height:22px;font-size:11px}}
+/* Keep enlarged stage labels reachable without widening a narrow page. */
+@media(max-width:850px){.stepper{overflow-x:auto;grid-template-columns:repeat(9,minmax(max-content,1fr));padding-bottom:4px}}
