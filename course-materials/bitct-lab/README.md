@@ -4,6 +4,17 @@ One course image and one folder per experience. Students install only Docker; ev
 starts with `docker compose up -d --wait` and is used through a Linux shell inside the lab
 (`docker compose exec lab bash`) plus a read-only dashboard at http://localhost:8080.
 
+## Examples
+
+Inspect a local Lightning network in DLAB 09, or work through the synthetic
+graph-learning experiment in the DLAB 10 notebook.
+
+| DLAB 09 · Lightning on regtest | DLAB 10 · Graph-learning simulation |
+|---|---|
+| <img src="https://raw.githubusercontent.com/davidepatti/bitct/main/.github/images/course-overview/labs-lightning.jpg" alt="The DLAB 09 dashboard showing its local Lightning channel graph" width="400"> | <img src="https://raw.githubusercontent.com/davidepatti/bitct/main/.github/images/course-overview/labs-notebook.jpg" alt="A computed calibration plot from the DLAB 10 teaching notebook" width="400"> |
+
+## Course images
+
 | Image | Contents |
 |---|---|
 | `ghcr.io/davidepatti/bitct-lab:2026.10` | Debian 13 slim · Bitcoin Core **31.1** · LND **v0.21.4-beta** · Mosquitto · course tools (`bip340`, `addr`, `header`, `merkle`, `hashdiff`, `d17`, `lnview`, `dlc-oracle`, `lab-key`/`lab-watch`/`lab-spend`, dashboard, gateway) |

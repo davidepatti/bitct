@@ -2,6 +2,15 @@
 
 An offline collection of visual teaching tools for the Bitcoin course. **The life of a transaction** animates the protocol overview in canonical M 1.3. Nineteen interactive experiments follow it: each is one scene with a few parameters to change, so students can build intuition by watching the consequence. They complement the Docker laboratories; they do not run Bitcoin software.
 
+## Examples
+
+Two of the twenty tools: follow a payment through the network, or explore
+how a Merkle tree commits to its leaves. Both are teaching simulations.
+
+| The life of a transaction | Merkle tree explorer |
+|---|---|
+| <img src="https://raw.githubusercontent.com/davidepatti/bitct/main/.github/images/course-overview/playground-transaction.jpg" alt="The transaction walkthrough in Bitcoin Playground" width="400"> | <img src="https://raw.githubusercontent.com/davidepatti/bitct/main/.github/images/course-overview/playground-merkle.jpg" alt="The interactive Merkle tree explorer" width="400"> |
+
 ## Launch
 
 - **Any desktop platform:** download [bitcoin-playground.html](bitcoin-playground.html), then double-click it. It opens locally in a recent browser. No installation, terminal, server, account, or internet connection is required. On GitHub, use **Download raw file**, rather than saving the GitHub page.

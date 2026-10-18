@@ -8,6 +8,16 @@ documents, images, audio, code, or other payloads.
 For a concise description of every example, read the
 [short trivia guide](trivia-guide.md).
 
+## Examples
+
+Preview the guide's early Bitcoin milestones and its stories about messages,
+images and memorials. These screenshots show the guide's explanations, not
+bundled historical payloads.
+
+| Early Bitcoin milestones | Messages, memorials and artifacts |
+|---|---|
+| <img src="https://raw.githubusercontent.com/davidepatti/bitct/main/.github/images/course-overview/trivia-history.jpg" alt="The trivia guide introducing the genesis block and Hal Finney" width="400"> | <img src="https://raw.githubusercontent.com/davidepatti/bitct/main/.github/images/course-overview/trivia-culture.jpg" alt="The trivia guide describing embedded images, messages and a memorial" width="400"> |
+
 ## What the collection covers
 
 - early Bitcoin milestones, including the genesis headline, the first
