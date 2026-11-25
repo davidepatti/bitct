@@ -184,7 +184,7 @@ btc-b getrawtransaction $TX2 true | jq '{txid, confirmations}'
 btc-b getrawtransaction $TX3 true | jq '{txid, confirmations}'
 ```
 
-**Checkpoint:** confirmations=1
+**Checkpoint:** TX2 has 2 confirmations. The block mined in P5 included it. TX3 has 1 confirmation from the block mined in P6.
 
 ### F1 · Change a signed transaction
 

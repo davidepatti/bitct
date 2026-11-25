@@ -156,7 +156,8 @@ LABS["dlab02-transaction"] = {"steps": [
         "mine 1\n"
         "btc-b getrawtransaction $TX2 true | jq '{txid, confirmations}'\n"
         "btc-b getrawtransaction $TX3 true | jq '{txid, confirmations}'",
-     "expect": [r'"confirmations": 1']},
+     "expect": [r'btc-b getrawtransaction \$TX2 true[^\n]*\n\{\n  "txid": "[0-9a-f]{64}",\n  "confirmations": 2\n\}',
+                r'btc-b getrawtransaction \$TX3 true[^\n]*\n\{\n  "txid": "[0-9a-f]{64}",\n  "confirmations": 1\n\}']},
     # Part C: failures at different layers
     {"id": "F1", "title": "Change a signed transaction", "cmd":
         "A_TR2=$(btc-a -rpcwallet=alice getnewaddress '' bech32m)\n"

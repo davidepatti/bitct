@@ -66,7 +66,7 @@ META["dlab02-transaction"] = dict(
            "P3": (None, "Sign, finalize, ask the node before broadcasting.", "allowed: true, vsize 141"),
            "P4": (None, "P2WPKH witness = signature + public key.", "two witness items"),
            "P5": (None, "Taproot key-path spend: one 64-byte Schnorr signature, smaller vsize.", "vsize ≈ 130, one witness item"),
-           "P6": (None, "Confirm both on node B.", "confirmations=1"),
+           "P6": (None, "Confirm both on node B.", "TX2 has 2 confirmations. The block mined in P5 included it. TX3 has 1 confirmation from the block mined in P6."),
            "F1": ("", "The signature covers the outputs.", "Invalid Schnorr signature (consensus)"),
            "F2": ("", "An unsigned PSBT is not a transaction yet.", "complete: false"),
            "F3": ("", "Valid, but below the node's relay policy.", "min relay fee not met (policy)")},
